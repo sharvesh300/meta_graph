@@ -128,8 +128,15 @@ application_rules:
 transition_metals:
   [Sc, Ti, V, Cr, Mn, Fe, Co, Ni, Cu, Zn, Y, Zr, Nb, Mo, Tc, Ru, Rh, Pd, Ag, Cd]
 
-# similar_to edges: cosine similarity over z-scored property vectors
-# (band_gap, formation_energy_per_atom, density, total_magnetization).
+# similar_to edges: for each material, its top_k nearest neighbours by cosine
+# similarity over a 10-dimensional z-scored property vector spanning electronic,
+# thermodynamic, structural-density, magnetic, mechanical and dielectric
+# behaviour. The exact field list, and the reasoning for every field included
+# and excluded, lives above SIMILARITY_FIELDS in src/matgraph/enrich.py.
+#
+# top_k rather than a flat global cutoff: a single cosine threshold produces
+# tens of thousands of "similar enough" pairs at a few hundred materials, which
+# makes similar_to noise. Top-K keeps edge density meaningful at any scale.
 similarity:
   min_edge_weight: 0.6
   top_k: 5

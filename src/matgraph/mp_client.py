@@ -35,12 +35,14 @@ SUMMARY_FIELDS = [
     "symmetry",
     "theoretical",
     # Elastic properties (PRD: "Elastic Properties"). Not computed for every
-    # material (~84% coverage observed) - null when unavailable.
+    # material - null when unavailable. Measured coverage across the full
+    # 794-material set: 18.0% (143/794).
     "bulk_modulus",
     "shear_modulus",
     "universal_anisotropy",
     "homogeneous_poisson",
-    # Dielectric properties (PRD: "Dielectric Properties"). ~70% coverage.
+    # Dielectric properties (PRD: "Dielectric Properties"). Measured coverage:
+    # 19.9% (158/794).
     "e_total",
     "e_electronic",
     "e_ionic",

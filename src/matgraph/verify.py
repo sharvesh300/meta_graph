@@ -11,6 +11,7 @@ tables with a JSON properties blob, not per-class labels/columns).
 
 from __future__ import annotations
 
+import json
 import logging
 from collections import defaultdict
 
@@ -19,6 +20,7 @@ from cognee.context_global_variables import set_database_global_context_variable
 from cognee.modules.data.methods import get_authorized_existing_datasets
 from cognee.modules.users.methods import get_default_user
 
+from matgraph.enrich import DATA_DIR
 from matgraph.pipeline import DATASET_NAME
 
 logger = logging.getLogger(__name__)
@@ -187,13 +189,92 @@ async def verify() -> None:
         )
 
         print("\n== Structural checks ==")
-        isolated = [
-            formula for formula, (nid, _) in materials.items() if not g.targets(nid, "contains")
-        ]
-        if isolated:
-            print(f"  !! Materials with no element edges: {isolated}")
-        else:
-            print("  OK: every Material has at least one contains edge.")
+        problems: list[str] = []
 
-        assert len(materials) > 0, "expected at least one Material node"
-        print(f"  OK: {len(materials)} Material nodes present.")
+        # Counted off the node list rather than the `materials` dict above:
+        # that dict is keyed by formula, so any duplicate formula would collapse
+        # two nodes into one entry and undercount.
+        material_nodes = g.nodes_of_type("Material")
+
+        def check(passed: bool, ok_message: str, problem: str) -> None:
+            """Report a check, and remember it if it failed."""
+            if passed:
+                print(f"  OK: {ok_message}")
+            else:
+                print(f"  !! {problem}")
+                problems.append(problem)
+
+        def sample(formulas: list[str], cap: int = 10) -> str:
+            shown = ", ".join(formulas[:cap])
+            return shown + (f", ... (+{len(formulas) - cap} more)" if len(formulas) > cap else "")
+
+        check(
+            bool(material_nodes),
+            f"{len(material_nodes)} Material nodes present.",
+            "no Material nodes in the graph",
+        )
+
+        isolated = [p["formula"] for nid, p in material_nodes if not g.targets(nid, "contains")]
+        check(
+            not isolated,
+            "every Material has at least one contains edge (no isolated materials).",
+            f"{len(isolated)} Material(s) with no contains edge: {sample(isolated)}",
+        )
+
+        # Every Material should come from exactly one cached record, so the node
+        # count must match the fetch manifest. A mismatch means either records
+        # were skipped as incomplete (enrich.filter_valid_materials logs which)
+        # or two materials collided on their material_id identity field.
+        manifest_path = DATA_DIR / "_manifest.json"
+        if manifest_path.exists():
+            expected = len(json.loads(manifest_path.read_text()))
+            check(
+                len(material_nodes) == expected,
+                f"Material count matches the fetch manifest exactly ({expected}).",
+                f"graph has {len(material_nodes)} Material nodes but the manifest "
+                f"lists {expected} cached records",
+            )
+        else:
+            print(f"  -- manifest check skipped: {manifest_path} not found")
+
+        no_space_group = [
+            p["formula"] for nid, p in material_nodes if len(g.targets(nid, "has_space_group")) != 1
+        ]
+        check(
+            not no_space_group,
+            "every Material has exactly one space group.",
+            f"{len(no_space_group)} Material(s) without exactly one has_space_group "
+            f"edge: {sample(no_space_group)}",
+        )
+
+        unclassified = [
+            p["formula"] for nid, p in material_nodes if not g.targets(nid, "classified_as")
+        ]
+        check(
+            not unclassified,
+            "every Material has at least one property classification.",
+            f"{len(unclassified)} Material(s) with no classified_as edge: {sample(unclassified)}",
+        )
+
+        # Informational, not a failure: enrich.py deliberately skips a single
+        # classification whose value is missing or unbucketable rather than
+        # failing the build, and logs a warning when it does. This surfaces the
+        # after-effect in the built graph.
+        for kind in ("band_gap", "stability"):
+            missing = [
+                p["formula"]
+                for nid, p in material_nodes
+                if kind not in {cp["kind"] for _, cp in g.targets(nid, "classified_as")}
+            ]
+            if missing:
+                print(
+                    f"  -- {len(missing)} Material(s) have no '{kind}' classification "
+                    f"(see enrich.py warnings from the build): {sample(missing)}"
+                )
+
+        if problems:
+            raise AssertionError(
+                f"graph verification failed with {len(problems)} problem(s):\n  - "
+                + "\n  - ".join(problems)
+            )
+        print("\n  All structural checks passed.")
