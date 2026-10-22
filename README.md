@@ -713,6 +713,8 @@ What these numbers do and don't show:
 | `POST /materials/ingest` | MP id, formula or crystal structure (`structure`: CIF/POSCAR text) → relation report (optionally explained, optionally persisted) |
 | `POST /predict` | crystal structure (`structure`: CIF/POSCAR text) → CGCNN predictions with expected errors; no graph change |
 | `GET /health` | graph loaded, embeddings reachable, LLM configured, CGCNN loaded and fixed-structure check |
+| `GET /graph` | every node and edge (compact), for the explorer |
+| `GET /explorer` | the animated graph explorer (below) |
 
 Structure endpoints take the file's text in JSON, e.g.
 `curl -X POST localhost:8000/predict -H 'Content-Type: application/json' -d "$(jq -Rs '{structure: .}' my.cif)"`.
@@ -731,6 +733,26 @@ The dashboard is one static page with no build step. It shows:
   relate it to the graph. Predicted values and edges are marked (amber "≈",
   dashed edges).
 - a **CGCNN predictions** toggle on Ask (off by default)
+
+**Graph explorer** (`/explorer`, linked from the dashboard header) shows the
+whole graph as an animated force layout:
+- **Nodes:** coloured by type; materials coloured by DFT band gap.
+- **Interaction:**
+  - hover for details;
+  - click to light up a node's neighbourhood and open its properties;
+  - search to fly to any material or hub;
+  - toggle node types and edge types.
+- **Import & match:** drop a CIF/POSCAR (or type an MP id or formula). The
+  drawer spins the crystal in 3D (3Dmol.js) while the graph plays the
+  matching:
+  1. Same-formula materials pulse while StructureMatcher compares them.
+  2. If one matches, the camera locks onto that node.
+  3. If not, a new node spawns. It is wired to each shared hub in turn, most
+     selective first, with flowing particles. Predicted edges are dashed
+     amber.
+  4. The force simulation pulls the new node into place.
+- **Saving:** "save to graph" persists the material through cognee, as
+  `--persist` does.
 
 ---
 
@@ -791,6 +813,7 @@ meta_graph/
 ```bash
 uv sync
 cp .env.example .env    # fill in MP_API_KEY and OPENROUTER_API_KEY
+brew install ollama                 # or the Ollama app
 ollama serve & ollama pull bge-m3   # local embeddings (BGE-M3, 1024-d)
 ```
 
