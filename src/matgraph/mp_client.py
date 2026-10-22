@@ -233,6 +233,38 @@ def fetch_all_clusters(
     return materials
 
 
+# --- single-material lookups (Phase 2 ingestion) -----------------------------
+
+
+def _attach_description(doc: dict[str, Any]) -> dict[str, Any]:
+    doc["description"] = fetch_robocrys_batch([doc["material_id"]]).get(doc["material_id"])
+    return doc
+
+
+def fetch_material_by_id(material_id: str) -> dict[str, Any] | None:
+    """One summary record (same fields as the cluster build) + robocrys text."""
+    docs = _get(
+        "/materials/summary/",
+        {"material_ids": material_id, "_fields": ",".join(SUMMARY_FIELDS), "_limit": 1},
+    )
+    return _attach_description(docs[0]) if docs else None
+
+
+def fetch_ground_state_by_formula(formula: str) -> dict[str, Any] | None:
+    """Lowest-energy_above_hull polymorph for a formula - the same selection
+    rule the cluster build uses (dedupe_by_formula)."""
+    docs = _get(
+        "/materials/summary/",
+        {
+            "formula": formula,
+            "_fields": ",".join(SUMMARY_FIELDS),
+            "_sort_fields": "energy_above_hull",
+            "_limit": 1,
+        },
+    )
+    return _attach_description(docs[0]) if docs else None
+
+
 # --- disk cache --------------------------------------------------------------
 
 MANIFEST_NAME = "_manifest.json"
