@@ -1,15 +1,18 @@
 """New-material ingestion (docs/PHASE2_PLAN.md §6): get a material's
 properties and relate it to the existing graph.
 
-Inputs are a Materials Project id or a formula. Crystal structures (CIF) are
-deliberately NOT accepted here - they go to the CGCNN model in Phase 3.
+Inputs here are a Materials Project id or a formula; crystal structures go
+through ``matgraph.ingest_structure`` (Phase 3), which shares the relate /
+report / persist core below.
 
 Properties come from a pluggable **property source**:
 - ``MPSource``: full summary record from Materials Project (provenance "mp").
 - ``CompositionSource``: formula Materials Project has no entry for; only
   what the formula itself determines (provenance "derived"/"guessed"); every
   computed property is reported unavailable, never estimated.
-Phase 3 adds a CGCNN source (provenance "predicted") behind the same interface.
+- ``ingest_structure.CGCNNSource``: a user-supplied structure; exact facts
+  derived from it ("derived") plus CGCNN predictions ("predicted"), which
+  never fill the DFT fields.
 
 The material is built with the same ``enrich.NodeFactory`` as the full graph,
 so identity-keyed hub nodes (Element, SpaceGroup, OxidationState, ...) get the
@@ -57,7 +60,9 @@ RELATION_FIELDS = [
     "similar_to", "has_oxidation_state", "has_formula_pattern",
 ]
 
-Provenance = Literal["mp", "derived", "guessed", "unavailable"]
+Provenance = Literal["mp", "derived", "guessed", "predicted", "unavailable"]
+# Exact properties of a user-supplied structure (not computed by DFT).
+STRUCTURE_DERIVED = {"density", "volume", "nsites"}
 
 REPORTED_PROPERTIES = [
     "band_gap", "is_gap_direct", "is_metal", "formation_energy_per_atom", "energy_above_hull",
@@ -157,6 +162,12 @@ class PropertyValue(BaseModel):
     name: str
     value: Any = None
     provenance: Provenance
+    # Predicted values only: units, model and the expected error measured on
+    # unseen graph materials (artifacts/eval/cgcnn_graph_eval.md).
+    units: str | None = None
+    model: str | None = None
+    expected_error: float | None = None
+    expected_error_units: str | None = None
 
 
 class RuleEvaluation(BaseModel):
@@ -164,6 +175,7 @@ class RuleEvaluation(BaseModel):
     rule: str
     status: Literal["fired", "not_fired", "cannot_evaluate"]
     reason: str = ""
+    predicted: bool = False  # evaluated on CGCNN predictions, not DFT values
 
 
 class Neighbour(BaseModel):
@@ -178,11 +190,12 @@ class SharedHub(BaseModel):
     relation: str
     shared_with: int  # existing materials connected to this hub
     new_node: bool = False
+    predicted: bool = False  # edge rests on a CGCNN prediction
 
 
 class RelationReport(BaseModel):
     input: str
-    source: Literal["mp", "composition", "graph"]
+    source: Literal["mp", "composition", "cgcnn", "graph"]
     material_id: str
     formula: str
     node_id: str
@@ -235,6 +248,19 @@ def _node_props(dp: Any) -> dict[str, Any]:
     return props
 
 
+def _hop_props(edge_props: dict[str, Any]) -> dict[str, Any]:
+    """Rule text, weight and (for CGCNN-based edges) provenance of an edge."""
+    inner = edge_props.get("properties") or {}
+    if isinstance(inner, str):  # cognee may hand edge properties back JSON-encoded
+        try:
+            inner = json.loads(inner)
+        except ValueError:
+            inner = {}
+    picked = {"rule": inner.get("rule"), "weight": edge_props.get("weight"),
+              "provenance": inner.get("provenance"), "model": inner.get("model")}
+    return {k: v for k, v in picked.items() if v is not None}
+
+
 def _relation_stub(material: Material) -> Material:
     """Copy of an existing Material with no relationship fields, used as a
     similar_to target when persisting: upserts identical properties without
@@ -272,6 +298,8 @@ def evaluate_rules(raw: dict[str, Any], config: dict[str, Any]) -> list[RuleEval
     if raw.get("band_gap") is not None and raw.get("energy_above_hull") is not None:
         fired = {d for d, _ in apply_application_rules(raw, config)}
         return [RuleEvaluation(domain=d, rule=r, status="fired" if d in fired else "not_fired") for d, r in rules.items()]
+    if raw.get("predicted_band_gap") is not None:
+        return _predicted_rule_evaluations(raw, config, rules)
 
     elements = set(raw["elements"])
     tms = set(config["transition_metals"])
@@ -289,6 +317,83 @@ def evaluate_rules(raw: dict[str, Any], config: dict[str, Any]) -> list[RuleEval
     return out
 
 
+def _interval_status(lo: float, hi: float, low: float, high: float) -> str:
+    """Rule low <= x <= high for x anywhere in [lo, hi]: fired / not_fired / uncertain."""
+    if low <= lo and hi <= high:
+        return "fired"
+    if hi < low or lo > high:
+        return "not_fired"
+    return "uncertain"
+
+
+def _predicted_rule_evaluations(raw: dict[str, Any], config: dict[str, Any],
+                                rules: dict[str, str]) -> list[RuleEvaluation]:
+    """Rules on CGCNN predictions. Only the band gap and metallicity are
+    predicted, and the gap carries its expected error: a rule fires only if
+    it holds across gap ± error, is not_fired only if it fails across it, and
+    cannot be evaluated when the interval straddles a threshold or the rule
+    needs a property CGCNN does not predict (E_hull, magnetization)."""
+    from matgraph.cgcnn.interpret import expected_errors
+
+    gap, metal = raw["predicted_band_gap"], raw.get("predicted_is_metal")
+    err = (expected_errors().get("predicted_band_gap") or {}).get("value") or 0.0
+    lo, hi = gap - err, gap + err
+    gap_text = f"predicted band gap {gap:.2f} ± {err:.2f} eV"
+    elements = set(raw["elements"])
+    out = []
+
+    def add(domain, status, reason):
+        out.append(RuleEvaluation(domain=domain, rule=rules[domain], status=status, reason=reason, predicted=True))
+
+    def by_gap(domain, low, high):
+        status = _interval_status(lo, hi, low, high)
+        if status == "uncertain":
+            add(domain, "cannot_evaluate", f"{gap_text} straddles the rule threshold")
+        else:
+            add(domain, status, gap_text)
+
+    if "Li" in elements and elements & set(config["transition_metals"]):
+        add("battery_cathode", "cannot_evaluate", "needs energy_above_hull (CGCNN predicts formation energy only)")
+    else:
+        add("battery_cathode", "not_fired", "composition lacks Li or a transition metal")
+    if metal:
+        add("semiconductor_device", "not_fired", f"predicted metallic (P(metal) = {raw.get('predicted_metal_probability', 0):.2f})")
+    else:
+        by_gap("semiconductor_device", 1e-9, 3.5)
+    if "O" not in elements:
+        add("photocatalyst", "not_fired", "contains no O")
+    else:
+        by_gap("photocatalyst", 1.5, 3.5)
+    if hi <= 2:
+        add("dielectric", "not_fired", gap_text)
+    else:
+        add("dielectric", "cannot_evaluate", "needs total_magnetization (not predicted)")
+    add("magnetic_material", "cannot_evaluate", "needs magnetic ordering and magnetization (not predicted)")
+    return [r for d in rules for r in out if r.domain == d]
+
+
+def predicted_properties(values: dict[str, Any]) -> list[PropertyValue]:
+    """PropertyValues for the predicted_* attributes present in `values` (a raw
+    record or a graph node's props), with model and expected error."""
+    from matgraph.cgcnn.interpret import expected_errors
+    from matgraph.schema import Material as _Material
+
+    errors = expected_errors()
+    units = {"predicted_formation_energy_per_atom": "eV/atom", "predicted_band_gap": "eV", "predicted_efermi": "eV",
+             "predicted_bulk_modulus_vrh": "GPa", "predicted_shear_modulus_vrh": "GPa"}
+    out = []
+    for name in _Material.model_fields:
+        if not name.startswith("predicted_") or values.get(name) is None:
+            continue
+        err = errors.get(name) or {}
+        out.append(PropertyValue(
+            name=name, value=values[name], provenance="predicted", units=units.get(name),
+            model=values.get("prediction_model"), expected_error=err.get("value"),
+            expected_error_units=err.get("units"),
+        ))
+    return out
+
+
 def _properties(raw: dict[str, Any], source: str, material: Material) -> list[PropertyValue]:
     out = []
     for name in ["formula_pretty", "chemsys", "formula_anonymous"]:
@@ -302,19 +407,22 @@ def _properties(raw: dict[str, Any], source: str, material: Material) -> list[Pr
     if raw.get("symmetry"):
         sym = raw["symmetry"]
         out.append(PropertyValue(name="space_group", value=f"{sym['symbol']} (#{sym['number']}, {sym['crystal_system']})",
-                                 provenance="mp"))
+                                 provenance="mp" if source == "mp" else "derived"))
     else:
         out.append(PropertyValue(name="space_group", value=None, provenance="unavailable"))
     for name in REPORTED_PROPERTIES:
         value = getattr(material, name, None)
-        out.append(PropertyValue(name=name, value=value, provenance="mp" if value is not None else "unavailable"))
+        provenance = "unavailable" if value is None else ("derived" if source == "cgcnn" else "mp")
+        out.append(PropertyValue(name=name, value=value, provenance=provenance))
+    if source == "cgcnn":
+        out.extend(predicted_properties(material.__dict__))
     return out
 
 
-def _record_user_material(material_id: str, formula: str, source: str) -> None:
+def _record_user_material(material_id: str, formula: str, source: str, key: str) -> None:
     entries = json.loads(USER_MATERIALS_PATH.read_text()) if USER_MATERIALS_PATH.exists() else []
     if not any(e["material_id"] == material_id for e in entries):
-        entries.append({"material_id": material_id, "formula": formula, "source": source})
+        entries.append({"material_id": material_id, "formula": formula, "source": source, "input": key})
         USER_MATERIALS_PATH.write_text(json.dumps(entries, indent=2))
 
 
@@ -347,6 +455,8 @@ async def ingest_material(
             existing = None
     if existing is not None:
         return relation_report_for_existing(kb, existing, key)
+    if key.startswith("struct-"):
+        raise IngestError(f"{key!r} is not in the graph; add a structure with its CIF/POSCAR file instead")
 
     sources = sources or [MPSource(), CompositionSource()]
     raw, source_name = None, None
@@ -382,6 +492,7 @@ async def ingest_material(
 
     factory = NodeFactory(config, elements_table)
     material = factory.material(raw, origin="user")
+    material.property_source = source_name
     if source_name == "composition":
         material.profile = (
             f"{raw['formula_pretty']} is a composition-only entry with no Materials Project record, "
@@ -389,7 +500,25 @@ async def ingest_material(
             f"Contains {', '.join(elements_table[s]['name'] for s in raw['elements'])}. "
             "Band gap, stability, formation energy, density and all other computed properties are not available."
         )
+    return await relate_and_report(kb, key, raw, source_name, material, factory, config, notes, persist, curated, stats)
 
+
+async def relate_and_report(
+    kb: KnowledgeBase,
+    key: str,
+    raw: dict[str, Any],
+    source_name: str,
+    material: Material,
+    factory: NodeFactory,
+    config: dict[str, Any],
+    notes: list[str],
+    persist: bool,
+    curated: list[dict[str, Any]] | None = None,
+    stats: dict[str, tuple[float, float]] | None = None,
+) -> RelationReport:
+    """Relate a built Material to the graph, report it, and preview or persist it.
+    Shared by every property source (ingest_material, ingest_structure)."""
+    g = kb.graph
     # similar_to: same 10-d cosine, on the frozen build-time scale.
     similar: list[Neighbour] = []
     stubs: list[Material] = []
@@ -414,8 +543,8 @@ async def ingest_material(
             similar.append(Neighbour(material_id=other["material_id"], formula=other["formula_pretty"],
                                      weight=round(weight, 4), kind="similar_to"))
         material.similar_to = edges
-    else:
-        notes.append(f"No similar_to edges: only {dims}/10 similarity dimensions have values "
+    elif source_name != "cgcnn":  # ingest_structure explains its own case
+        notes.append(f"No similar_to edges: only {dims}/10 DFT similarity dimensions have values "
                      f"(needs {MIN_SIMILARITY_DIMENSIONS}); related by composition instead.")
 
     # Compositional neighbours: cosine over element-fraction vectors.
@@ -451,8 +580,7 @@ async def ingest_material(
                     new_nodes.append((str(cs.id), _node_props(cs)))
                 overlay_edges.append((tid, str(cs.id), "crystal_system", {}))
         overlay_edges.append((node_id, tid, rel, props))
-        hop_props = {k: v for k, v in {"rule": (props.get("properties") or {}).get("rule"),
-                                        "weight": props.get("weight")}.items() if v is not None}
+        hop_props = _hop_props(props)
         edges_out.append(Hop(source=node_label({**material_props}), relation=rel,
                              target=node_label(tprops if is_new else g.node[tid]), properties=hop_props))
         if rel != "similar_to":
@@ -460,7 +588,8 @@ async def ingest_material(
                 1 for r, sid, _ in g.in_[tid] if r == rel and g.node[sid].get("type") == "Material"
             )
             shared.append(SharedHub(node=node_label(tprops if is_new else g.node[tid]), relation=rel,
-                                    shared_with=degree, new_node=is_new))
+                                    shared_with=degree, new_node=is_new,
+                                    predicted=hop_props.get("provenance") == "predicted"))
     # Most selective shared hubs first; new nodes last.
     shared.sort(key=lambda h: (h.new_node, h.shared_with == 0, h.shared_with))
 
@@ -478,7 +607,7 @@ async def ingest_material(
         from matgraph.pipeline import add_to_graph
 
         await add_to_graph([material] + stubs)
-        _record_user_material(raw["material_id"], raw["formula_pretty"], source_name)
+        _record_user_material(raw["material_id"], raw["formula_pretty"], source_name, key)
         kb.graph = await load_graph()
         report.persisted = True
         report.node_id = str(material.id)
@@ -499,25 +628,28 @@ def relation_report_for_existing(kb: KnowledgeBase, node_id: str, key: str) -> R
     props = g.node[node_id]
     edges, shared, similar = [], [], []
     for rel, tid, eprops in g.out[node_id]:
-        hop_props = {k: v for k, v in {"rule": (eprops.get("properties") or {}).get("rule"),
-                                        "weight": eprops.get("weight")}.items() if v is not None}
-        edges.append(Hop(source=node_label(props), relation=rel, target=node_label(g.node[tid]), properties=hop_props))
+        edges.append(Hop(source=node_label(props), relation=rel, target=node_label(g.node[tid]),
+                         properties=_hop_props(eprops)))
         if rel == "similar_to":
             similar.append(Neighbour(material_id=g.node[tid]["material_id"], formula=g.node[tid]["formula"],
                                      weight=round(eprops.get("weight") or 0, 4), kind="similar_to"))
         else:
             degree = sum(1 for r, sid, _ in g.in_[tid] if r == rel and g.node[sid].get("type") == "Material") - 1
-            shared.append(SharedHub(node=node_label(g.node[tid]), relation=rel, shared_with=degree))
+            shared.append(SharedHub(node=node_label(g.node[tid]), relation=rel, shared_with=degree,
+                                    predicted=_hop_props(eprops).get("provenance") == "predicted"))
     shared.sort(key=lambda h: (h.shared_with == 0, h.shared_with))
-    raw_like = {k: props.get(k) for k in ("band_gap", "energy_above_hull", "is_metal", "total_magnetization", "ordering")}
+    raw_like = {k: props.get(k) for k in ("band_gap", "energy_above_hull", "is_metal", "total_magnetization", "ordering",
+                                          "predicted_band_gap", "predicted_is_metal", "predicted_metal_probability")}
     raw_like["elements"] = [p["symbol"] for _, p in g.targets(node_id, "contains")]
+    known = "derived" if props.get("property_source") == "cgcnn" else "mp"
+    has_rule_inputs = raw_like["band_gap"] is not None or raw_like["predicted_band_gap"] is not None
     return RelationReport(
         input=key, source="graph", material_id=props["material_id"], formula=props["formula"], node_id=node_id,
         already_in_graph=True,
-        properties=[PropertyValue(name=n, value=props.get(n), provenance="mp" if props.get(n) is not None else "unavailable")
-                    for n in REPORTED_PROPERTIES],
+        properties=[PropertyValue(name=n, value=props.get(n), provenance=known if props.get(n) is not None else "unavailable")
+                    for n in REPORTED_PROPERTIES] + predicted_properties(props),
         edges=edges, shared_hubs=shared, similar_materials=similar,
-        rules=evaluate_rules(raw_like, load_config()) if raw_like["band_gap"] is not None else [],
+        rules=evaluate_rules(raw_like, load_config()) if has_rule_inputs else [],
         notes=[f"{props['formula']} ({props['material_id']}) is already in the graph; showing its existing relations."],
     )
 
@@ -527,7 +659,8 @@ def relation_report_for_existing(kb: KnowledgeBase, node_id: str, key: str) -> R
 _PROVENANCE_SOURCE = {
     "mp": "Materials Project summary",
     "derived": "derived from the formula (pymatgen Composition)",
-    "guessed": "guessed from the formula (pymatgen oxi_state_guesses; not Materials Project data)",
+    "guessed": "guessed from the formula or structure (pymatgen; not Materials Project data)",
+    "predicted": "CGCNN prediction (pre-trained txie-93/cgcnn model; not a DFT value)",
 }
 
 
@@ -546,14 +679,23 @@ def relation_evidence(report: RelationReport):
         if p.provenance == "unavailable" or p.value is None:
             continue
         value = p.value if not isinstance(p.value, float) else round(p.value, 4)
-        add("property", f"{f} {p.name} = {value}.", _PROVENANCE_SOURCE[p.provenance], mid, f,
-            **({p.name: p.value} if isinstance(p.value, (int, float)) and not isinstance(p.value, bool) else {}))
+        numeric = {p.name: p.value} if isinstance(p.value, (int, float)) and not isinstance(p.value, bool) else {}
+        if p.provenance == "predicted":
+            error = "" if p.expected_error is None else (
+                f"; expected error ±{p.expected_error:.3g} {p.expected_error_units or ''}".rstrip())
+            add("property", f"{f} {p.name} ≈ {value}{(' ' + p.units) if p.units else ''} (predicted by {p.model}{error}).",
+                _PROVENANCE_SOURCE["predicted"], mid, f, **numeric)
+            continue
+        add("property", f"{f} {p.name} = {value}.", _PROVENANCE_SOURCE[p.provenance], mid, f, **numeric)
     missing = [p.name for p in report.properties if p.provenance == "unavailable"]
     if missing:
-        add("missing", f"{f}: NOT AVAILABLE: {', '.join(missing)}.", "no Materials Project value", mid, f, missing=missing)
+        add("missing", f"{f}: NOT AVAILABLE: {', '.join(missing)}.", "no Materials Project (DFT) value", mid, f,
+            missing=missing)
     for hub in report.shared_hubs:
         status = "a new node in the graph" if hub.new_node else f"shared with {hub.shared_with} existing materials"
-        add("edge", f"{f} -{hub.relation}-> {hub.node} ({status}).", f"graph edge {hub.relation}", mid, f,
+        basis = ", based on a CGCNN prediction" if hub.predicted else ""
+        add("edge", f"{f} -{hub.relation}-> {hub.node} ({status}{basis}).",
+            f"graph edge {hub.relation}" + (" (predicted)" if hub.predicted else ""), mid, f,
             shared_with=hub.shared_with)
     for n in report.similar_materials:
         add("similarity", f"{f} -similar_to-> {n.formula} ({n.material_id}) weight {n.weight}.",
@@ -563,7 +705,7 @@ def relation_evidence(report: RelationReport):
             "composition similarity", n.material_id, n.formula, weight=n.weight)
     for r in report.rules:
         add("edge", f"{f} rule {r.domain}: {r.status}" + (f" ({r.reason})" if r.reason else "") + f' - "{r.rule}".',
-            "application-domain rule evaluation", mid, f)
+            "application-domain rule evaluation" + (" on CGCNN predictions" if r.predicted else ""), mid, f)
     related = list(dict.fromkeys([n.material_id for n in report.similar_materials + report.compositional_neighbours]))
     return EvidenceBundle(facts=facts, material_ids=related)
 
@@ -599,6 +741,18 @@ async def replay_user_materials(kb: KnowledgeBase) -> list[str]:
         return []
     replayed = []
     for entry in json.loads(USER_MATERIALS_PATH.read_text()):
+        if entry["source"] == "cgcnn":
+            from matgraph.ingest_structure import USER_STRUCTURES_DIR, ingest_structure
+
+            record_file = USER_STRUCTURES_DIR / f"{entry['material_id']}.json"
+            if not record_file.exists():
+                logger.warning("cannot replay %s: %s missing", entry["material_id"], record_file)
+                continue
+            # From the stored predictions, so a rebuild reproduces the node exactly.
+            await ingest_structure(kb, label=entry.get("input") or entry["material_id"], persist=True,
+                                   record=json.loads(record_file.read_text()))
+            replayed.append(entry["formula"])
+            continue
         if entry["source"] == "mp":
             cache_file = DATA_DIR / f"{entry['material_id']}.json"
             if not cache_file.exists():
