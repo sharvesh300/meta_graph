@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MatGraphRAG</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.2/cytoscape.min.js"></script>
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --text: #1d1d1b; --muted: #6b6b66; --border: #e3e2dd;
+    --accent: #3b5bdb; --accent-soft: #e7ecfd; --ok: #2b8a3e; --ok-soft: #e6f4ea; --bad: #c92a2a;
+    --bad-soft: #fdecec; --warn: #a15c07; --warn-soft: #fff4e0; --na: #f1f0ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151514; --panel: #1f1f1d; --text: #ecebe6; --muted: #9b9a93; --border: #34332f;
+      --accent: #8fa6ff; --accent-soft: #232a45; --ok: #69db7c; --ok-soft: #1c2f21; --bad: #ff8787;
+      --bad-soft: #3a1f1f; --warn: #ffc078; --warn-soft: #3a2c16; --na: #2a2a27;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+           padding: 14px 24px; border-bottom: 1px solid var(--border); background: var(--panel); }
+  header h1 { font-size: 17px; margin: 0; letter-spacing: -0.01em; }
+  header h1 span { color: var(--muted); font-weight: 400; }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px 16px 60px; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+  .tab { border: 1px solid var(--border); background: var(--panel); color: var(--text); padding: 7px 14px;
+         border-radius: 8px; cursor: pointer; font: inherit; }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+           margin-bottom: 14px; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+              margin: 0 0 10px; font-weight: 600; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type=text] { flex: 1 1 320px; min-width: 0; padding: 9px 12px; border: 1px solid var(--border);
+                     border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; }
+  input[type=number] { width: 70px; padding: 8px; border: 1px solid var(--border); border-radius: 8px;
+                       background: var(--bg); color: var(--text); font: inherit; }
+  button.primary { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 9px 16px;
+                   cursor: pointer; font: inherit; font-weight: 600; }
+  button.primary:disabled { opacity: 0.55; cursor: progress; }
+  label.check { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
+  .examples { margin-top: 8px; color: var(--muted); font-size: 13px; }
+  .examples a { color: var(--accent); cursor: pointer; margin-right: 10px; text-decoration: none; }
+  .chip { display: inline-block; padding: 2px 9px; border-radius: 999px; background: var(--accent-soft);
+          color: var(--accent); margin: 2px 4px 2px 0; font-size: 12.5px; }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); }
+  .chip.ok { background: var(--ok-soft); color: var(--ok); }
+  .chip.bad { background: var(--bad-soft); color: var(--bad); }
+  .chip.muted { background: var(--na); color: var(--muted); }
+  .notice { background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 8px 12px; margin: 6px 0; }
+  .error { background: var(--bad-soft); color: var(--bad); border-radius: 8px; padding: 8px 12px; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.na { background: var(--na); color: var(--muted); text-align: center; }
+  tr.selectable { cursor: pointer; }
+  tr.selected td { background: var(--accent-soft); }
+  .bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--accent); vertical-align: middle; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 14px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .claim { padding: 5px 0 5px 22px; position: relative; }
+  .claim::before { position: absolute; left: 0; font-weight: 700; }
+  .claim.ok::before { content: "✓"; color: var(--ok); }
+  .claim.bad::before { content: "✗"; color: var(--bad); }
+  .claim .cite { color: var(--accent); font-size: 12px; cursor: help; }
+  .claim .problem { color: var(--bad); font-size: 12px; display: block; }
+  .material-block { margin: 10px 0; }
+  .material-block h3 { margin: 0 0 2px; font-size: 14px; }
+  #graph, #ingestGraph { height: 420px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
+  .muted { color: var(--muted); }
+  .hidden { display: none; }
+  .kv { display: grid; grid-template-columns: max-content 1fr max-content; gap: 3px 14px; font-size: 13px; }
+  .prov { font-size: 11px; padding: 1px 7px; border-radius: 999px; }
+  .prov-mp { background: var(--ok-soft); color: var(--ok); }
+  .prov-derived { background: var(--accent-soft); color: var(--accent); }
+  .prov-guessed { background: var(--warn-soft); color: var(--warn); }
+  .prov-unavailable { background: var(--na); color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>MatGraphRAG <span>· explainable graph retrieval for materials</span></h1>
+  <div id="health" class="chip muted">checking…</div>
+</header>
+<main>
+  <div class="tabs">
+    <button class="tab active" data-tab="ask">Ask</button>
+    <button class="tab" data-tab="add">Add material</button>
+  </div>
+
+  <section id="tab-ask">
+    <div class="panel">
+      <div class="row">
+        <input type="text" id="question" placeholder="e.g. stable cobalt-free Li cathodes with band gap above 2 eV">
+        <label class="check"><input type="checkbox" id="useLlm" checked> LLM</label>
+        <label class="check">top <input type="number" id="topK" value="10" min="1" max="50"></label>
+        <button class="primary" id="askBtn">Ask</button>
+      </div>
+      <div class="examples">Try:
+        <a data-q="stable cobalt-free Li cathode materials with a band gap above 2 eV">Co-free cathodes</a>
+        <a data-q="materials similar to LiFePO4 but based on manganese">like LiFePO4, Mn-based</a>
+        <a data-q="hexagonal nitrides with a direct band gap">hexagonal nitrides</a>
+        <a data-q="oxides with bulk modulus above 150 GPa and band gap above 3 eV">stiff wide-gap oxides</a>
+      </div>
+    </div>
+    <div id="askOut"></div>
+  </section>
+
+  <section id="tab-add" class="hidden">
+    <div class="panel">
+      <div class="row">
+        <input type="text" id="material" placeholder="Materials Project id (mp-…) or formula, e.g. LaAlO3">
+        <label class="check"><input type="checkbox" id="explain"> explain</label>
+        <label class="check"><input type="checkbox" id="persist"> save to graph</label>
+        <button class="primary" id="addBtn">Relate</button>
+      </div>
+      <div class="examples">Crystal structure (CIF) input goes to the CGCNN model in Phase 3; here: ids and formulas.
+        Try: <a data-m="LaAlO3">LaAlO3</a><a data-m="MgAl2O4">MgAl2O4</a><a data-m="La2Zr2O7">La2Zr2O7</a></div>
+    </div>
+    <div id="addOut"></div>
+  </section>
+</main>
+
+<script>
+const $ = (sel) => document.querySelector(sel);
+// API base: same origin when served by scripts/serve.py; when the file is opened
+// directly (file://, or an embedded preview) relative URLs like "/query" can't
+// resolve, so fall back to the local server. Override with ?api=http://host:port
+const API = (() => {
+  const override = new URLSearchParams(location.search).get("api");
+  if (override) return override.replace(/\/$/, "");
+  return location.protocol.startsWith("http") ? "" : "http://127.0.0.1:8000";
+})();
+const api = (path) => API + path;
+const SERVER_HINT = "Can't reach the MatGraphRAG API at " + (API || location.origin) +
+  ". Start it with: uv run python scripts/serve.py  — then open http://127.0.0.1:8000";
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const fmt = (v) => v === null || v === undefined ? null : (typeof v === "number" ? (Math.abs(v) >= 100 ? v.toFixed(1) : +v.toFixed(3)) : v);
+
+document.querySelectorAll(".tab").forEach((t) => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("active", x === t));
+  $("#tab-ask").classList.toggle("hidden", t.dataset.tab !== "ask");
+  $("#tab-add").classList.toggle("hidden", t.dataset.tab !== "add");
+});
+document.querySelectorAll("[data-q]").forEach((a) => a.onclick = () => { $("#question").value = a.dataset.q; ask(); });
+document.querySelectorAll("[data-m]").forEach((a) => a.onclick = () => { $("#material").value = a.dataset.m; relate(); });
+$("#askBtn").onclick = ask;
+$("#addBtn").onclick = relate;
+$("#question").addEventListener("keydown", (e) => e.key === "Enter" && ask());
+$("#material").addEventListener("keydown", (e) => e.key === "Enter" && relate());
+
+async function post(url, body) {
+  let r;
+  try {
+    r = await fetch(api(url), {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  } catch (e) {
+    throw new Error(SERVER_HINT);
+  }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail ? (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail)) : r.statusText);
+  return data;
+}
+
+fetch(api("/health")).then((r) => r.json()).then((h) => {
+  const el = $("#health");
+  el.className = "chip " + (h.status === "ok" ? "ok" : "warn");
+  el.textContent = `${h.materials ?? "?"} materials · ${h.llm_configured ? "LLM on" : "no LLM"}` + (h.status === "ok" ? "" : " · degraded");
+}).catch(() => {
+  $("#health").className = "chip bad";
+  $("#health").textContent = "API offline";
+  $("#askOut").innerHTML = `<div class="error">${esc(SERVER_HINT)}</div>`;
+});
+
+/* ---------------- Ask ---------------- */
+let lastAnswer = null;
+
+async function ask() {
+  const question = $("#question").value.trim();
+  if (!question) return;
+  const btn = $("#askBtn"); btn.disabled = true; btn.textContent = "Thinking…";
+  $("#askOut").innerHTML = `<div class="panel muted">Parsing, traversing the graph${$("#useLlm").checked ? ", and asking the LLM (free tier can take ~30 s)" : ""}…</div>`;
+  try {
+    lastAnswer = await post("/query", {question, use_llm: $("#useLlm").checked, top_k: +$("#topK").value || null});
+    renderAnswer(lastAnswer);
+  } catch (e) {
+    $("#askOut").innerHTML = `<div class="error">${esc(e.message)}</div>`;
+  } finally { btn.disabled = false; btn.textContent = "Ask"; }
+}
+
+function constraintChips(c) {
+  const chips = [];
+  (c.application_domains || []).forEach((d) => chips.push(`domain: ${d}`));
+  (c.property_ranges || []).forEach((r) => chips.push(`${r.property} ${r.min != null ? "≥ " + r.min : ""}${r.min != null && r.max != null ? " and " : ""}${r.max != null ? "≤ " + r.max : ""}`));
+  (c.property_classes || []).forEach((p) => chips.push(`${p.kind}: ${p.name}`));
+  (c.boolean_flags || []).forEach((b) => chips.push(`${b.flag} = ${b.value}`));
+  (c.include_elements || []).forEach((e) => chips.push(`contains ${e}`));
+  (c.exclude_elements || []).forEach((e) => chips.push(`no ${e}`));
+  (c.crystal_systems || []).forEach((s) => chips.push(`crystal: ${s}`));
+  (c.space_groups || []).forEach((s) => chips.push(`space group ${s}`));
+  (c.formula_patterns || []).forEach((s) => chips.push(`pattern ${s}`));
+  (c.oxidation_states || []).forEach((s) => chips.push(`ion ${s}`));
+  (c.anchor_materials || []).forEach((s) => chips.push(`similar to ${s}`));
+  if (c.sort_by) chips.push(`sort ${c.sort_by} ${c.sort_descending ? "↓" : "↑"}`);
+  return chips.map((x) => `<span class="chip">${esc(x)}</span>`).join("") || `<span class="muted">none (semantic search only)</span>`;
+}
+
+function renderAnswer(a) {
+  const p = a.parsed, r = a.retrieval, g = a.grounding;
+  const evidence = Object.fromEntries(a.evidence.facts.map((f) => [f.id, f]));
+  const claimChecks = new Map(g.claims.map((c) => [c.section + "|" + c.text, c]));
+  const claimHtml = (claim, section) => {
+    const chk = claimChecks.get(section + "|" + claim.text);
+    const ok = chk ? chk.grounded : false;
+    const cites = claim.evidence_ids.map((id) => `<span class="cite" title="${esc(evidence[id] ? evidence[id].text + "  — " + evidence[id].source : "unknown evidence id")}">[${esc(id)}]</span>`).join(" ");
+    const problem = !ok && chk ? `<span class="problem">${esc(chk.problems.join("; "))}</span>` : "";
+    return `<div class="claim ${ok ? "ok" : "bad"}">${esc(claim.text)} ${cites}${problem}</div>`;
+  };
+  const cols = a.comparison.length ? Object.keys(a.comparison[0]).filter((k) => !["material_id", "formula", "score"].includes(k)) : [];
+  const e = a.explanation;
+
+  $("#askOut").innerHTML = `
+    <div class="panel">
+      <h2>Understood as</h2>
+      <div>${constraintChips(p.constraints)}</div>
+      <div class="muted" style="margin-top:6px">parser: ${esc(p.parser)}${p.parser_model ? " · " + esc(p.parser_model) : ""}
+        · ${r.total_matching} of ${r.pool_size} reached materials satisfy every constraint
+        ${Object.entries(r.excluded_missing_data).map(([k, v]) => `· <span class="chip warn">${v} excluded: no ${esc(k)} data</span>`).join("")}
+        · ${Object.entries(a.timings_ms).map(([k, v]) => `${esc(k)} ${v} ms`).join(", ")}</div>
+      ${p.ignored_constraints.map((i) => `<div class="notice">Ignored ${esc(i.field)} “${esc(i.value)}”: ${esc(i.reason)}</div>`).join("")}
+      ${a.notices.map((n) => `<div class="notice">${esc(n)}</div>`).join("")}
+    </div>
+    <div class="grid">
+      <div class="panel">
+        <h2>Candidates</h2>
+        ${r.candidates.length ? `<div class="table-wrap"><table>
+          <tr><th>#</th><th>Formula</th><th>MP id</th><th>Score</th><th>Components</th></tr>
+          ${r.candidates.map((c, i) => `<tr class="selectable" data-i="${i}">
+            <td>${i + 1}</td><td><b>${esc(c.formula)}</b>${c.missing_properties.length ? ` <span class="chip warn">missing ${esc(c.missing_properties.join(", "))}</span>` : ""}</td>
+            <td class="muted">${esc(c.material_id)}</td>
+            <td class="num"><span class="bar" style="width:${Math.round(c.score * 60)}px"></span> ${c.score.toFixed(3)}</td>
+            <td class="muted">${Object.entries(c.score_components).map(([k, v]) => `${esc(k)} ${v.toFixed(2)}`).join(" · ")}</td></tr>`).join("")}
+        </table></div>` : `<div class="muted">No material satisfies every constraint.</div>`}
+      </div>
+      <div class="panel">
+        <h2>Evidence path <span id="pathFor" class="muted" style="text-transform:none"></span></h2>
+        <div id="graph"></div>
+      </div>
+    </div>
+    ${a.comparison.length ? `<div class="panel"><h2>Property comparison <span class="muted" style="text-transform:none">(grey = not available in Materials Project)</span></h2>
+      <div class="table-wrap"><table><tr><th>Formula</th>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr>
+      ${a.comparison.map((row) => `<tr><td><b>${esc(row.formula)}</b></td>${cols.map((c) => row[c] === null || row[c] === undefined ? `<td class="na">n/a</td>` : `<td class="num">${esc(fmt(row[c]))}</td>`).join("")}</tr>`).join("")}
+      </table></div></div>` : ""}
+    <div class="panel">
+      <h2>Explanation <span class="chip ${g.traceability >= 0.95 ? "ok" : "warn"}" style="text-transform:none">${g.grounded_claims}/${g.total_claims} claims grounded (${Math.round(g.traceability * 100)}%)</span>
+        <span class="muted" style="text-transform:none">· ${esc(a.generator)}${a.generator_model ? " · " + esc(a.generator_model) : ""}</span></h2>
+      ${e.summary.map((c) => claimHtml(c, "summary")).join("")}
+      ${e.recommendations.map((rec) => `<div class="material-block"><h3>${esc(rec.formula)} <span class="muted">${esc(rec.material_id)}</span></h3>
+        ${rec.claims.map((c) => claimHtml(c, "recommendation:" + rec.material_id)).join("")}</div>`).join("")}
+      ${e.caveats.length ? `<div class="material-block"><h3>Caveats</h3>${e.caveats.map((c) => claimHtml(c, "caveat")).join("")}</div>` : ""}
+    </div>`;
+  document.querySelectorAll("tr.selectable").forEach((tr) => tr.onclick = () => selectCandidate(+tr.dataset.i));
+  if (r.candidates.length) selectCandidate(0);
+}
+
+function nodeKind(label) { return label.split(":")[0]; }
+const KIND_COLORS = {Material: "#3b5bdb", Element: "#2b8a3e", ApplicationDomain: "#c2255c", PropertyClass: "#e67700",
+  SpaceGroup: "#7048e8", CrystalSystem: "#5f3dc4", OxidationState: "#0c8599", FormulaPattern: "#862e9c", ChemicalSystem: "#5c940d"};
+
+function drawGraph(containerId, hops, focus) {
+  const nodes = new Map(), edges = [];
+  hops.forEach((h, i) => {
+    [h.source, h.target].forEach((n) => nodes.set(n, {data: {id: n, label: n.replace(/^[A-Za-z]+:/, ""), kind: nodeKind(n), focus: n === focus}}));
+    const extra = h.properties && h.properties.weight != null ? ` ${(+h.properties.weight).toFixed(2)}` : "";
+    edges.push({data: {id: "e" + i, source: h.source, target: h.target, label: h.relation + extra, rule: h.properties && h.properties.rule || ""}});
+  });
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  cytoscape({
+    container: document.getElementById(containerId),
+    elements: [...nodes.values(), ...edges],
+    layout: {name: "cose", animate: false, padding: 24, nodeRepulsion: 9000, idealEdgeLength: 110},
+    style: [
+      {selector: "node", style: {"label": "data(label)", "font-size": 10, "color": dark ? "#ecebe6" : "#1d1d1b",
+        "background-color": (n) => KIND_COLORS[n.data("kind")] || "#868e96", "width": 16, "height": 16,
+        "text-valign": "bottom", "text-margin-y": 4, "text-wrap": "ellipsis", "text-max-width": 140}},
+      {selector: "node[?focus]", style: {"width": 26, "height": 26, "border-width": 3, "border-color": "#fab005"}},
+      {selector: "edge", style: {"label": "data(label)", "font-size": 8, "color": dark ? "#9b9a93" : "#6b6b66",
+        "curve-style": "bezier", "target-arrow-shape": "triangle", "width": 1.4,
+        "line-color": dark ? "#4a4944" : "#c9c8c1", "target-arrow-color": dark ? "#4a4944" : "#c9c8c1",
+        "text-rotation": "autorotate", "text-background-color": dark ? "#151514" : "#f7f7f5", "text-background-opacity": 0.8}},
+    ],
+  });
+}
+
+function selectCandidate(i) {
+  const c = lastAnswer.retrieval.candidates[i];
+  document.querySelectorAll("tr.selectable").forEach((tr) => tr.classList.toggle("selected", +tr.dataset.i === i));
+  const hops = [];
+  c.checks.forEach((ch) => ch.path.forEach((h) => hops.push(h)));
+  c.anchor_links.forEach((l) => l.similar_to.forEach((h) => hops.push(h)));
+  const focus = `Material:${c.formula} (${c.material_id})`;
+  if (!hops.length) hops.push({source: focus, target: focus, relation: "(attribute constraints only)", properties: {}});
+  $("#pathFor").textContent = "· " + c.formula;
+  drawGraph("graph", hops, focus);
+}
+
+/* ---------------- Add material ---------------- */
+async function relate() {
+  const key = $("#material").value.trim();
+  if (!key) return;
+  const btn = $("#addBtn"); btn.disabled = true; btn.textContent = "Relating…";
+  $("#addOut").innerHTML = `<div class="panel muted">Looking up ${esc(key)} and relating it to the graph…</div>`;
+  const body = {persist: $("#persist").checked, explain: $("#explain").checked, use_llm: true};
+  if (/^(mp|mvc)-/.test(key)) body.material_id = key; else body.formula = key;
+  try {
+    renderReport(await post("/materials/ingest", body));
+  } catch (e) {
+    $("#addOut").innerHTML = `<div class="error">${esc(e.message)}</div>`;
+  } finally { btn.disabled = false; btn.textContent = "Relate"; }
+}
+
+function renderReport(resp) {
+  const r = resp.report;
+  const status = r.already_in_graph ? "already in graph" : (r.persisted ? "saved to graph" : "preview (not saved)");
+  const props = r.properties.filter((p) => p.value !== null && p.value !== undefined);
+  const unavailable = r.properties.filter((p) => p.provenance === "unavailable").map((p) => p.name);
+  const neighbours = (list, title) => list.length ? `<h2 style="margin-top:12px">${title}</h2><div class="table-wrap"><table>
+      ${list.map((n) => `<tr><td><b>${esc(n.formula)}</b></td><td class="muted">${esc(n.material_id)}</td><td class="num">${n.weight.toFixed(3)}</td></tr>`).join("")}</table></div>` : "";
+  let explanationHtml = "";
+  if (resp.explanation) {
+    const g = resp.grounding;
+    const checks = new Map(g.claims.map((c) => [c.section + "|" + c.text, c]));
+    const line = (c, s) => { const k = checks.get(s + "|" + c.text); return `<div class="claim ${k && k.grounded ? "ok" : "bad"}">${esc(c.text)} <span class="cite">[${esc(c.evidence_ids.join(", "))}]</span>${k && !k.grounded ? `<span class="problem">${esc(k.problems.join("; "))}</span>` : ""}</div>`; };
+    const e = resp.explanation;
+    explanationHtml = `<div class="panel"><h2>Explanation <span class="chip ${g.traceability >= 0.95 ? "ok" : "warn"}" style="text-transform:none">${g.grounded_claims}/${g.total_claims} grounded</span> <span class="muted" style="text-transform:none">· ${esc(resp.generator)}</span></h2>
+      ${e.summary.map((c) => line(c, "summary")).join("")}
+      ${e.recommendations.map((rec) => `<div class="material-block"><h3>${esc(rec.formula)}</h3>${rec.claims.map((c) => line(c, "recommendation:" + rec.material_id)).join("")}</div>`).join("")}
+      ${e.caveats.map((c) => line(c, "caveat")).join("")}</div>`;
+  }
+  $("#addOut").innerHTML = `
+    <div class="panel">
+      <h2>${esc(r.formula)} <span class="muted" style="text-transform:none">${esc(r.material_id)} · source: ${esc(r.source)} · ${status}</span></h2>
+      ${r.notes.map((n) => `<div class="notice">${esc(n)}</div>`).join("")}
+    </div>
+    <div class="grid">
+      <div class="panel">
+        <h2>Properties</h2>
+        <div class="kv">${props.map((p) => `<div>${esc(p.name)}</div><div>${esc(typeof p.value === "object" ? JSON.stringify(p.value) : fmt(p.value))}</div><div><span class="prov prov-${esc(p.provenance)}">${esc(p.provenance)}</span></div>`).join("")}</div>
+        ${unavailable.length ? `<p class="muted">Not available: ${esc(unavailable.join(", "))}</p>` : ""}
+        <h2 style="margin-top:12px">Application rules</h2>
+        ${r.rules.map((x) => `<div><span class="chip ${x.status === "fired" ? "ok" : x.status === "cannot_evaluate" ? "warn" : "muted"}">${esc(x.status.replace("_", " "))}</span> ${esc(x.domain)} <span class="muted">${esc(x.reason)}</span></div>`).join("")}
+      </div>
+      <div class="panel">
+        <h2>How it connects</h2>
+        <div id="ingestGraph"></div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="panel">
+        <h2>Shared graph nodes <span class="muted" style="text-transform:none">(most selective first)</span></h2>
+        <div class="table-wrap"><table><tr><th>Relation</th><th>Node</th><th>Shared with</th></tr>
+        ${r.shared_hubs.map((h) => `<tr><td class="muted">${esc(h.relation)}</td><td>${esc(h.node)}</td><td>${h.new_node ? `<span class="chip warn">new node</span>` : h.shared_with + " materials"}</td></tr>`).join("")}
+        </table></div>
+      </div>
+      <div class="panel">
+        ${neighbours(r.similar_materials, "similar_to (property cosine)")}
+        ${neighbours(r.compositional_neighbours, "Compositional neighbours")}
+      </div>
+    </div>
+    ${explanationHtml}`;
+  const focus = `Material:${r.formula} (${r.material_id})`;
+  const hops = r.edges.filter((h) => h.relation !== "similar_to").map((h) => ({...h, source: focus}));
+  r.similar_materials.forEach((n) => hops.push({source: focus, target: `Material:${n.formula} (${n.material_id})`, relation: "similar_to", properties: {weight: n.weight}}));
+  drawGraph("ingestGraph", hops, focus);
+}
+</script>
+</body>
+</html>
