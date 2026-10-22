@@ -1,0 +1,95 @@
+{
+  "predictions": {
+    "1000041": {
+      "band-gap": 4.774056434631348,
+      "bulk-moduli": 1.3808047771453857,
+      "efermi": -0.6838362216949463,
+      "formation-energy-per-atom": -2.1132540702819824,
+      "poisson-ratio": 0.3124755322933197,
+      "semi-metal-classification": 4.423649443197064e-06,
+      "shear-moduli": 0.9817742109298706
+    },
+    "1000050": {
+      "band-gap": 4.381992816925049,
+      "bulk-moduli": 1.2745447158813477,
+      "efermi": 0.3648555278778076,
+      "formation-energy-per-atom": -2.1395480632781982,
+      "poisson-ratio": 0.2615654766559601,
+      "semi-metal-classification": 1.8172563898133376e-08,
+      "shear-moduli": 0.9499564170837402
+    },
+    "1101051": {
+      "band-gap": 2.0292701721191406,
+      "bulk-moduli": 1.8490923643112183,
+      "efermi": 1.934661626815796,
+      "formation-energy-per-atom": -1.1313966512680054,
+      "poisson-ratio": 0.2827703058719635,
+      "semi-metal-classification": 0.01579952798783779,
+      "shear-moduli": 1.5264105796813965
+    },
+    "1507756": {
+      "band-gap": 1.9109772443771362,
+      "bulk-moduli": 2.078078508377075,
+      "efermi": 2.8407540321350098,
+      "formation-energy-per-atom": -3.5268213748931885,
+      "poisson-ratio": 0.2498898208141327,
+      "semi-metal-classification": 0.02798972651362419,
+      "shear-moduli": 1.894673466682434
+    },
+    "7206075": {
+      "band-gap": 2.689206600189209,
+      "bulk-moduli": 2.245962381362915,
+      "efermi": 2.2209701538085938,
+      "formation-energy-per-atom": -3.380303382873535,
+      "poisson-ratio": 0.3440283536911011,
+      "semi-metal-classification": 0.21180114150047302,
+      "shear-moduli": 1.6966915130615234
+    },
+    "9000046": {
+      "band-gap": 1.781317949295044,
+      "bulk-moduli": 2.083164691925049,
+      "efermi": 0.18501806259155273,
+      "formation-energy-per-atom": 0.005215644836425781,
+      "poisson-ratio": 0.2059626579284668,
+      "semi-metal-classification": 0.7432069778442383,
+      "shear-moduli": 1.9969762563705444
+    },
+    "9009743": {
+      "band-gap": 4.981689453125,
+      "bulk-moduli": 1.201047658920288,
+      "efermi": -0.5166003704071045,
+      "formation-energy-per-atom": -2.2411956787109375,
+      "poisson-ratio": 0.28165751695632935,
+      "semi-metal-classification": 3.817409943707162e-09,
+      "shear-moduli": 0.7690802216529846
+    },
+    "9011050": {
+      "band-gap": 1.5325589179992676,
+      "bulk-moduli": 1.6138992309570312,
+      "efermi": 2.6271395683288574,
+      "formation-energy-per-atom": 0.01811051368713379,
+      "poisson-ratio": 0.2306276112794876,
+      "semi-metal-classification": 0.6765005588531494,
+      "shear-moduli": 1.468144178390503
+    },
+    "9011998": {
+      "band-gap": 0.9553936719894409,
+      "bulk-moduli": 1.9132097959518433,
+      "efermi": 4.236880779266357,
+      "formation-energy-per-atom": 0.09059560298919678,
+      "poisson-ratio": 0.2522144019603729,
+      "semi-metal-classification": 0.33046066761016846,
+      "shear-moduli": 1.7246463298797607
+    },
+    "9012304": {
+      "band-gap": 2.0028772354125977,
+      "bulk-moduli": 2.195671796798706,
+      "efermi": 9.206644058227539,
+      "formation-energy-per-atom": 0.4017457962036133,
+      "poisson-ratio": 0.22947409749031067,
+      "semi-metal-classification": 0.9351831674575806,
+      "shear-moduli": 2.2025365829467773
+    }
+  },
+  "source_commit": "f42ab233c4ee0c416879d6bc2d22a264418413ad"
+}
