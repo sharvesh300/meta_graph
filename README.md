@@ -3,7 +3,7 @@
 **An Explainable Graph-Based Retrieval-Augmented Reasoning System for Intelligent Materials Discovery**
 
 > Project report: Phase 1 (knowledge graph construction) and Phase 2 (GraphRAG retrieval and recommendation)
-> Status: **Phase 1 complete** · **Phase 2 complete** · Phase 3 (CGCNN structural embeddings) not yet started
+> Status: **Phase 1 complete** · **Phase 2 complete** · Phase 3 (CGCNN inference) in progress: M0 done, see `docs/PHASE3_PLAN.md`
 
 ---
 
@@ -63,7 +63,7 @@ as the graph/vector storage and pipeline layer.
 |---|---|---|
 | **Phase 1** | Knowledge graph construction from Materials Project data | ✅ Complete |
 | **Phase 2** | GraphRAG retrieval + LLM-generated, evidence-backed recommendations | ✅ Complete |
-| Phase 3 | CGCNN crystal-structure embeddings, structural similarity search, element substitution | Not started |
+| Phase 3 | CGCNN inference with the txie-93 pre-trained models, structure ingestion, structural similarity, element substitution | In progress (M0: inference module, parity-tested) |
 
 Phase 1 deliverable, as built and verified: a graph of **794 materials**
 spanning **46 elements**, **106 space groups**, **143 chemical systems**,

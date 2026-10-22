@@ -1,6 +1,6 @@
 # MatGraphRAG — Phase 3 Plan: CGCNN Inference and Structure Ingestion
 
-> **Status (2026-10-22): plan revised, nothing implemented.** The reference
+> **Status (2026-10-22): M0 done (see §8.1 for results); M1 next.** The reference
 > is [`txie-93/cgcnn`](https://github.com/txie-93/cgcnn) at commit `f42ab23`
 > (MIT). Scope is **inference** with its published pre-trained models, wired
 > into the existing Phase 2 ingestion feature. Training our own CGCNN is no
@@ -149,12 +149,13 @@ Things the code and checkpoints imply, which M1 has to verify:
 | `sklearn` dependency | Not needed, because we don't compute metrics at inference time. |
 
 Dependencies: **only `torch`**, in a new `[ml]` optional extra. pymatgen and
-numpy are already installed. Inference on ≤200 sites should take well under
-a second on CPU (measured in M0), so MPS is not needed. The weights come from
-`scripts/fetch_cgcnn_weights.py`: it downloads the 8 checkpoints pinned to
+numpy are already installed. Inference runs on CPU and is fast enough that
+MPS is not needed: 62 ms for the largest graph structure (198 sites), as
+measured in M0. The weights come from
+`scripts/fetch_cgcnn_weights.py`: it downloads the 7 used checkpoints pinned to
 commit `f42ab23`, checks their sha256, converts them, and writes them to
 `models/cgcnn/txie93-f42ab23/` (gitignored, so the weights are build
-artifacts as the PRD asks). Committing the converted 5.6 MB instead is a
+artifacts as the PRD asks). Committing the converted 2.8 MB instead is a
 §9 decision.
 
 ## 3. Inference module
@@ -355,6 +356,37 @@ has DFT values to compare against.
 | **M5** | (PRD Phase 3 continuation) Crystal embedding: the 64-d pooled vector from the formation-energy model, on a `Structure` node. Add `structurally_similar` edges and `/similar-structures`, plus the CrystalNN site-fingerprint baseline. | Tier-4 nDCG for embedding vs fingerprint vs the current 0.517, reported honestly. |
 | **M6** | (Optional) Retrain on the current MP snapshot with the reference `main.py` recipe, to remove the 2017 drift. Gate on Matbench `mp_e_form` (published CGCNN 0.0337 eV/atom). Then Hautier substitution, `substitutable_with` and `/similar-elements` (PRD). | Done only if M1 shows the drift matters. |
 
+### 8.1 M0 results (2026-10-22)
+
+- **Code and data added:**
+  - `[ml]` extra with `torch>=2.14.1`
+  - `src/matgraph/cgcnn/`: `registry.py` (pinned commit, sha256 per
+    checkpoint), the vendored `model.py`, `featurize.py`, `predictor.py`, and
+    `atom_init.json`
+  - `scripts/fetch_cgcnn_weights.py`
+  - `scripts/make_cgcnn_reference_fixture.py`
+  - `tests/test_cgcnn.py`, with the 10 reference sample CIFs and their
+    reference outputs as fixtures
+- **Weights.** All 7 checkpoints downloaded at `f42ab23` and matched their
+  pinned sha256. They are converted to plain `state_dict` files plus
+  `meta.json`, 2.8 MB in total because there is no optimizer state. Six of
+  them load with `weights_only=True` as they are. The classifier also needs
+  an allowlist for `numpy.core.multiarray.scalar`, the NumPy 1.x name in its
+  pickle.
+- **Parity.** On the reference repo's 10 sample CIFs, our featuriser and
+  predictor match the reference `CIFData` + `collate_pool` +
+  `CrystalGraphConvNet` with the original checkpoints. The largest absolute
+  difference across all 7 models is **4.8e-7**.
+- **Invariance.** Predictions and the 64-d pooled embedding are unchanged
+  within 1e-4 for a supercell, permuted sites, a rotated cell, and the
+  primitive and conventional settings. We checked this on NaCl and on COD
+  1000041. A random-init model already separates structures by about 0.03,
+  far above that tolerance, so the tests do discriminate.
+- **Speed on the 795 graph structures (CPU).** Featurising takes 8.8 s and
+  running all 7 models takes 1.8 s. No structure needed neighbour padding.
+- **Test suite.** 59 tests pass, with no network calls. The parity tests
+  skip when the weights have not been fetched.
+
 M0–M4 is the requested feature: complete CGCNN inference wired into the
 existing ingestion and the existing nodes.
 
@@ -376,7 +408,7 @@ Changed by this revision:
 
 Still open:
 1. **Weights in git?** The default is gitignored, with a fetch script and
-   sha256 pins. The alternative is to commit the 5.6 MB of converted weights
+   sha256 pins. The alternative is to commit the 2.8 MB of converted weights
    so the repo works offline from a clone.
 2. **Gap-filling scope.** The default is all 7 models on every node. The
    alternative is elastic and Poisson only, where DFT coverage is 18%.
