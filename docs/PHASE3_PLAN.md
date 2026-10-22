@@ -1,6 +1,6 @@
 # MatGraphRAG — Phase 3 Plan: CGCNN Inference and Structure Ingestion
 
-> **Status (2026-10-22): M0 and M1 done (results in §8.1–8.2); M2 next.** The reference
+> **Status (2026-10-22): M0–M2 done (results in §8.1–8.3); M3 next.** The reference
 > is [`txie-93/cgcnn`](https://github.com/txie-93/cgcnn) at commit `f42ab23`
 > (MIT). Scope is **inference** with its published pre-trained models, wired
 > into the existing Phase 2 ingestion feature. Training our own CGCNN is no
@@ -259,7 +259,8 @@ overlay preview, `--persist`, `_user_materials.json` replay, and
 
 1. **Parse with safety limits** (`validate.py`). Reject the input when any
    of these hold:
-   - the file is over 1 MB, or the parse takes more than 10 s
+   - the file is over 1 MB (with the site cap, this bounds parse time, so
+     there is no separate timeout)
    - it has more than 200 sites (the graph's max is 198)
    - it has partial occupancy, which CGCNN needs ordered sites for
    - an element is outside `atom_init.json` or in `exclude_elements`
@@ -305,11 +306,12 @@ overlay preview, `--persist`, `_user_materials.json` replay, and
    DFT dimensions, so structure nodes get none. This keeps the accepted
    decision: the structural relation comes from `structurally_similar` in
    M5.
-8. **Persist.** Save to `data/user_structures/<material_id>.json`: the
+8. **Persist.** Save to `data/raw/user_structures/<material_id>.json`: the
    structure, the predictions and the `prediction_model`. Add an entry to
    `_user_materials.json` with `source: "cgcnn"`. `build_graph.py` replays
-   from the stored predictions, so a rebuild is deterministic.
-   `add_material.py --repredict` refreshes them after a weights change.
+   from the stored predictions, so a rebuild is deterministic. A
+   `--repredict` option to refresh them after a weights change is not built
+   yet; it is only needed once a second model set exists.
 
 **Interfaces**
 
@@ -358,7 +360,7 @@ has DFT values to compare against.
 |---|---|---|
 | **M0** | Add `torch` in an `[ml]` extra. `scripts/fetch_cgcnn_weights.py` handles download, sha256 check and conversion. Vendor `model.py` and write `featurize.py` and `predictor.py`. | **Parity test:** for the repo's 10 `sample-regression` CIFs, our predictor matches the reference `predict.py` (run once against the vendored code) to 1e-5. **Invariance tests:** a supercell, an equivalent setting, permuted sites and a rotated cell all give the same prediction within 1e-4. Everything runs offline once the weights are fetched. |
 | **M1** ✓ | Graph evaluation via `scripts/evaluate_cgcnn.py`. Map the legacy ids to find seen versus unseen materials. | `artifacts/eval/cgcnn_graph_eval.md` reports, per model and per cluster, MAE, bias and seen/unseen splits against the 795 DFT values. The moduli log base and the band-gap gating are settled in `cgcnn/interpret.py`. `artifacts/eval/cgcnn_graph_eval.json → expected_errors` (committed) holds the expected errors that evidence will quote. |
-| **M2** | `CGCNNSource` and structure ingestion (§5), with naming, validation, dedup, persistence and replay. CLI `--structure` and `scripts/predict.py`. | A known MP structure in a different setting dedups onto its MP node and shows prediction vs DFT. A new polymorph creates a `struct-…` node with derived edges, predicted values and predicted classes. A rebuild replays it identically. Tests cover the parse limits, naming and hash stability, and dedup. |
+| **M2** ✓ | `CGCNNSource` and structure ingestion (§5), with naming, validation, dedup, persistence and replay. CLI `--structure` and `scripts/predict.py`. | A known MP structure in a different setting dedups onto its MP node and shows prediction vs DFT. A new polymorph creates a `struct-…` node with derived edges, predicted values and predicted classes. A rebuild replays it identically. Tests cover the parse limits, naming and hash stability, and dedup. |
 | **M3** | API and dashboard: `/predict`, CIF on `/materials/ingest`, `/health`, the upload panel. Retrieval, evidence and grounding integration (§7). | With `include_predicted=false` the benchmark is identical to Phase 2. With true, struct nodes are retrievable, and every predicted claim is hedged and grounded. API tests stay offline. |
 | **M4** | Gap-fill existing nodes (§6). | Every node has `predicted_*` attributes. The README documents coverage of DFT vs predicted per property. |
 | **M5** | (PRD Phase 3 continuation) Crystal embedding: the 64-d pooled vector from the formation-energy model, on a `Structure` node. Add `structurally_similar` edges and `/similar-structures`, plus the CrystalNN site-fingerprint baseline. | Tier-4 nDCG for embedding vs fingerprint vs the current 0.517, reported honestly. |
@@ -424,6 +426,64 @@ Full report: [`artifacts/eval/cgcnn_graph_eval.md`](../artifacts/eval/cgcnn_grap
 - **Moduli are log₁₀(GPa).** Read as ln, they would be off by 2.2–2.6.
 - **Speed (CPU).** 795 structures featurise in 9.3 s and run through all 7
   models in 1.8 s.
+
+### 8.3 M2 results (2026-10-22)
+
+**Code**
+
+| File | Contents |
+|---|---|
+| `src/matgraph/cgcnn/validate.py` | Parse limits, checks and `struct-` naming |
+| `src/matgraph/ingest_structure.py` | The CGCNN path: derived record, StructureMatcher dedup, predicted classes and rules, profile, persistence |
+| `src/matgraph/ingest.py` | The relate/report/persist core is factored out as `relate_and_report`. Adds the `predicted` provenance, predicted rule evaluation, provenance on edges, and `cgcnn` replay. |
+| `src/matgraph/schema.py` | `property_source`, `predicted_*` and `prediction_model` on `Material` |
+| `src/matgraph/graph_store.py` | A formula resolves to the MP node before a `struct-` polymorph |
+| `scripts/add_material.py --structure` | Structure input |
+| `scripts/predict.py` | Predictions only |
+
+**Naming hash.** It fingerprints site environments, not coordinates, so site
+order, origin and supercells give the same id. Over the 795 graph
+structures:
+- **Uniqueness:** all 795 ids are distinct.
+- **Re-described inputs:** shuffled, shifted and supercell versions always
+  hash the same.
+- **Symmetrised standard cells:** about 12% hash differently, because
+  standardisation idealises atom positions.
+
+That last case does not split nodes. Deduplication goes through
+`StructureMatcher` against every graph material with the same formula, so a
+re-upload resolves to the stored node and keeps its id.
+
+**End-to-end preview on the real graph**
+
+| Input | Outcome |
+|---|---|
+| LiFePO4 from `mp-aaaabcdl`, as POSCAR | Matches the MP node. Prediction vs DFT: E_form −2.561 vs −2.480 eV/atom, gap 3.97 vs 3.92 eV. |
+| The same LiFePO4 as a conventional-cell CIF | Matches the MP node |
+| A hypothetical wurtzite MgO | New node `struct-MgO-sg186-6774f5b4`, alongside rock-salt `mp-aaaaabwr`. Gets derived edges (P6_3mc shared with 12 materials, Mg-O, AB, Mg2+/O2-), a predicted `wide_gap` class (3.99 ± 0.62 eV), and rules marked predicted. |
+
+**Persist and replay.** This was checked on a scratch copy of the cognee
+store: one copy to persist into, and a pristine one to replay into.
+- **Persist:** the node lands with its `predicted_*` attributes, and the
+  `classified_as` edge keeps `provenance: predicted` through Kuzu.
+- **Formula lookup:** `MgO` still resolves to the MP node.
+- **Dedup after persist:** the primitive-cell re-upload resolves to the
+  stored node.
+- **Replay:** replaying into the pristine copy reproduces identical node
+  properties and edges.
+- **Caveat:** that run used stubbed embeddings. The local Ollama server
+  cannot embed, because its app bundle was moved to the Trash, so
+  `llama-server` is missing. This also blocks real persists and query
+  embedding until Ollama is reinstalled.
+
+**Tests.** 85 pass. `tests/test_ingest_structure.py` covers validation,
+naming, dedup, predicted classes and rules, gating, and persist→replay. It
+uses a fake predictor and no stores.
+
+**Open until M3.** The retriever does not filter predicted edges yet. So a
+*persisted* struct node can already show up in class- or domain-based
+queries through its predicted `classified_as` / `suitable_for` edges. M3
+adds `include_predicted` (default off).
 
 M0–M4 is the requested feature: complete CGCNN inference wired into the
 existing ingestion and the existing nodes.

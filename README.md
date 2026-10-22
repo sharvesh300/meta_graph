@@ -3,7 +3,7 @@
 **An Explainable Graph-Based Retrieval-Augmented Reasoning System for Intelligent Materials Discovery**
 
 > Project report: Phase 1 (knowledge graph construction) and Phase 2 (GraphRAG retrieval and recommendation)
-> Status: **Phase 1 complete** · **Phase 2 complete** · Phase 3 (CGCNN inference) in progress: M0–M1 done, see `docs/PHASE3_PLAN.md`
+> Status: **Phase 1 complete** · **Phase 2 complete** · Phase 3 (CGCNN inference) in progress: M0–M2 done, see `docs/PHASE3_PLAN.md`
 
 ---
 
@@ -63,7 +63,7 @@ as the graph/vector storage and pipeline layer.
 |---|---|---|
 | **Phase 1** | Knowledge graph construction from Materials Project data | ✅ Complete |
 | **Phase 2** | GraphRAG retrieval + LLM-generated, evidence-backed recommendations | ✅ Complete |
-| Phase 3 | CGCNN inference with the txie-93 pre-trained models, structure ingestion, structural similarity, element substitution | In progress (M0: inference module, parity-tested; M1: graph evaluation, `artifacts/eval/cgcnn_graph_eval.md`) |
+| Phase 3 | CGCNN inference with the txie-93 pre-trained models, structure ingestion, structural similarity, element substitution | In progress (M0: inference module, parity-tested; M1: graph evaluation, `artifacts/eval/cgcnn_graph_eval.md`; M2: structure ingestion) |
 
 Phase 1 deliverable, as built and verified: a graph of **794 materials**
 spanning **46 elements**, **106 space groups**, **143 chemical systems**,
@@ -587,8 +587,15 @@ the PRD's *traceability* metric.
 Project id or a formula**. The pipeline gets the material's properties and
 relates it to the existing graph.
 
-**Crystal-structure (CIF) input is deliberately not accepted.** Structures go
-to the CGCNN model in Phase 3.
+**Crystal structures (CIF / POSCAR)** go to the CGCNN path (Phase 3, needs the
+`[ml]` extra): `scripts/add_material.py --structure file.cif`.
+- If the structure matches a graph material (StructureMatcher), it resolves
+  to that node, and the CGCNN prediction is shown next to the DFT values.
+- Otherwise it becomes a `struct-<formula>-sg<n>-<hash>` node. Its derived
+  facts are exact, and its properties are CGCNN predictions in `predicted_*`
+  fields with expected errors. DFT fields stay empty.
+
+The API takes structure input from Phase 3 M3. See `docs/PHASE3_PLAN.md` §5.
 
 Where the properties come from:
 
@@ -748,13 +755,18 @@ meta_graph/
 │   ├── grounding.py             # claim verification, traceability
 │   ├── answer.py                # end-to-end question answering
 │   ├── ingest.py                # new-material ingestion + relation report
+│   ├── ingest_structure.py      # structure (CIF/POSCAR) ingestion via CGCNN (Phase 3)
+│   ├── cgcnn/                   # CGCNN inference: model, featurizer, predictor, interpret, validate
 │   ├── api.py, static/          # FastAPI service + dashboard
 │   └── eval/                    # oracle, baselines, metrics, runner, ingestion LOO
 ├── scripts/
 │   ├── fetch_materials.py       # fetch + cache clusters from Materials Project
 │   ├── build_graph.py           # build, write to Cognee, visualize, verify
 │   ├── ask.py                   # ask a question (CLI)
-│   ├── add_material.py          # add/relate a material by MP id or formula
+│   ├── add_material.py          # add/relate a material by MP id, formula or --structure file
+│   ├── predict.py               # CGCNN predictions for structure files (no graph change)
+│   ├── fetch_cgcnn_weights.py   # download + verify + convert the pre-trained CGCNN models
+│   ├── evaluate_cgcnn.py        # CGCNN vs graph DFT values -> artifacts/eval/cgcnn_graph_eval.*
 │   ├── evaluate.py              # run the evaluation -> artifacts/eval/
 │   ├── serve.py                 # API + dashboard
 │   └── generate_elements.py     # regenerates config/elements.json via pymatgen
@@ -795,6 +807,9 @@ uv run python scripts/ask.py "stable cobalt-free Li cathodes with band gap above
 uv run python scripts/ask.py "..." --no-llm         # rule parser + templated explanation
 uv run python scripts/add_material.py LaAlO3         # preview how a new material relates
 uv run python scripts/add_material.py mp-2920 --persist
+uv sync --extra ml && uv run python scripts/fetch_cgcnn_weights.py   # once, for structure input
+uv run python scripts/predict.py my.cif                # CGCNN predictions only
+uv run python scripts/add_material.py --structure my.cif [--persist]
 uv run python scripts/serve.py                       # API + dashboard on :8000
 uv run python scripts/evaluate.py --llm-sample 10 --ingestion 50
 uv run pytest
