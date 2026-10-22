@@ -3,8 +3,8 @@
 All models are loaded once; each structure is featurised once and shared by
 every model. Values are the models' raw outputs (denormalised regression
 values in the units of registry.ModelSpec, or P(metal) for the classifier);
-interpreting them for the graph - band-gap gating by the classifier, the
-moduli log base - is calibrated against the graph in M1, not here.
+interpreting them for the graph (band-gap gating by the classifier, moduli
+in GPa, expected errors) is matgraph.cgcnn.interpret.
 """
 
 from __future__ import annotations
