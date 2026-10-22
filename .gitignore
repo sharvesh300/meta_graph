@@ -12,3 +12,4 @@ artifacts/*.html
 .pytest_cache/
 artifacts/similarity_stats.json
 .llm_cache/
+models/

@@ -11,6 +11,11 @@ dependencies = [
     "pymatgen>=2026.5.4",
 ]
 
+[project.optional-dependencies]
+ml = [
+    "torch>=2.14.1",
+]
+
 [dependency-groups]
 dev = [
     "pytest>=8.0",
