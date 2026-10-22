@@ -10,3 +10,5 @@ data/raw/
 artifacts/*.html
 *.egg-info/
 .pytest_cache/
+artifacts/similarity_stats.json
+.llm_cache/
