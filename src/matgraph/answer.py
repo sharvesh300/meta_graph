@@ -38,13 +38,25 @@ class Answer(BaseModel):
     timings_ms: dict[str, float] = Field(default_factory=dict)
 
 
-def comparison_table(kb: KnowledgeBase, result: RetrievalResult, extra: list[str]) -> list[dict[str, Any]]:
+def comparison_table(kb: KnowledgeBase, result: RetrievalResult, extra: list[str],
+                     include_predicted: bool = False) -> list[dict[str, Any]]:
+    """One row per candidate. With include_predicted, a column without a DFT
+    value shows the CGCNN prediction, and the row lists those columns under
+    "predicted" so they are never mistaken for DFT values."""
     columns = list(dict.fromkeys(CORE_PROPERTIES + extra + OPTIONAL_PROPERTIES))
     rows = []
     for cand in result.candidates:
         props = kb.graph.node[cand.node_id]
-        row = {"material_id": cand.material_id, "formula": cand.formula, "score": cand.score}
-        row.update({col: props.get(col) for col in columns})
+        row: dict[str, Any] = {"material_id": cand.material_id, "formula": cand.formula, "score": cand.score}
+        predicted = []
+        for col in columns:
+            value = props.get(col)
+            if value is None and include_predicted and props.get(f"predicted_{col}") is not None:
+                value = props[f"predicted_{col}"]
+                predicted.append(col)
+            row[col] = value
+        if include_predicted:
+            row["predicted"] = predicted
         rows.append(row)
     return rows
 
@@ -56,6 +68,7 @@ async def answer_question(
     top_k: int | None = None,
     use_semantic: bool = True,
     max_explained: int = 5,
+    include_predicted: bool = False,
 ) -> Answer:
     timings: dict[str, float] = {}
     notices: list[str] = []
@@ -80,10 +93,11 @@ async def answer_question(
     timings["semantic"] = (time.perf_counter() - t) * 1000
 
     t = time.perf_counter()
-    result = retrieve(kb.graph, parsed.constraints, semantic, cfg)
+    result = retrieve(kb.graph, parsed.constraints, semantic, cfg, include_predicted=include_predicted)
     timings["retrieve"] = (time.perf_counter() - t) * 1000
 
-    evidence = build_evidence(kb.graph, result, parsed.constraints, max_candidates=max_explained)
+    evidence = build_evidence(kb.graph, result, parsed.constraints, max_candidates=max_explained,
+                              include_predicted=include_predicted)
     constrained = [r.property for r in parsed.constraints.property_ranges]
     if parsed.constraints.sort_by:
         constrained.append(parsed.constraints.sort_by)
@@ -116,7 +130,7 @@ async def answer_question(
 
     return Answer(
         question=question, parsed=parsed, retrieval=result,
-        comparison=comparison_table(kb, result, constrained), evidence=evidence,
+        comparison=comparison_table(kb, result, constrained, include_predicted), evidence=evidence,
         explanation=explanation, grounding=grounding, generator=generator, generator_model=model,
         notices=notices, timings_ms={k: round(v, 1) for k, v in timings.items()},
     )

@@ -44,6 +44,12 @@ round differently, or estimate a value.
 4. If a property is marked NOT AVAILABLE, say it is not available - never guess it.
 5. When band gaps matter to the question, add a caveat citing the DFT band-gap fact.
 6. Keep claims short: one fact-backed statement each. Return JSON only."""
+# Appended only when the evidence holds CGCNN predictions, so prompts (and the
+# LLM response cache keys) for DFT-only evidence stay exactly as in Phase 2.
+_PREDICTED_RULE = """
+7. Facts whose source says "CGCNN prediction", and edges marked [predicted], are \
+model estimates, not DFT values: call them predicted (e.g. "predicted band gap ≈ \
+2.1 eV") and give their expected error when you state the number."""
 
 
 def _user_prompt(question: str, constraints: QueryConstraints, evidence: EvidenceBundle) -> str:
@@ -62,7 +68,7 @@ def explain_with_llm(
     from matgraph.llm import complete_json
 
     messages = [
-        {"role": "system", "content": _SYSTEM},
+        {"role": "system", "content": _SYSTEM + (_PREDICTED_RULE if any(f.predicted for f in evidence.facts) else "")},
         {"role": "user", "content": _user_prompt(question, constraints, evidence)},
     ]
     explanation, meta = complete_json(messages, Explanation)

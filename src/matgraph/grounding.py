@@ -6,7 +6,11 @@ A claim is grounded when:
    user's own question/constraints, e.g. "above the requested 2 eV") within
    rounding tolerance;
 3. every material formula it mentions is one covered by the evidence;
-4. (recommendations) the recommended material is one that was retrieved.
+4. (recommendations) the recommended material is one that was retrieved;
+5. a claim that rests on a CGCNN prediction - it states a number only a
+   predicted fact supports, or cites nothing but predicted facts - says so
+   ("predicted", "estimated", "≈", ...): a model estimate must never read
+   as a DFT value.
 
 The traceability score - the PRD's "proportion of statements traceable to a
 graph edge or database record" - is grounded claims / all claims. Ungrounded
@@ -30,6 +34,7 @@ from matgraph.graph_store import Graph
 _TOKEN = re.compile(r"[A-Za-z_][A-Za-z0-9_\-+()./]*|-?\d+(?:\.\d+)?(?:[eE]-?\d+)?")
 _NUMBER = re.compile(r"^-?\d+(?:\.\d+)?(?:[eE]-?\d+)?$")
 _FORMULA = re.compile(r"\b(?:[A-Z][a-z]?\d*(?:\.\d+)?|\((?:[A-Z][a-z]?\d*)+\)\d*){2,}\b")
+_HEDGE = re.compile(r"predict|estimat|≈|~|approx|cgcnn|model", re.IGNORECASE)
 
 
 class ClaimCheck(BaseModel):
@@ -92,9 +97,15 @@ def check_claim(
         problems.append(f"cites unknown evidence ids {unknown}")
 
     supported = [n for f in cited for n in _fact_numbers(f)] + allowed_numbers
+    exact = [n for f in cited if not f.predicted for n in _fact_numbers(f)] + allowed_numbers
+    rests_on_prediction = bool(cited) and all(f.predicted for f in cited)
     for number, decimals in _numbers_in(claim.text):
         if not _matches(number, decimals, supported):
             problems.append(f"number {number:g} not found in cited evidence")
+        elif not _matches(number, decimals, exact):
+            rests_on_prediction = True
+    if rests_on_prediction and not _HEDGE.search(claim.text):
+        problems.append("states a CGCNN prediction without saying it is predicted")
 
     for formula in set(_FORMULA.findall(claim.text)):
         if formula in graph_formulas and formula not in evidence_formulas:
