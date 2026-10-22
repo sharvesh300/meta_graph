@@ -81,6 +81,10 @@
   .prov-derived { background: var(--accent-soft); color: var(--accent); }
   .prov-guessed { background: var(--warn-soft); color: var(--warn); }
   .prov-unavailable { background: var(--na); color: var(--muted); }
+  .prov-predicted { background: var(--warn-soft); color: var(--warn); }
+  td.pred { background: var(--warn-soft); color: var(--warn); font-style: italic; }
+  input[type=file] { flex: 1 1 320px; min-width: 0; font: inherit; color: var(--muted); }
+  #structGraph { height: 420px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
 </style>
 </head>
 <body>
@@ -92,6 +96,7 @@
   <div class="tabs">
     <button class="tab active" data-tab="ask">Ask</button>
     <button class="tab" data-tab="add">Add material</button>
+    <button class="tab" data-tab="struct">From structure</button>
   </div>
 
   <section id="tab-ask">
@@ -99,6 +104,7 @@
       <div class="row">
         <input type="text" id="question" placeholder="e.g. stable cobalt-free Li cathodes with band gap above 2 eV">
         <label class="check"><input type="checkbox" id="useLlm" checked> LLM</label>
+        <label class="check" title="Also use CGCNN predictions: struct- materials, predicted values and edges"><input type="checkbox" id="includePredicted"> CGCNN predictions</label>
         <label class="check">top <input type="number" id="topK" value="10" min="1" max="50"></label>
         <button class="primary" id="askBtn">Ask</button>
       </div>
@@ -120,10 +126,27 @@
         <label class="check"><input type="checkbox" id="persist"> save to graph</label>
         <button class="primary" id="addBtn">Relate</button>
       </div>
-      <div class="examples">Crystal structure (CIF) input goes to the CGCNN model in Phase 3; here: ids and formulas.
+      <div class="examples">Materials Project ids and formulas; crystal structures go in the “From structure” tab.
         Try: <a data-m="LaAlO3">LaAlO3</a><a data-m="MgAl2O4">MgAl2O4</a><a data-m="La2Zr2O7">La2Zr2O7</a></div>
     </div>
     <div id="addOut"></div>
+  </section>
+
+  <section id="tab-struct" class="hidden">
+    <div class="panel">
+      <div class="row">
+        <input type="file" id="structFile" accept=".cif,.mcif,.vasp,.poscar,POSCAR,CONTCAR,text/plain">
+        <label class="check"><input type="checkbox" id="structExplain"> explain</label>
+        <label class="check"><input type="checkbox" id="structPersist"> save to graph</label>
+        <button class="primary" id="predictBtn">Predict</button>
+        <button class="primary" id="structAddBtn">Add to graph</button>
+      </div>
+      <div class="examples">CIF or POSCAR, at most 200 sites, ordered sites only. Properties are predicted by the
+        pre-trained CGCNN models (txie-93/cgcnn) and shown with the error measured on graph materials the models had not
+        seen. <b>Predict</b> changes nothing; <b>Add to graph</b> relates the structure to the graph (a preview unless
+        “save to graph” is ticked). A structure that matches a graph material resolves to it.</div>
+    </div>
+    <div id="structOut"></div>
   </section>
 </main>
 
@@ -147,11 +170,14 @@ document.querySelectorAll(".tab").forEach((t) => t.onclick = () => {
   document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("active", x === t));
   $("#tab-ask").classList.toggle("hidden", t.dataset.tab !== "ask");
   $("#tab-add").classList.toggle("hidden", t.dataset.tab !== "add");
+  $("#tab-struct").classList.toggle("hidden", t.dataset.tab !== "struct");
 });
 document.querySelectorAll("[data-q]").forEach((a) => a.onclick = () => { $("#question").value = a.dataset.q; ask(); });
 document.querySelectorAll("[data-m]").forEach((a) => a.onclick = () => { $("#material").value = a.dataset.m; relate(); });
 $("#askBtn").onclick = ask;
 $("#addBtn").onclick = relate;
+$("#predictBtn").onclick = predictStructure;
+$("#structAddBtn").onclick = addStructure;
 $("#question").addEventListener("keydown", (e) => e.key === "Enter" && ask());
 $("#material").addEventListener("keydown", (e) => e.key === "Enter" && relate());
 
@@ -170,7 +196,11 @@ async function post(url, body) {
 fetch(api("/health")).then((r) => r.json()).then((h) => {
   const el = $("#health");
   el.className = "chip " + (h.status === "ok" ? "ok" : "warn");
-  el.textContent = `${h.materials ?? "?"} materials · ${h.llm_configured ? "LLM on" : "no LLM"}` + (h.status === "ok" ? "" : " · degraded");
+  const cg = h.cgcnn || {};
+  el.textContent = `${h.materials ?? "?"} materials · ${h.llm_configured ? "LLM on" : "no LLM"} · ` +
+    (cg.available ? (cg.smoke_test && cg.smoke_test.ok ? "CGCNN on" : "CGCNN check failed") : "no CGCNN") +
+    (h.status === "ok" ? "" : " · degraded");
+  el.title = cg.available ? `CGCNN ${cg.model_set}: ${cg.models} models; fixed-structure check max diff ${cg.smoke_test && cg.smoke_test.max_abs_diff}` : (cg.reason || "");
 }).catch(() => {
   $("#health").className = "chip bad";
   $("#health").textContent = "API offline";
@@ -186,7 +216,8 @@ async function ask() {
   const btn = $("#askBtn"); btn.disabled = true; btn.textContent = "Thinking…";
   $("#askOut").innerHTML = `<div class="panel muted">Parsing, traversing the graph${$("#useLlm").checked ? ", and asking the LLM (free tier can take ~30 s)" : ""}…</div>`;
   try {
-    lastAnswer = await post("/query", {question, use_llm: $("#useLlm").checked, top_k: +$("#topK").value || null});
+    lastAnswer = await post("/query", {question, use_llm: $("#useLlm").checked, top_k: +$("#topK").value || null,
+                                       include_predicted: $("#includePredicted").checked});
     renderAnswer(lastAnswer);
   } catch (e) {
     $("#askOut").innerHTML = `<div class="error">${esc(e.message)}</div>`;
@@ -221,7 +252,10 @@ function renderAnswer(a) {
     const problem = !ok && chk ? `<span class="problem">${esc(chk.problems.join("; "))}</span>` : "";
     return `<div class="claim ${ok ? "ok" : "bad"}">${esc(claim.text)} ${cites}${problem}</div>`;
   };
-  const cols = a.comparison.length ? Object.keys(a.comparison[0]).filter((k) => !["material_id", "formula", "score"].includes(k)) : [];
+  const cols = a.comparison.length ? Object.keys(a.comparison[0]).filter((k) => !["material_id", "formula", "score", "predicted"].includes(k)) : [];
+  const cell = (row, c) => row[c] === null || row[c] === undefined ? `<td class="na">n/a</td>`
+    : (row.predicted || []).includes(c) ? `<td class="num pred" title="CGCNN prediction, not a DFT value">≈${esc(fmt(row[c]))}</td>`
+    : `<td class="num">${esc(fmt(row[c]))}</td>`;
   const e = a.explanation;
 
   $("#askOut").innerHTML = `
@@ -241,7 +275,7 @@ function renderAnswer(a) {
         ${r.candidates.length ? `<div class="table-wrap"><table>
           <tr><th>#</th><th>Formula</th><th>MP id</th><th>Score</th><th>Components</th></tr>
           ${r.candidates.map((c, i) => `<tr class="selectable" data-i="${i}">
-            <td>${i + 1}</td><td><b>${esc(c.formula)}</b>${c.missing_properties.length ? ` <span class="chip warn">missing ${esc(c.missing_properties.join(", "))}</span>` : ""}</td>
+            <td>${i + 1}</td><td><b>${esc(c.formula)}</b>${c.uses_predictions ? ` <span class="chip warn" title="rests on CGCNN predictions">predicted</span>` : ""}${c.missing_properties.length ? ` <span class="chip warn">missing ${esc(c.missing_properties.join(", "))}</span>` : ""}</td>
             <td class="muted">${esc(c.material_id)}</td>
             <td class="num"><span class="bar" style="width:${Math.round(c.score * 60)}px"></span> ${c.score.toFixed(3)}</td>
             <td class="muted">${Object.entries(c.score_components).map(([k, v]) => `${esc(k)} ${v.toFixed(2)}`).join(" · ")}</td></tr>`).join("")}
@@ -252,9 +286,9 @@ function renderAnswer(a) {
         <div id="graph"></div>
       </div>
     </div>
-    ${a.comparison.length ? `<div class="panel"><h2>Property comparison <span class="muted" style="text-transform:none">(grey = not available in Materials Project)</span></h2>
+    ${a.comparison.length ? `<div class="panel"><h2>Property comparison <span class="muted" style="text-transform:none">(grey = not available in Materials Project${a.comparison.some((row) => (row.predicted || []).length) ? "; ≈ amber = CGCNN prediction" : ""})</span></h2>
       <div class="table-wrap"><table><tr><th>Formula</th>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr>
-      ${a.comparison.map((row) => `<tr><td><b>${esc(row.formula)}</b></td>${cols.map((c) => row[c] === null || row[c] === undefined ? `<td class="na">n/a</td>` : `<td class="num">${esc(fmt(row[c]))}</td>`).join("")}</tr>`).join("")}
+      ${a.comparison.map((row) => `<tr><td><b>${esc(row.formula)}</b></td>${cols.map((c) => cell(row, c)).join("")}</tr>`).join("")}
       </table></div></div>` : ""}
     <div class="panel">
       <h2>Explanation <span class="chip ${g.traceability >= 0.95 ? "ok" : "warn"}" style="text-transform:none">${g.grounded_claims}/${g.total_claims} claims grounded (${Math.round(g.traceability * 100)}%)</span>
@@ -277,7 +311,9 @@ function drawGraph(containerId, hops, focus) {
   hops.forEach((h, i) => {
     [h.source, h.target].forEach((n) => nodes.set(n, {data: {id: n, label: n.replace(/^[A-Za-z]+:/, ""), kind: nodeKind(n), focus: n === focus}}));
     const extra = h.properties && h.properties.weight != null ? ` ${(+h.properties.weight).toFixed(2)}` : "";
-    edges.push({data: {id: "e" + i, source: h.source, target: h.target, label: h.relation + extra, rule: h.properties && h.properties.rule || ""}});
+    const predicted = !!(h.properties && h.properties.provenance === "predicted");
+    edges.push({data: {id: "e" + i, source: h.source, target: h.target, label: h.relation + extra + (predicted ? " (predicted)" : ""),
+                       rule: h.properties && h.properties.rule || "", predicted}});
   });
   const dark = matchMedia("(prefers-color-scheme: dark)").matches;
   cytoscape({
@@ -293,6 +329,8 @@ function drawGraph(containerId, hops, focus) {
         "curve-style": "bezier", "target-arrow-shape": "triangle", "width": 1.4,
         "line-color": dark ? "#4a4944" : "#c9c8c1", "target-arrow-color": dark ? "#4a4944" : "#c9c8c1",
         "text-rotation": "autorotate", "text-background-color": dark ? "#151514" : "#f7f7f5", "text-background-opacity": 0.8}},
+      {selector: "edge[?predicted]", style: {"line-style": "dashed", "line-color": dark ? "#ffc078" : "#a15c07",
+        "target-arrow-color": dark ? "#ffc078" : "#a15c07"}},
     ],
   });
 }
@@ -318,13 +356,17 @@ async function relate() {
   const body = {persist: $("#persist").checked, explain: $("#explain").checked, use_llm: true};
   if (/^(mp|mvc)-/.test(key)) body.material_id = key; else body.formula = key;
   try {
-    renderReport(await post("/materials/ingest", body));
+    renderReport(await post("/materials/ingest", body), "addOut", "ingestGraph");
   } catch (e) {
     $("#addOut").innerHTML = `<div class="error">${esc(e.message)}</div>`;
   } finally { btn.disabled = false; btn.textContent = "Relate"; }
 }
 
-function renderReport(resp) {
+const errText = (p) => p.expected_error == null ? "" : (p.expected_error_units === "error rate"
+  ? `${Math.round(p.expected_error * 100)}% misclassified` : (p.expected_error_units || "").startsWith("log10")
+  ? `×/÷ ${Math.pow(10, p.expected_error).toFixed(2)}` : `± ${+p.expected_error.toFixed(3)}`);
+
+function renderReport(resp, outId, graphId) {
   const r = resp.report;
   const status = r.already_in_graph ? "already in graph" : (r.persisted ? "saved to graph" : "preview (not saved)");
   const props = r.properties.filter((p) => p.value !== null && p.value !== undefined);
@@ -342,29 +384,29 @@ function renderReport(resp) {
       ${e.recommendations.map((rec) => `<div class="material-block"><h3>${esc(rec.formula)}</h3>${rec.claims.map((c) => line(c, "recommendation:" + rec.material_id)).join("")}</div>`).join("")}
       ${e.caveats.map((c) => line(c, "caveat")).join("")}</div>`;
   }
-  $("#addOut").innerHTML = `
+  document.getElementById(outId).innerHTML = `
     <div class="panel">
-      <h2>${esc(r.formula)} <span class="muted" style="text-transform:none">${esc(r.material_id)} · source: ${esc(r.source)} · ${status}</span></h2>
+      <h2><span style="text-transform:none">${esc(r.formula)}</span> <span class="muted" style="text-transform:none">${esc(r.material_id)} · source: ${esc(r.source)} · ${status}</span></h2>
       ${r.notes.map((n) => `<div class="notice">${esc(n)}</div>`).join("")}
     </div>
     <div class="grid">
       <div class="panel">
         <h2>Properties</h2>
-        <div class="kv">${props.map((p) => `<div>${esc(p.name)}</div><div>${esc(typeof p.value === "object" ? JSON.stringify(p.value) : fmt(p.value))}</div><div><span class="prov prov-${esc(p.provenance)}">${esc(p.provenance)}</span></div>`).join("")}</div>
+        <div class="kv">${props.map((p) => `<div>${esc(p.name)}</div><div>${esc(typeof p.value === "object" ? JSON.stringify(p.value) : fmt(p.value))}${p.units ? " " + esc(p.units) : ""}${p.provenance === "predicted" && p.expected_error != null ? ` <span class="muted">(${esc(errText(p))})</span>` : ""}</div><div><span class="prov prov-${esc(p.provenance)}">${esc(p.provenance)}</span></div>`).join("")}</div>
         ${unavailable.length ? `<p class="muted">Not available: ${esc(unavailable.join(", "))}</p>` : ""}
         <h2 style="margin-top:12px">Application rules</h2>
-        ${r.rules.map((x) => `<div><span class="chip ${x.status === "fired" ? "ok" : x.status === "cannot_evaluate" ? "warn" : "muted"}">${esc(x.status.replace("_", " "))}</span> ${esc(x.domain)} <span class="muted">${esc(x.reason)}</span></div>`).join("")}
+        ${r.rules.map((x) => `<div><span class="chip ${x.status === "fired" ? "ok" : x.status === "cannot_evaluate" ? "warn" : "muted"}">${esc(x.status.replace("_", " "))}</span> ${esc(x.domain)} <span class="muted">${esc(x.reason)}</span>${x.predicted ? ` <span class="prov prov-predicted">predicted</span>` : ""}</div>`).join("")}
       </div>
       <div class="panel">
-        <h2>How it connects</h2>
-        <div id="ingestGraph"></div>
+        <h2>How it connects <span class="muted" style="text-transform:none">(dashed = rests on a prediction)</span></h2>
+        <div id="${graphId}"></div>
       </div>
     </div>
     <div class="grid">
       <div class="panel">
         <h2>Shared graph nodes <span class="muted" style="text-transform:none">(most selective first)</span></h2>
         <div class="table-wrap"><table><tr><th>Relation</th><th>Node</th><th>Shared with</th></tr>
-        ${r.shared_hubs.map((h) => `<tr><td class="muted">${esc(h.relation)}</td><td>${esc(h.node)}</td><td>${h.new_node ? `<span class="chip warn">new node</span>` : h.shared_with + " materials"}</td></tr>`).join("")}
+        ${r.shared_hubs.map((h) => `<tr><td class="muted">${esc(h.relation)}</td><td>${esc(h.node)}${h.predicted ? ` <span class="prov prov-predicted">predicted</span>` : ""}</td><td>${h.new_node ? `<span class="chip warn">new node</span>` : h.shared_with + " materials"}</td></tr>`).join("")}
         </table></div>
       </div>
       <div class="panel">
@@ -376,7 +418,59 @@ function renderReport(resp) {
   const focus = `Material:${r.formula} (${r.material_id})`;
   const hops = r.edges.filter((h) => h.relation !== "similar_to").map((h) => ({...h, source: focus}));
   r.similar_materials.forEach((n) => hops.push({source: focus, target: `Material:${n.formula} (${n.material_id})`, relation: "similar_to", properties: {weight: n.weight}}));
-  drawGraph("ingestGraph", hops, focus);
+  drawGraph(graphId, hops, focus);
+}
+
+/* ---------------- From structure ---------------- */
+async function readStructure() {
+  const f = $("#structFile").files[0];
+  if (!f) throw new Error("Choose a CIF or POSCAR file first.");
+  if (f.size > 1000000) throw new Error("The file is larger than 1 MB.");
+  const name = f.name.toLowerCase();
+  const format = /\.m?cif$/.test(name) ? "cif" : (/\.(vasp|poscar)$/.test(name) || /^(poscar|contcar)/.test(name) ? "poscar" : null);
+  return {structure: await f.text(), format, filename: f.name};
+}
+
+async function predictStructure() {
+  const btn = $("#predictBtn"); btn.disabled = true; btn.textContent = "Predicting…";
+  try {
+    const s = await readStructure();
+    $("#structOut").innerHTML = `<div class="panel muted">Running the CGCNN models on ${esc(s.filename)}…</div>`;
+    renderPrediction(await post("/predict", s));
+  } catch (e) {
+    $("#structOut").innerHTML = `<div class="error">${esc(e.message)}</div>`;
+  } finally { btn.disabled = false; btn.textContent = "Predict"; }
+}
+
+async function addStructure() {
+  const btn = $("#structAddBtn"); btn.disabled = true; btn.textContent = "Relating…";
+  try {
+    const s = await readStructure();
+    $("#structOut").innerHTML = `<div class="panel muted">Predicting ${esc(s.filename)} and relating it to the graph…</div>`;
+    const resp = await post("/materials/ingest", {structure: s.structure, structure_format: s.format, filename: s.filename,
+      persist: $("#structPersist").checked, explain: $("#structExplain").checked, use_llm: true});
+    renderReport(resp, "structOut", "structGraph");
+  } catch (e) {
+    $("#structOut").innerHTML = `<div class="error">${esc(e.message)}</div>`;
+  } finally { btn.disabled = false; btn.textContent = "Add to graph"; }
+}
+
+function renderPrediction(p) {
+  const rows = Object.entries(p.predictions).map(([name, v]) => {
+    const value = typeof v.value === "boolean" ? (v.value ? "yes" : "no") : fmt(v.value);
+    const extra = v.detail && v.detail.p_metal != null ? `P(metal) = ${v.detail.p_metal.toFixed(2)}` : "";
+    return `<tr><td>${esc(name.replace(/^predicted_/, ""))}</td><td class="num pred">≈${esc(value)}</td><td>${esc(v.units)}</td>
+      <td class="muted">${esc(errText(v))}</td><td class="muted">${esc(extra)}</td>
+      <td class="muted">${esc(v.model_ids.map((m) => m.split("/").pop()).join(" + "))}</td></tr>`;
+  }).join("");
+  $("#structOut").innerHTML = `
+    <div class="panel">
+      <h2><span style="text-transform:none">${esc(p.formula)}</span> <span class="muted" style="text-transform:none">${esc(p.space_group)} · ${p.nsites} sites · would be named ${esc(p.struct_id)}</span></h2>
+      ${p.notes.map((n) => `<div class="notice">${esc(n)}</div>`).join("")}
+      <div class="table-wrap"><table>
+        <tr><th>Property</th><th>Predicted</th><th>Units</th><th>Expected error (unseen)</th><th></th><th>Models</th></tr>${rows}
+      </table></div>
+    </div>`;
 }
 </script>
 </body>
