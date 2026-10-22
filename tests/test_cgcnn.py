@@ -163,3 +163,21 @@ def test_prediction_metadata(predictor):
     assert gap.validation_score == pytest.approx(0.369, abs=1e-3)
     assert 0.0 <= preds["semi-metal-classification"].value <= 1.0
     assert gap.flags == ()
+
+
+# --- API smoke test ------------------------------------------------------------------------
+
+
+def test_smoke_expectations_are_the_reference_outputs():
+    from matgraph.cgcnn.smoke import EXPECTED, SMOKE_CIF
+
+    assert EXPECTED == REFERENCE["1000041"]
+    assert SMOKE_CIF.read_bytes() == (FIXTURES / "1000041.cif").read_bytes()
+
+
+@needs_weights
+def test_smoke_test_passes_with_pretrained_weights(predictor):
+    from matgraph.cgcnn.smoke import smoke_test
+
+    result = smoke_test(predictor)
+    assert result["ok"] and result["max_abs_diff"] < 1e-5

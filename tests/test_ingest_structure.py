@@ -146,7 +146,7 @@ def test_new_polymorph_becomes_struct_node(kb):
     assert sg.node.startswith("SpaceGroup:P6_3mc") and sg.shared_with == 1 and not sg.predicted
     cls = next(h for h in report.shared_hubs if h.relation == "classified_as")
     assert cls.node == "PropertyClass:band_gap/semiconductor" and cls.predicted
-    assert all(r.predicted for r in report.rules)
+    assert {r.domain for r in report.rules if r.predicted} == {"semiconductor_device", "photocatalyst"}
     assert not report.similar_materials
     assert report.compositional_neighbours[0].material_id == "mp-10"
 
