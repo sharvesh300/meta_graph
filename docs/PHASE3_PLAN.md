@@ -1,6 +1,6 @@
 # MatGraphRAG — Phase 3 Plan: CGCNN Inference and Structure Ingestion
 
-> **Status (2026-10-22): M0 done (see §8.1 for results); M1 next.** The reference
+> **Status (2026-10-22): M0 and M1 done (results in §8.1–8.2); M2 next.** The reference
 > is [`txie-93/cgcnn`](https://github.com/txie-93/cgcnn) at commit `f42ab23`
 > (MIT). Scope is **inference** with its published pre-trained models, wired
 > into the existing Phase 2 ingestion feature. Training our own CGCNN is no
@@ -108,26 +108,32 @@ unpickler that runs no code. All of them were trained on an **MP snapshot of
 | `poisson-ratio` | `predicted_homogeneous_poisson` | — | 2,041 | MAE 0.0293 | 66 |
 | `final-energy-per-atom` | *not used*: raw uncorrected total energy, not in our schema | eV/atom | 28,046 | MAE 0.079 | 953 |
 
-Things the code and checkpoints imply, which M1 has to verify:
+Things the code and checkpoints imply. M1 has verified all of them; the
+outcomes are in §8.2.
 
 - **The band-gap model was trained only on non-metals.** It used the "semi"
   file, which has about 16k entries against 28k for formation energy. So
   `predicted_band_gap` is gated by the classifier:
-  - if P(metal) ≥ 0.5, the gap is 0
+  - if P(metal) ≥ the threshold, the gap is 0
   - otherwise it is the regressor output, clipped at 0
 
-  M1 checks this on the 231 graph metals.
+  M1 confirmed this on the 231 graph metals and set the threshold to
+  **0.3**, chosen on the seen split.
 - **The log base for the moduli is not documented.** We settle it
   empirically on the 143 graph materials that have elastic data. Their median
   bulk modulus is 106 GPa, which is 2.03 in log₁₀ and 4.66 in ln, so the two
   are easy to tell apart. After that we store values in GPa.
+  M1 settled it as **log₁₀**.
 - **Data drift.** The 2017 MP formation energies use the legacy
   correction scheme, while the graph uses current MP2020-compatible values.
   Most of the graph is transition-metal oxides, where the corrections
   changed, so expect a **systematic offset**. We measure it and report it,
-  and we do not hide it with a fitted correction.
+  and we do not hide it with a fitted correction. M1 found it small
+  overall: −0.010 eV/atom on unseen materials. It is larger per cluster,
+  e.g. +0.12 for III-V.
 - **Contamination.** Many graph materials were probably in CGCNN's training
-  data. M1 maps the 46,744 legacy ids to new ids through the API, then
+  data. M1 maps the legacy ids to new ids. No API call is needed, because
+  the new id is the legacy number in base 26. It then
   reports graph MAE separately for *seen in training* and *unseen*. The
   unseen number is the honest one, and it is the one quoted in evidence.
 - **Validation MAE is not test MAE.** We quote our own graph-measured MAE,
@@ -169,7 +175,9 @@ src/matgraph/cgcnn/
   validate.py     # parse limits + standardisation for user structures
   atom_init.json  # from txie-93/cgcnn data/sample-regression
 models/cgcnn/txie93-f42ab23/<property>/{state_dict.pt, meta.json}
-  meta.json = {property, units, task, args, normalizer, val_score, source_commit, sha256, graph_eval}
+  meta.json = {property, units, task, args, normalizer, best_validation_score, epoch, source}
+  training_ids/mp-ids-*.csv   # the reference repo's dataset id lists (seen/unseen split)
+src/matgraph/cgcnn/interpret.py  # raw outputs -> graph values: gating, GPa, expected errors (M1)
 ```
 
 `Prediction` holds:
@@ -349,7 +357,7 @@ has DFT values to compare against.
 | | Milestone | Done when |
 |---|---|---|
 | **M0** | Add `torch` in an `[ml]` extra. `scripts/fetch_cgcnn_weights.py` handles download, sha256 check and conversion. Vendor `model.py` and write `featurize.py` and `predictor.py`. | **Parity test:** for the repo's 10 `sample-regression` CIFs, our predictor matches the reference `predict.py` (run once against the vendored code) to 1e-5. **Invariance tests:** a supercell, an equivalent setting, permuted sites and a rotated cell all give the same prediction within 1e-4. Everything runs offline once the weights are fetched. |
-| **M1** | Graph evaluation via `scripts/predict_graph.py --eval-only`. Map the legacy ids to find seen versus unseen materials. | `artifacts/eval/cgcnn_graph_eval.md` reports, per model and per cluster, MAE, bias and seen/unseen splits against the 795 DFT values. The moduli log base and the band-gap gating are settled. `meta.json.graph_eval` holds the expected errors that evidence will quote. |
+| **M1** ✓ | Graph evaluation via `scripts/evaluate_cgcnn.py`. Map the legacy ids to find seen versus unseen materials. | `artifacts/eval/cgcnn_graph_eval.md` reports, per model and per cluster, MAE, bias and seen/unseen splits against the 795 DFT values. The moduli log base and the band-gap gating are settled in `cgcnn/interpret.py`. `artifacts/eval/cgcnn_graph_eval.json → expected_errors` (committed) holds the expected errors that evidence will quote. |
 | **M2** | `CGCNNSource` and structure ingestion (§5), with naming, validation, dedup, persistence and replay. CLI `--structure` and `scripts/predict.py`. | A known MP structure in a different setting dedups onto its MP node and shows prediction vs DFT. A new polymorph creates a `struct-…` node with derived edges, predicted values and predicted classes. A rebuild replays it identically. Tests cover the parse limits, naming and hash stability, and dedup. |
 | **M3** | API and dashboard: `/predict`, CIF on `/materials/ingest`, `/health`, the upload panel. Retrieval, evidence and grounding integration (§7). | With `include_predicted=false` the benchmark is identical to Phase 2. With true, struct nodes are retrievable, and every predicted claim is hedged and grounded. API tests stay offline. |
 | **M4** | Gap-fill existing nodes (§6). | Every node has `predicted_*` attributes. The README documents coverage of DFT vs predicted per property. |
@@ -386,6 +394,36 @@ has DFT values to compare against.
   running all 7 models takes 1.8 s. No structure needed neighbour padding.
 - **Test suite.** 59 tests pass, with no network calls. The parity tests
   skip when the weights have not been fetched.
+
+### 8.2 M1 results (2026-10-22)
+
+Full report: [`artifacts/eval/cgcnn_graph_eval.md`](../artifacts/eval/cgcnn_graph_eval.md).
+
+| Attribute | Expected error (unseen graph materials) | MAE in dataset | Checkpoint val. |
+|---|---|---|---|
+| `predicted_formation_energy_per_atom` | **0.063 eV/atom** (n=389), bias −0.010 | 0.044 | 0.040 |
+| `predicted_band_gap` (gated at P(metal) ≥ 0.3) | **0.62 eV** (n=389) | 0.41 | 0.37 (non-metals only) |
+| `predicted_is_metal` | **27% error rate** (AUC 0.79, n=389) | AUC 0.91 | AUC 0.96 |
+| `predicted_efermi` | **0.69 eV** (n=389) | 0.40 | 0.36 |
+| `predicted_bulk_modulus_vrh` | **0.097 log₁₀ GPa**, about ×1.25 (n=55) | 0.046 | 0.055 |
+| `predicted_shear_modulus_vrh` | **0.100 log₁₀ GPa**, about ×1.26 (n=55) | 0.060 | 0.091 |
+| `predicted_homogeneous_poisson` | **0.030** (n=55) | 0.023 | 0.029 |
+
+- **Seen and unseen.** 406 of the 795 graph materials are in the
+  formation-energy/classifier dataset, 286 in the band-gap one and 84 in the
+  elastic one. Unseen errors are 1.3–2.1× the in-dataset ones, so the
+  checkpoint validation numbers are optimistic for this chemistry.
+- **Formation energy works.** Unseen MAE is 0.063 eV/atom with almost no
+  bias. That is above the PRD's 0.03–0.04 retraining gate, but usable for
+  predicted values with a stated error.
+- **Band gap is the weak spot.**
+  - Without gating, the regressor gives DFT metals a mean gap of 1.63 eV.
+  - Gating cuts the unseen MAE from 0.82 to 0.62 eV.
+  - The classifier is the bottleneck: its metal recall on unseen materials
+    is only 0.60.
+- **Moduli are log₁₀(GPa).** Read as ln, they would be off by 2.2–2.6.
+- **Speed (CPU).** 795 structures featurise in 9.3 s and run through all 7
+  models in 1.8 s.
 
 M0–M4 is the requested feature: complete CGCNN inference wired into the
 existing ingestion and the existing nodes.
