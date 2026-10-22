@@ -19,32 +19,10 @@ from cognee.context_global_variables import set_database_global_context_variable
 from cognee.modules.data.methods import get_authorized_existing_datasets
 from cognee.modules.users.methods import get_default_user
 
+from matgraph.graph_store import Graph
 from matgraph.pipeline import DATASET_NAME
 
 logger = logging.getLogger(__name__)
-
-
-class Graph:
-    """Thin in-memory index over cognee's (nodes, edges) tuples."""
-
-    def __init__(self, nodes, edges):
-        self.node = {node_id: props for node_id, props in nodes}
-        self.out: dict[str, list[tuple[str, str, dict]]] = defaultdict(list)
-        self.in_: dict[str, list[tuple[str, str, dict]]] = defaultdict(list)
-        for source_id, target_id, rel, props in edges:
-            self.out[source_id].append((rel, target_id, props))
-            self.in_[target_id].append((rel, source_id, props))
-
-    def nodes_of_type(self, type_name: str):
-        return [(nid, p) for nid, p in self.node.items() if p.get("type") == type_name]
-
-    def targets(self, node_id: str, rel: str):
-        """(target_id, target_node_props) pairs for outgoing edges of type `rel`."""
-        return [(tid, self.node[tid]) for r, tid, _edge_props in self.out[node_id] if r == rel]
-
-    def target_edges(self, node_id: str, rel: str):
-        """(target_id, edge_props) pairs, when the edge's own properties matter."""
-        return [(tid, ep) for r, tid, ep in self.out[node_id] if r == rel]
 
 
 async def verify() -> None:
@@ -197,3 +175,21 @@ async def verify() -> None:
 
         assert len(materials) > 0, "expected at least one Material node"
         print(f"  OK: {len(materials)} Material nodes present.")
+
+        # Each Material index field must be embedded from its own text (guards
+        # the cognee 1.3.0 shared-metadata bug patched in matgraph.cognee_patches).
+        from cognee.infrastructure.databases.vector import get_vector_engine
+
+        vector_engine = get_vector_engine()
+        probe = "LiFePO4" if "LiFePO4" in materials else next(iter(materials))
+        top_ids = {}
+        for collection in ("Material_formula", "Material_description", "Material_profile"):
+            hits = await vector_engine.search(collection, query_text=probe, limit=1, include_payload=True)
+            top_ids[collection] = (str(hits[0].id), (hits[0].payload or {}).get("text", "")[:40]) if hits else None
+        formula_hit = top_ids["Material_formula"]
+        assert formula_hit and g.node[formula_hit[0]]["formula"] == probe, (
+            f"Material_formula search for {probe!r} returned {formula_hit} - index fields not embedded separately?"
+        )
+        payloads = {v[1] for v in top_ids.values() if v}
+        assert len(payloads) == 3, f"Material_* collections share embedded text: {top_ids}"
+        print(f"  OK: Material_formula / _description / _profile embedded from distinct text ({probe!r} probe).")

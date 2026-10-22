@@ -97,19 +97,29 @@ class Material(DataPoint):
     material_id: str
     formula: str
     description: str  # robocrystallographer text, embeddable
+    # Deterministic property summary (enrich.build_profile), embeddable. The
+    # robocrys description covers structure only; this gives semantic search
+    # and the Vector RAG baseline the property/class/domain facts too.
+    profile: str = ""
+    # Where this node came from: "mp" for the curated cluster build, "user"
+    # for materials added later through matgraph.ingest.
+    origin: str = "mp"
 
-    band_gap: float
-    is_gap_direct: bool
-    is_metal: bool
-    formation_energy_per_atom: float
-    energy_above_hull: float
-    is_stable: bool
-    density: float
-    volume: float
-    nsites: int
-    total_magnetization: float
-    ordering: str
-    theoretical: bool
+    # Core computed properties. Always present for Materials Project records;
+    # None only for composition-only materials added through matgraph.ingest
+    # (a formula Materials Project has no entry for - nothing to report).
+    band_gap: float | None = None
+    is_gap_direct: bool | None = None
+    is_metal: bool | None = None
+    formation_energy_per_atom: float | None = None
+    energy_above_hull: float | None = None
+    is_stable: bool | None = None
+    density: float | None = None
+    volume: float | None = None
+    nsites: int | None = None
+    total_magnetization: float | None = None
+    ordering: str | None = None
+    theoretical: bool | None = None
 
     # Electronic structure (cheap scalars, always paired with band_gap).
     cbm: float | None = None
@@ -144,6 +154,6 @@ class Material(DataPoint):
     has_formula_pattern: SkipValidation[Any] = None  # (Edge, FormulaPattern)
 
     metadata: dict = {
-        "index_fields": ["formula", "description"],
+        "index_fields": ["formula", "description", "profile"],
         "identity_fields": ["material_id"],
     }

@@ -32,6 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 CONFIG_PATH = ROOT / "config" / "materials.yaml"
 ELEMENTS_PATH = ROOT / "config" / "elements.json"
 DATA_DIR = ROOT / "data" / "raw"
+SIMILARITY_STATS_PATH = ROOT / "artifacts" / "similarity_stats.json"
 
 
 def load_config() -> dict[str, Any]:
@@ -179,39 +180,68 @@ def _similarity_value(raw: dict[str, Any], field: str) -> float | None:
     {"voigt": .., "reuss": .., "vrh": ..} and dielectric_total's raw key is
     e_total (dielectric_total is the flattened name used on the Material
     DataPoint, built later in build_graph - not present on the raw dict)."""
-    if field == "bulk_modulus_vrh":
-        return _vrh(raw.get("bulk_modulus"))
-    if field == "shear_modulus_vrh":
-        return _vrh(raw.get("shear_modulus"))
+    if field in ELASTIC_FIELDS:
+        elastic = elastic_properties(raw)
+        return elastic[field] if elastic else None
     if field == "dielectric_total":
         return raw.get("e_total")
     return raw.get(field)
 
 
-def _zscore_vectors(materials: list[dict[str, Any]]) -> dict[str, list[float]]:
-    """Z-score every similarity field, imputing missing values (elastic and
-    dielectric data aren't computed for every material - roughly 84% and 70%
-    coverage respectively) with the column mean, so a missing value
-    contributes neutrally (z=0) rather than skewing the comparison in either
-    direction."""
-    columns = {f: [_similarity_value(m, f) for m in materials] for f in SIMILARITY_FIELDS}
-    stats = {}
-    for f, values in columns.items():
-        present = [v for v in values if v is not None]
+SimilarityStats = dict[str, tuple[float, float]]  # field -> (mean, std)
+
+
+def compute_similarity_stats(materials: list[dict[str, Any]]) -> SimilarityStats:
+    """Per-field (mean, std) over the materials that have a value for it.
+
+    Frozen at build time (see save_similarity_stats) so a material added later
+    through matgraph.ingest is z-scored on the same scale as the existing
+    graph instead of shifting it.
+    """
+    stats: SimilarityStats = {}
+    for f in SIMILARITY_FIELDS:
+        present = [v for v in (_similarity_value(m, f) for m in materials) if v is not None]
         mean = sum(present) / len(present) if present else 0.0
         variance = sum((v - mean) ** 2 for v in present) / len(present) if present else 0.0
-        std = math.sqrt(variance) or 1.0
-        stats[f] = (mean, std)
+        stats[f] = (mean, math.sqrt(variance) or 1.0)
+    return stats
 
-    vectors = {}
-    for m in materials:
-        vec = []
-        for f in SIMILARITY_FIELDS:
-            value = _similarity_value(m, f)
-            mean, std = stats[f]
-            vec.append(0.0 if value is None else (value - mean) / std)
-        vectors[m["material_id"]] = vec
-    return vectors
+
+# Z-scores are clipped to +/- this many standard deviations. Several fields are
+# heavy-tailed (universal_anisotropy runs 0 - 461: layered h-BN), and an
+# unclipped z of ~180 on one dimension makes the cosine a function of that one
+# field alone. Found in Phase 2's leave-one-out ingestion check.
+Z_CLIP = 3.0
+
+
+def similarity_vector(raw: dict[str, Any], stats: SimilarityStats) -> list[float]:
+    """Z-scored similarity vector, clipped to +/- Z_CLIP. Missing values
+    (elastic and dielectric data aren't computed for every material - roughly
+    18% and 20% coverage) are imputed with the column mean, i.e. z=0, so a
+    missing value contributes neutrally rather than skewing the comparison."""
+    vec = []
+    for f in SIMILARITY_FIELDS:
+        value = _similarity_value(raw, f)
+        mean, std = stats[f]
+        z = 0.0 if value is None else (value - mean) / std
+        vec.append(max(-Z_CLIP, min(Z_CLIP, z)))
+    return vec
+
+
+def count_similarity_dimensions(raw: dict[str, Any]) -> int:
+    """How many SIMILARITY_FIELDS carry a real (non-imputed) value."""
+    return sum(1 for f in SIMILARITY_FIELDS if _similarity_value(raw, f) is not None)
+
+
+def save_similarity_stats(stats: SimilarityStats, path: Path = SIMILARITY_STATS_PATH) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({f: list(v) for f, v in stats.items()}, indent=2))
+
+
+def load_similarity_stats(path: Path = SIMILARITY_STATS_PATH) -> SimilarityStats:
+    if not path.exists():
+        raise FileNotFoundError(f"no similarity stats at {path} (run scripts/build_graph.py first)")
+    return {f: (v[0], v[1]) for f, v in json.loads(path.read_text()).items()}
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
@@ -234,7 +264,8 @@ def compute_similarity_edges(
     neighbours keeps the edge density meaningful regardless of how many
     materials are in the graph.
     """
-    vectors = _zscore_vectors(materials)
+    stats = compute_similarity_stats(materials)
+    vectors = {m["material_id"]: similarity_vector(m, stats) for m in materials}
     ids = list(vectors.keys())
     edges: dict[str, list[tuple[str, float]]] = {i: [] for i in ids}
     for i, id_i in enumerate(ids):
@@ -256,7 +287,255 @@ def _vrh(value: dict[str, float] | None) -> float | None:
     return value.get("vrh") if value else None
 
 
+ELASTIC_FIELDS = ("bulk_modulus_vrh", "shear_modulus_vrh", "universal_anisotropy", "homogeneous_poisson")
+
+
+def elastic_status(raw: dict[str, Any]) -> str:
+    """"ok", "missing", or "unphysical".
+
+    Materials Project occasionally ships elastic tensors from mechanically
+    unstable fits: e.g. Li(CuO2)2 with a bulk modulus of -300,604 GPa. A
+    stable crystal must have positive bulk and shear moduli, and the
+    universal anisotropy index is >= 0 by definition. Such tensors are
+    discarded as a block - one bad component means the whole fit is
+    unreliable - and reported as unphysical rather than silently used (they
+    previously dominated the elastic z-scores in similar_to).
+    """
+    bulk, shear = _vrh(raw.get("bulk_modulus")), _vrh(raw.get("shear_modulus"))
+    anisotropy = raw.get("universal_anisotropy")
+    if bulk is None and shear is None:
+        return "missing"
+    if bulk is None or shear is None or bulk <= 0 or shear <= 0 or (anisotropy is not None and anisotropy < 0):
+        return "unphysical"
+    return "ok"
+
+
+def elastic_properties(raw: dict[str, Any]) -> dict[str, float | None] | None:
+    """The four elastic fields, or None when missing or unphysical."""
+    if elastic_status(raw) != "ok":
+        return None
+    return {
+        "bulk_modulus_vrh": _vrh(raw.get("bulk_modulus")),
+        "shear_modulus_vrh": _vrh(raw.get("shear_modulus")),
+        "universal_anisotropy": raw.get("universal_anisotropy"),
+        "homogeneous_poisson": raw.get("homogeneous_poisson"),
+    }
+
+
+# --- profile text -----------------------------------------------------------
+
+# (raw-record extractor, label, unit) for the optional properties a profile
+# reports as either a value or "not available" - never silently omitted, so
+# both semantic search and the LLM see what is missing.
+_OPTIONAL_PROPERTIES = [
+    (lambda r: (elastic_properties(r) or {}).get("bulk_modulus_vrh"), "bulk modulus", "GPa"),
+    (lambda r: (elastic_properties(r) or {}).get("shear_modulus_vrh"), "shear modulus", "GPa"),
+    (lambda r: r.get("e_total"), "total dielectric constant", ""),
+    (lambda r: r.get("n"), "refractive index", ""),
+]
+
+
+def build_profile(
+    raw: dict[str, Any],
+    classifications: list[dict[str, Any]],
+    domain_matches: list[tuple[str, str]],
+    elements_table: dict[str, dict[str, Any]],
+) -> str:
+    """Deterministic one-paragraph property summary of a material.
+
+    Built from the same raw record and rule outputs as the graph edges (no
+    LLM), so every statement in it is also present as an attribute or edge.
+    """
+    classes = {c["kind"]: c["name"] for c in classifications}
+    symmetry = raw["symmetry"]
+    element_names = ", ".join(
+        elements_table[sym]["name"] if sym in elements_table else sym for sym in raw["elements"]
+    )
+    gap_kind = "direct" if raw.get("is_gap_direct") else "indirect"
+    gap_text = (
+        "It is metallic (DFT band gap 0 eV)."
+        if raw["band_gap"] == 0
+        else f"It has a DFT band gap of {raw['band_gap']:.2f} eV "
+        f"({gap_kind}, {classes.get('band_gap')})."
+    )
+    ordering = raw.get("ordering")
+    ordering_text = (
+        f"magnetic ordering {ordering}"
+        if ordering and ordering != "Unknown"
+        else "magnetic ordering not determined"
+    )
+
+    parts = [
+        f"{raw['formula_pretty']} ({raw['material_id']}) is a {classes.get('stability')} material "
+        f"(energy above hull {raw['energy_above_hull']:.3f} eV/atom) in the {raw['chemsys']} "
+        f"chemical system, space group {symmetry['symbol']} "
+        f"({symmetry['crystal_system'].lower()} crystal system).",
+        gap_text,
+        f"Formation energy {raw['formation_energy_per_atom']:.3f} eV/atom; "
+        f"density {raw['density']:.2f} g/cm3.",
+        f"Total magnetization {raw['total_magnetization']:.2f} bohr magnetons, {ordering_text}.",
+        f"Contains {element_names}.",
+    ]
+    species = raw.get("possible_species") or []
+    if species:
+        parts.append(f"Oxidation states: {', '.join(species)}.")
+    if raw.get("formula_anonymous"):
+        parts.append(f"Formula pattern {raw['formula_anonymous']}.")
+    if domain_matches:
+        domains = ", ".join(name.replace("_", " ") for name, _ in domain_matches)
+        parts.append(f"Suitable for: {domains}.")
+    else:
+        parts.append("Matches no application-domain rule.")
+
+    available, missing = [], []
+    for extract, label, unit in _OPTIONAL_PROPERTIES:
+        value = extract(raw)
+        if value is None:
+            missing.append(label)
+        else:
+            available.append(f"{label} {value:.2f}{(' ' + unit) if unit else ''}")
+    if available:
+        text = "; ".join(available)
+        parts.append(f"{text[0].upper()}{text[1:]}.")
+    if missing:
+        parts.append(f"Not available in Materials Project: {', '.join(missing)}.")
+    if elastic_status(raw) == "unphysical":
+        parts.append("(Materials Project's elastic tensor for it is unphysical - negative modulus or anisotropy - and was discarded.)")
+    return " ".join(parts)
+
+
 # --- graph construction -----------------------------------------------------
+
+
+class NodeFactory:
+    """Builds DataPoints for materials and the shared nodes they point at.
+
+    Shared nodes are cached per factory, and every shared node type declares
+    identity_fields, so a node built here gets the same deterministic id as
+    the one already in the graph - which is how a material ingested later
+    (matgraph.ingest) attaches to the existing Element/SpaceGroup/... hubs
+    instead of duplicating them.
+    """
+
+    def __init__(self, config: dict[str, Any], elements_table: dict[str, dict[str, Any]]):
+        self.config = config
+        self.elements_table = elements_table
+        self._rules_by_domain = {r["domain"]: r["rule"] for r in config["application_rules"]}
+        self._cache: dict[tuple, Any] = {}
+
+    def _cached(self, key: tuple, build):
+        if key not in self._cache:
+            self._cache[key] = build()
+        return self._cache[key]
+
+    def element(self, symbol: str) -> Element:
+        info = self.elements_table[symbol]
+        return self._cached(("Element", symbol), lambda: Element(
+            symbol=symbol,
+            name=info["name"],
+            atomic_number=info["atomic_number"],
+            group=info["group"],
+            period=info["period"],
+            electronegativity=info["electronegativity"],
+            covalent_radius_pm=info["covalent_radius_pm"],
+            category=info["category"],
+        ))
+
+    def crystal_system(self, name: str) -> CrystalSystem:
+        return self._cached(("CrystalSystem", name), lambda: CrystalSystem(name=name))
+
+    def space_group(self, symbol: str, number: int, crystal_system_name: str) -> SpaceGroup:
+        return self._cached(("SpaceGroup", symbol, number), lambda: SpaceGroup(
+            symbol=symbol, number=number, crystal_system=self.crystal_system(crystal_system_name),
+        ))
+
+    def chemsys(self, chemsys: str) -> ChemicalSystem:
+        return self._cached(("ChemicalSystem", chemsys), lambda: ChemicalSystem(chemsys=chemsys))
+
+    def property_class(self, kind: str, name: str, description: str) -> PropertyClass:
+        return self._cached(("PropertyClass", kind, name),
+                            lambda: PropertyClass(kind=kind, name=name, description=description))
+
+    def domain(self, name: str) -> ApplicationDomain:
+        return self._cached(("ApplicationDomain", name), lambda: ApplicationDomain(
+            name=name, description=self._rules_by_domain.get(name, name)
+        ))
+
+    def oxidation_state(self, species: str) -> OxidationState:
+        return self._cached(("OxidationState", species), lambda: OxidationState(species=species))
+
+    def formula_pattern(self, pattern: str) -> FormulaPattern:
+        return self._cached(("FormulaPattern", pattern), lambda: FormulaPattern(pattern=pattern))
+
+    def classifications(self, raw: dict[str, Any]) -> list[dict[str, Any]]:
+        out = []
+        if raw.get("band_gap") is not None:
+            out.append(classify_band_gap(raw["band_gap"], self.config))
+        if raw.get("energy_above_hull") is not None:
+            out.append(classify_stability(raw["energy_above_hull"], self.config))
+        ordering_class = classify_ordering(raw.get("ordering"))
+        if ordering_class:
+            out.append(ordering_class)
+        return out
+
+    def material(self, raw: dict[str, Any], origin: str = "mp") -> Material:
+        """Material node with every edge except similar_to (needs all materials)."""
+        classifications = self.classifications(raw)
+        # Domain rules need the full property set; a composition-only record
+        # (matgraph.ingest) has none, so no rule can fire for it.
+        has_properties = raw.get("band_gap") is not None and raw.get("energy_above_hull") is not None
+        domain_matches = apply_application_rules(raw, self.config) if has_properties else []
+
+        symmetry = raw.get("symmetry")
+        formula_pattern = raw.get("formula_anonymous")
+        return Material(
+            material_id=raw["material_id"],
+            formula=raw["formula_pretty"],
+            description=raw.get("description") or f"{raw['formula_pretty']} (no description available)",
+            profile=build_profile(raw, classifications, domain_matches, self.elements_table)
+            if has_properties else raw.get("profile", ""),
+            origin=origin,
+            band_gap=raw.get("band_gap"),
+            is_gap_direct=raw.get("is_gap_direct"),
+            is_metal=raw.get("is_metal"),
+            formation_energy_per_atom=raw.get("formation_energy_per_atom"),
+            energy_above_hull=raw.get("energy_above_hull"),
+            is_stable=raw.get("is_stable"),
+            density=raw.get("density"),
+            volume=raw.get("volume"),
+            nsites=raw.get("nsites"),
+            total_magnetization=raw.get("total_magnetization"),
+            ordering=raw.get("ordering"),
+            theoretical=raw.get("theoretical"),
+            cbm=raw.get("cbm"),
+            vbm=raw.get("vbm"),
+            efermi=raw.get("efermi"),
+            is_magnetic=raw.get("is_magnetic") or False,
+            num_magnetic_sites=raw.get("num_magnetic_sites") or 0,
+            **(elastic_properties(raw) or {}),
+            dielectric_total=raw.get("e_total"),
+            dielectric_electronic=raw.get("e_electronic"),
+            dielectric_ionic=raw.get("e_ionic"),
+            refractive_index=raw.get("n"),
+            contains=[self.element(sym) for sym in raw["elements"]],
+            has_space_group=(
+                (Edge(relationship_type="has_space_group"),
+                 self.space_group(symmetry["symbol"], symmetry["number"], symmetry["crystal_system"]))
+                if symmetry else None
+            ),
+            member_of=(Edge(relationship_type="member_of"), self.chemsys(raw["chemsys"])),
+            classified_as=[self.property_class(c["kind"], c["name"], c["description"]) for c in classifications],
+            suitable_for=[
+                (Edge(relationship_type="suitable_for", properties={"rule": rule}), self.domain(name))
+                for name, rule in domain_matches
+            ],
+            has_oxidation_state=[self.oxidation_state(sp) for sp in raw.get("possible_species") or []],
+            has_formula_pattern=(
+                (Edge(relationship_type="has_formula_pattern"), self.formula_pattern(formula_pattern))
+                if formula_pattern else None
+            ),
+            # similar_to is filled in by the caller once target nodes exist.
+        )
 
 
 def build_graph(
@@ -265,153 +544,11 @@ def build_graph(
     elements_table: dict[str, dict[str, Any]],
 ) -> list[Material]:
     """Build the full set of interconnected DataPoint nodes for all materials."""
-
-    element_cache: dict[str, Element] = {}
-    crystal_system_cache: dict[str, CrystalSystem] = {}
-    space_group_cache: dict[str, SpaceGroup] = {}
-    chemsys_cache: dict[str, ChemicalSystem] = {}
-    property_class_cache: dict[tuple[str, str], PropertyClass] = {}
-    domain_cache: dict[str, ApplicationDomain] = {}
-    oxidation_state_cache: dict[str, OxidationState] = {}
-    formula_pattern_cache: dict[str, FormulaPattern] = {}
-
-    def get_element(symbol: str) -> Element:
-        if symbol not in element_cache:
-            info = elements_table[symbol]
-            element_cache[symbol] = Element(
-                symbol=symbol,
-                name=info["name"],
-                atomic_number=info["atomic_number"],
-                group=info["group"],
-                period=info["period"],
-                electronegativity=info["electronegativity"],
-                covalent_radius_pm=info["covalent_radius_pm"],
-                category=info["category"],
-            )
-        return element_cache[symbol]
-
-    def get_crystal_system(name: str) -> CrystalSystem:
-        if name not in crystal_system_cache:
-            crystal_system_cache[name] = CrystalSystem(name=name)
-        return crystal_system_cache[name]
-
-    def get_space_group(symbol: str, number: int, crystal_system_name: str) -> SpaceGroup:
-        key = f"{symbol}:{number}"
-        if key not in space_group_cache:
-            space_group_cache[key] = SpaceGroup(
-                symbol=symbol,
-                number=number,
-                crystal_system=get_crystal_system(crystal_system_name),
-            )
-        return space_group_cache[key]
-
-    def get_chemsys(chemsys: str) -> ChemicalSystem:
-        if chemsys not in chemsys_cache:
-            chemsys_cache[chemsys] = ChemicalSystem(chemsys=chemsys)
-        return chemsys_cache[chemsys]
-
-    def get_property_class(kind: str, name: str, description: str) -> PropertyClass:
-        key = (kind, name)
-        if key not in property_class_cache:
-            property_class_cache[key] = PropertyClass(kind=kind, name=name, description=description)
-        return property_class_cache[key]
-
-    def get_domain(name: str) -> ApplicationDomain:
-        if name not in domain_cache:
-            rules_by_domain = {r["domain"]: r["rule"] for r in config["application_rules"]}
-            domain_cache[name] = ApplicationDomain(
-                name=name, description=rules_by_domain.get(name, name)
-            )
-        return domain_cache[name]
-
-    def get_oxidation_state(species: str) -> OxidationState:
-        if species not in oxidation_state_cache:
-            oxidation_state_cache[species] = OxidationState(species=species)
-        return oxidation_state_cache[species]
-
-    def get_formula_pattern(pattern: str) -> FormulaPattern:
-        if pattern not in formula_pattern_cache:
-            formula_pattern_cache[pattern] = FormulaPattern(pattern=pattern)
-        return formula_pattern_cache[pattern]
-
+    factory = NodeFactory(config, elements_table)
     similarity_edges = compute_similarity_edges(
         raw_materials, config["similarity"]["min_edge_weight"], config["similarity"]["top_k"]
     )
-
-    material_nodes: dict[str, Material] = {}
-    for raw in raw_materials:
-        contains = [get_element(sym) for sym in raw["elements"]]
-        symmetry = raw["symmetry"]
-        space_group = get_space_group(
-            symmetry["symbol"], symmetry["number"], symmetry["crystal_system"]
-        )
-        chemsys = get_chemsys(raw["chemsys"])
-
-        classifications = [
-            classify_band_gap(raw["band_gap"], config),
-            classify_stability(raw["energy_above_hull"], config),
-        ]
-        ordering_class = classify_ordering(raw["ordering"])
-        if ordering_class:
-            classifications.append(ordering_class)
-        classified_as = [
-            get_property_class(c["kind"], c["name"], c["description"]) for c in classifications
-        ]
-
-        domain_matches = apply_application_rules(raw, config)
-        suitable_for = [
-            (Edge(relationship_type="suitable_for", properties={"rule": rule}), get_domain(name))
-            for name, rule in domain_matches
-        ]
-
-        species = raw.get("possible_species") or []
-        has_oxidation_state = [get_oxidation_state(sp) for sp in species]
-
-        formula_pattern = raw.get("formula_anonymous")
-        has_formula_pattern = (
-            (Edge(relationship_type="has_formula_pattern"), get_formula_pattern(formula_pattern))
-            if formula_pattern
-            else None
-        )
-
-        material_nodes[raw["material_id"]] = Material(
-            material_id=raw["material_id"],
-            formula=raw["formula_pretty"],
-            description=raw["description"] or f"{raw['formula_pretty']} (no description available)",
-            band_gap=raw["band_gap"],
-            is_gap_direct=raw["is_gap_direct"],
-            is_metal=raw["is_metal"],
-            formation_energy_per_atom=raw["formation_energy_per_atom"],
-            energy_above_hull=raw["energy_above_hull"],
-            is_stable=raw["is_stable"],
-            density=raw["density"],
-            volume=raw["volume"],
-            nsites=raw["nsites"],
-            total_magnetization=raw["total_magnetization"],
-            ordering=raw["ordering"],
-            theoretical=raw["theoretical"],
-            cbm=raw.get("cbm"),
-            vbm=raw.get("vbm"),
-            efermi=raw.get("efermi"),
-            is_magnetic=raw.get("is_magnetic") or False,
-            num_magnetic_sites=raw.get("num_magnetic_sites") or 0,
-            bulk_modulus_vrh=_vrh(raw.get("bulk_modulus")),
-            shear_modulus_vrh=_vrh(raw.get("shear_modulus")),
-            universal_anisotropy=raw.get("universal_anisotropy"),
-            homogeneous_poisson=raw.get("homogeneous_poisson"),
-            dielectric_total=raw.get("e_total"),
-            dielectric_electronic=raw.get("e_electronic"),
-            dielectric_ionic=raw.get("e_ionic"),
-            refractive_index=raw.get("n"),
-            contains=contains,
-            has_space_group=(Edge(relationship_type="has_space_group"), space_group),
-            member_of=(Edge(relationship_type="member_of"), chemsys),
-            classified_as=classified_as,
-            suitable_for=suitable_for,
-            has_oxidation_state=has_oxidation_state,
-            has_formula_pattern=has_formula_pattern,
-            # similar_to filled in below, once every Material node exists.
-        )
+    material_nodes = {raw["material_id"]: factory.material(raw) for raw in raw_materials}
 
     for material_id, material in material_nodes.items():
         pairs = similarity_edges.get(material_id, [])

@@ -20,8 +20,18 @@ from cognee.modules.users.methods import get_default_user
 from cognee.pipelines import Task
 from cognee.tasks.storage import add_data_points
 
-from matgraph.enrich import build_graph, load_config, load_elements_table, load_raw_materials
+from matgraph.enrich import (
+    build_graph,
+    compute_similarity_stats,
+    load_config,
+    load_elements_table,
+    load_raw_materials,
+    save_similarity_stats,
+)
 from matgraph.schema import Material
+from matgraph import cognee_patches
+
+cognee_patches.apply()
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +46,8 @@ def build_materials(_: list[Any]) -> list[Material]:
     elements_table = load_elements_table()
     raw_materials = load_raw_materials(config_data)
     materials = build_graph(raw_materials, config_data, elements_table)
+    # Frozen so materials ingested later are z-scored on this build's scale.
+    save_similarity_stats(compute_similarity_stats(raw_materials))
     logger.info("built %d Material nodes from %d cached records", len(materials), len(raw_materials))
     return materials
 
@@ -63,3 +75,26 @@ async def run(reset: bool = True) -> None:
 
     async for status in pipeline:
         logger.info("pipeline status: %s", status)
+
+
+async def add_to_graph(datapoints: list[Any]) -> None:
+    """Upsert DataPoints into the existing dataset without pruning (used by
+    matgraph.ingest). Identity-keyed nodes resolve onto the existing ones."""
+    from cognee.modules.data.methods import get_authorized_existing_datasets
+
+    sys.setrecursionlimit(20000)
+    config.system_root_directory(str(COGNEE_SYSTEM_DIR))
+    await setup()
+    user = await get_default_user()
+    datasets = await get_authorized_existing_datasets([DATASET_NAME], "write", user)
+    if not datasets:
+        raise RuntimeError(f"dataset {DATASET_NAME!r} not found (run scripts/build_graph.py first)")
+
+    def provide(_: list[Any]) -> list[Any]:
+        return datapoints
+
+    pipeline = run_pipeline(
+        [Task(provide), Task(add_data_points)], [None], [datasets[0].id], user, "matgraph_ingest_pipeline"
+    )
+    async for status in pipeline:
+        logger.info("ingest pipeline status: %s", status)
