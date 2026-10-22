@@ -13,6 +13,12 @@ reasoning paths. No LLM anywhere in this module.
 
 Hard constraints are never traded off against score: a candidate satisfies
 all of them or is not returned.
+
+CGCNN predictions (Phase 3) are opt-in. With ``include_predicted=False`` (the
+default) retrieval sees exactly the Phase 2 graph: no struct- materials,
+no edges marked ``provenance: predicted``, no ``predicted_*`` values. With it
+on, those count too, but every check and hop that rests on a prediction is
+marked ``predicted`` so evidence and grounding can label it.
 """
 
 from __future__ import annotations
@@ -25,7 +31,7 @@ from typing import Any, Literal
 import yaml
 from pydantic import BaseModel, Field
 
-from matgraph.graph_store import Graph
+from matgraph.graph_store import Graph, edge_annotations, is_predicted_edge, is_predicted_material
 from matgraph.query_schema import NUMERIC_PROPERTIES, QueryConstraints
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -51,6 +57,7 @@ class ConstraintCheck(BaseModel):
     satisfied: bool | None  # None = value missing (keep_flagged policy only)
     path: list[Hop] = Field(default_factory=list)  # graph edges proving it
     value: Any = None  # attribute value for numeric/boolean checks
+    predicted: bool = False  # satisfied by a CGCNN prediction, not a DFT value / exact edge
 
 
 class AnchorLink(BaseModel):
@@ -69,6 +76,7 @@ class Candidate(BaseModel):
     checks: list[ConstraintCheck]
     anchor_links: list[AnchorLink] = Field(default_factory=list)
     missing_properties: list[str] = Field(default_factory=list)
+    uses_predictions: bool = False  # any check, path or the material itself rests on CGCNN
 
 
 class RetrievalResult(BaseModel):
@@ -108,8 +116,9 @@ def node_label(props: dict[str, Any]) -> str:
 def _hop(g: Graph, source_id: str, rel: str, target_id: str, props: dict | None = None) -> Hop:
     props = props or {}
     # cognee keeps Edge(weight=...) top-level but Edge(properties={...}) nested.
-    keep = {"rule": (props.get("properties") or {}).get("rule") or props.get("rule"),
-            "weight": props.get("weight")}
+    inner = edge_annotations(props)
+    keep = {"rule": inner.get("rule") or props.get("rule"), "weight": props.get("weight"),
+            "provenance": inner.get("provenance"), "model": inner.get("model")}
     keep = {k: v for k, v in keep.items() if v is not None}
     return Hop(
         source=node_label(g.node[source_id]),
@@ -132,12 +141,16 @@ def _format_range(prop: str, lo: float | None, hi: float | None) -> str:
 # --- node-constraint traversal ----------------------------------------------------
 
 
-def _materials_via(g: Graph, target_id: str, rel: str) -> set[str]:
-    return {sid for sid in g.sources(target_id, rel) if g.node[sid].get("type") == "Material"}
+def _materials_via(g: Graph, target_id: str, rel: str, include_predicted: bool = False) -> set[str]:
+    return {
+        sid for r, sid, props in g.in_[target_id]
+        if r == rel and g.node[sid].get("type") == "Material"
+        and (include_predicted or not (is_predicted_edge(props) or is_predicted_material(g.node[sid])))
+    }
 
 
 def _node_constraint_sets(
-    g: Graph, c: QueryConstraints
+    g: Graph, c: QueryConstraints, include_predicted: bool = False
 ) -> list[tuple[str, set[str], dict[str, list[Hop]]]]:
     """For each node constraint: (label, materials satisfying it, per-material proof path).
 
@@ -151,7 +164,7 @@ def _node_constraint_sets(
         if target_id is None:
             out.append((label, set(), {}))
             return
-        mats = _materials_via(g, target_id, rel)
+        mats = _materials_via(g, target_id, rel, include_predicted)
         paths = {}
         for m in mats:
             edge_props = next((ep for tid, ep in g.target_edges(m, rel) if tid == target_id), {})
@@ -174,7 +187,7 @@ def _node_constraint_sets(
         for target_id in targets:
             if target_id is None:
                 continue
-            for m in _materials_via(g, target_id, rel):
+            for m in _materials_via(g, target_id, rel, include_predicted):
                 mats.add(m)
                 paths[m] = [_hop(g, m, rel, target_id)]
         out.append((label, mats, paths))
@@ -194,7 +207,7 @@ def _node_constraint_sets(
             if cs_id is None:
                 continue
             for sg_id in g.sources(cs_id, "crystal_system"):
-                for m in _materials_via(g, sg_id, "has_space_group"):
+                for m in _materials_via(g, sg_id, "has_space_group", include_predicted):
                     mats.add(m)
                     paths[m] = [_hop(g, m, "has_space_group", sg_id), _hop(g, sg_id, "crystal_system", cs_id)]
         out.append((f"crystal system in {c.crystal_systems}", mats, paths))
@@ -207,18 +220,21 @@ def _node_constraint_sets(
 class _AnchorIndex:
     """IDF-weighted hub overlap + similar_to paths, relative to anchor materials."""
 
-    def __init__(self, g: Graph, anchor_ids: list[str], cfg: dict[str, Any]):
+    def __init__(self, g: Graph, anchor_ids: list[str], cfg: dict[str, Any], materials: set[str]):
         self.g = g
         self.cfg = cfg["anchor"]
         self.hub_relations = set(self.cfg["hub_relations"])
-        n_materials = max(1, len(g.by_type.get("Material", [])))
+        # Hub selectivity over the materials retrieval may see (without
+        # include_predicted, struct- nodes do not dilute it).
+        self.materials = materials
         self._idf_cache: dict[str, float] = {}
-        self._n = n_materials
+        self._n = max(1, len(materials))
         self.anchors = [(a, self._hubs(a)) for a in anchor_ids]
 
     def _idf(self, hub_id: str) -> float:
         if hub_id not in self._idf_cache:
-            degree = sum(1 for rel, _source, _props in self.g.in_[hub_id] if rel in self.hub_relations)
+            degree = sum(1 for rel, source, _props in self.g.in_[hub_id]
+                         if rel in self.hub_relations and source in self.materials)
             self._idf_cache[hub_id] = math.log((self._n + 1) / (degree + 1)) + 1e-6
         return self._idf_cache[hub_id]
 
@@ -268,10 +284,10 @@ class _AnchorIndex:
 # --- main entry point ---------------------------------------------------------------
 
 
-def _property_spread(g: Graph, prop: str) -> float:
+def _property_spread(g: Graph, prop: str, materials: set[str]) -> float:
     """Robust scale of a property: (90th - 10th percentile) / 2.56, which
     equals the standard deviation for normal data but ignores outliers."""
-    values = sorted(p.get(prop) for _, p in g.nodes_of_type("Material") if p.get(prop) is not None)
+    values = sorted(g.node[m][prop] for m in materials if g.node[m].get(prop) is not None)
     if len(values) < 2:
         return 1.0
     lo, hi = values[int(0.1 * (len(values) - 1))], values[int(0.9 * (len(values) - 1))]
@@ -287,24 +303,36 @@ def _margin(value: float, lo: float | None, hi: float | None, spread: float) -> 
     return max(0.0, min(1.0, abs(value - bound) / spread))
 
 
+def _value(props: dict[str, Any], prop: str, include_predicted: bool) -> tuple[Any, bool]:
+    """(value, is_predicted): the DFT value, or - opt-in, only where DFT has
+    none - the CGCNN prediction stored as predicted_<prop>."""
+    value = props.get(prop)
+    if value is None and include_predicted and props.get(f"predicted_{prop}") is not None:
+        return props[f"predicted_{prop}"], True
+    return value, False
+
+
 def retrieve(
     graph: Graph,
     constraints: QueryConstraints,
     semantic_scores: dict[str, float] | None = None,
     config: dict[str, Any] | None = None,
     exclude_node_ids: set[str] | None = None,
+    include_predicted: bool = False,
 ) -> RetrievalResult:
     cfg = config or load_retrieval_config()
     g = graph
     c = constraints
     semantic_scores = semantic_scores or {}
     all_materials = set(g.by_type.get("Material", []))
+    if not include_predicted:
+        all_materials = {m for m in all_materials if not is_predicted_material(g.node[m])}
     anchor_ids = [g.material(a) for a in c.anchor_materials]
     anchor_ids = [a for a in anchor_ids if a]
     excluded = set(anchor_ids) | (exclude_node_ids or set())
 
     # SEED + EXPAND: node constraints -> intersected material pool.
-    node_sets = _node_constraint_sets(g, c)
+    node_sets = _node_constraint_sets(g, c, include_predicted)
     if node_sets:
         pool = set.intersection(*(s for _, s, _ in node_sets))
         mode = "constrained"
@@ -319,7 +347,7 @@ def retrieve(
 
     # FILTER: attribute-level constraints.
     policy = cfg["missing_value_policy"]
-    spreads = {r.property: _property_spread(g, r.property) for r in c.property_ranges}
+    spreads = {r.property: _property_spread(g, r.property, all_materials) for r in c.property_ranges}
     excluded_missing: dict[str, int] = defaultdict(int)
     survivors: list[tuple[str, list[ConstraintCheck], list[float], list[str]]] = []
 
@@ -327,13 +355,15 @@ def retrieve(
         props = g.node[m]
         checks: list[ConstraintCheck] = []
         for label, mats, paths in node_sets:
-            checks.append(ConstraintCheck(constraint=label, satisfied=True, path=paths.get(m, [])))
+            path = paths.get(m, [])
+            checks.append(ConstraintCheck(constraint=label, satisfied=True, path=path,
+                                          predicted=any(h.properties.get("provenance") == "predicted" for h in path)))
 
         ok = True
         margins: list[float] = []
         missing: list[str] = []
         for r in c.property_ranges:
-            value = props.get(r.property)
+            value, predicted = _value(props, r.property, include_predicted)
             label = _format_range(r.property, r.min, r.max)
             if value is None:
                 if policy == "exclude":
@@ -348,16 +378,17 @@ def retrieve(
                 ok = False
                 break
             margins.append(_margin(value, r.min, r.max, spreads[r.property]))
-            checks.append(ConstraintCheck(constraint=label, satisfied=True, value=value))
+            checks.append(ConstraintCheck(constraint=label, satisfied=True, value=value, predicted=predicted))
         if not ok:
             continue
 
         for b in c.boolean_flags:
-            value = props.get(b.flag)
+            value, predicted = _value(props, b.flag, include_predicted)
             if value is None or bool(value) != b.value:
                 ok = False
                 break
-            checks.append(ConstraintCheck(constraint=f"{b.flag} = {b.value}", satisfied=True, value=value))
+            checks.append(ConstraintCheck(constraint=f"{b.flag} = {b.value}", satisfied=True, value=value,
+                                          predicted=predicted))
         if not ok:
             continue
 
@@ -371,7 +402,7 @@ def retrieve(
 
     # RANK.
     weights = cfg["ranking_weights"]
-    anchor_index = _AnchorIndex(g, anchor_ids, cfg) if anchor_ids else None
+    anchor_index = _AnchorIndex(g, anchor_ids, cfg, all_materials) if anchor_ids else None
     sem_values = [semantic_scores[m] for m, *_ in survivors if m in semantic_scores]
     sem_lo, sem_hi = (min(sem_values), max(sem_values)) if sem_values else (0.0, 1.0)
 
@@ -402,13 +433,14 @@ def retrieve(
                 checks=checks,
                 anchor_links=links,
                 missing_properties=missing,
+                uses_predictions=is_predicted_material(props) or any(ch.predicted for ch in checks),
             )
         )
 
     def sort_key(cand: Candidate):
         incomplete = 1 if cand.missing_properties else 0
         if c.sort_by:
-            value = g.node[cand.node_id].get(c.sort_by)
+            value, _ = _value(g.node[cand.node_id], c.sort_by, include_predicted)
             has_value = 0 if value is not None else 1
             ordered = -(value or 0) if c.sort_descending else (value or 0)
             return (incomplete, has_value, ordered, -cand.score, cand.formula)

@@ -14,6 +14,7 @@ without being written to cognee.
 
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from typing import Any
 
@@ -32,6 +33,28 @@ MATERIAL_TO_MATERIAL = {"similar_to"}
 
 def _is_struct(props: dict[str, Any]) -> bool:
     return str(props.get("material_id", "")).startswith("struct-")
+
+
+def edge_annotations(edge_props: dict[str, Any]) -> dict[str, Any]:
+    """The Edge(properties={...}) dict of an edge (rule text, provenance, ...).
+    cognee nests it under "properties" and may hand it back JSON-encoded."""
+    inner = edge_props.get("properties") or {}
+    if isinstance(inner, str):
+        try:
+            inner = json.loads(inner)
+        except ValueError:
+            inner = {}
+    return inner if isinstance(inner, dict) else {}
+
+
+def is_predicted_edge(edge_props: dict[str, Any]) -> bool:
+    """Edge resting on a CGCNN prediction (matgraph.ingest_structure)."""
+    return edge_annotations(edge_props).get("provenance") == "predicted"
+
+
+def is_predicted_material(props: dict[str, Any]) -> bool:
+    """Material whose properties are all CGCNN predictions (a struct- node)."""
+    return props.get("property_source") == "cgcnn"
 
 
 class Graph:
