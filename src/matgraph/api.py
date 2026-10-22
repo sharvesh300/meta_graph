@@ -6,7 +6,9 @@
     POST /materials/ingest     add a material by MP id, formula or crystal structure -> relation report
     POST /predict              crystal structure -> CGCNN predictions (no graph change)
     GET  /health               readiness: graph, embeddings, LLM, CGCNN (with a fixed-structure check)
+    GET  /graph                the whole graph (nodes + edges) for the explorer
     GET  /                     dashboard (static/index.html)
+    GET  /explorer             animated graph explorer with structure import (static/explorer.html)
 
 Structures are sent as CIF / POSCAR text in the JSON body (the dashboard reads
 the chosen file). The graph and the CGCNN models are loaded once at startup;
@@ -257,6 +259,51 @@ async def health() -> dict[str, Any]:
     return checks
 
 
+# Node fields the explorer shows; anything else stays server-side.
+_GRAPH_NODE_TYPES = {"Material", "Element", "SpaceGroup", "CrystalSystem", "ChemicalSystem", "PropertyClass",
+                     "ApplicationDomain", "OxidationState", "FormulaPattern"}
+_MATERIAL_FIELDS = ("material_id", "formula", "band_gap", "energy_above_hull", "origin", "property_source",
+                    "predicted_band_gap")
+
+
+@app.get("/graph")
+async def graph_data() -> dict[str, Any]:
+    """Every node and edge (preview additions included), compact, for the explorer."""
+    from matgraph.graph_store import is_predicted_edge
+    from matgraph.retriever import node_label
+
+    g = kb().graph
+    nodes, ids = [], set()
+    for node_id, props in g.node.items():
+        kind = props.get("type")
+        if kind not in _GRAPH_NODE_TYPES:
+            continue
+        node: dict[str, Any] = {"id": node_id, "type": kind, "label": node_label(props)}
+        if kind == "Material":
+            node.update({k: props.get(k) for k in _MATERIAL_FIELDS if props.get(k) is not None})
+        if node_id in g.overlay_nodes:
+            node["preview"] = True
+        nodes.append(node)
+        ids.add(node_id)
+    links = []
+    for source, edges in g.out.items():
+        for rel, target, props in edges:
+            if source not in ids or target not in ids:
+                continue
+            link: dict[str, Any] = {"source": source, "target": target, "rel": rel}
+            if props.get("weight") is not None:
+                link["weight"] = round(props["weight"], 3)
+            if is_predicted_edge(props):
+                link["predicted"] = True
+            links.append(link)
+    return {"nodes": nodes, "links": links}
+
+
 @app.get("/", include_in_schema=False)
 async def dashboard() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/explorer", include_in_schema=False)
+async def explorer() -> FileResponse:
+    return FileResponse(STATIC_DIR / "explorer.html")
