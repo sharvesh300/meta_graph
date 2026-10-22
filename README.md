@@ -2,8 +2,8 @@
 
 **An Explainable Graph-Based Retrieval-Augmented Reasoning System for Intelligent Materials Discovery**
 
-> Phase 1 Report — Knowledge Graph Construction Pipeline
-> Status: **Phase 1 complete** · Phase 2 (GraphRAG retrieval) and Phase 3 (CGCNN structural embeddings) not yet started
+> Project report: Phase 1 (knowledge graph construction) and Phase 2 (GraphRAG retrieval and recommendation)
+> Status: **Phase 1 complete** · **Phase 2 complete** · Phase 3 (CGCNN structural embeddings) not yet started
 
 ---
 
@@ -18,11 +18,24 @@
 7. [How Materials Are Grouped](#7-how-materials-are-grouped)
 8. [Verified Graph Statistics](#8-verified-graph-statistics)
 9. [Example Graph Traversals](#9-example-graph-traversals)
-10. [Project Structure](#10-project-structure)
-11. [Getting Started](#11-getting-started)
-12. [Engineering Notes](#12-engineering-notes)
-13. [Roadmap](#13-roadmap)
-14. [Tech Stack](#14-tech-stack)
+
+**Part II: Phase 2**
+
+10. [Phase 2 Overview](#10-phase-2-overview)
+11. [Query Understanding](#11-query-understanding)
+12. [Graph Retrieval](#12-graph-retrieval)
+13. [Evidence and Grounded Explanations](#13-evidence-and-grounded-explanations)
+14. [Adding New Materials](#14-adding-new-materials)
+15. [Evaluation](#15-evaluation)
+16. [API and Dashboard](#16-api-and-dashboard)
+
+**Reference**
+
+17. [Project Structure](#17-project-structure)
+18. [Getting Started](#18-getting-started)
+19. [Engineering Notes](#19-engineering-notes)
+20. [Roadmap](#20-roadmap)
+21. [Tech Stack](#21-tech-stack)
 
 ---
 
@@ -32,12 +45,14 @@ MatGraphRAG is a decision-support system for materials discovery: it turns the
 [Materials Project](https://materialsproject.org) database into a knowledge graph
 so that materials, their properties, their crystal chemistry, and their
 application domains become traversable and explainable, rather than isolated
-rows in a table. The eventual goal (Phases 2–3) is graph-based retrieval and
+rows in a table. On top of the graph, Phase 2 adds graph-based retrieval and
 LLM-generated recommendations, where every claim in an answer is traceable to
 a concrete graph edge or database record.
 
-This document reports on **Phase 1**: constructing that knowledge graph. No
-LLM is involved anywhere in this phase — every node, edge, and classification
+Part I of this document reports on **Phase 1**: constructing that knowledge
+graph. Part II (§10–16) reports on **Phase 2**: retrieval, explanation,
+new-material ingestion, and their evaluation. No LLM is involved anywhere in
+Phase 1: every node, edge, and classification
 is produced by deterministic rules applied to data pulled directly from the
 Materials Project API, using [Cognee](https://github.com/topoteretes/cognee)
 as the graph/vector storage and pipeline layer.
@@ -47,14 +62,22 @@ as the graph/vector storage and pipeline layer.
 | Phase | Description | Status |
 |---|---|---|
 | **Phase 1** | Knowledge graph construction from Materials Project data | ✅ Complete |
-| Phase 2 | GraphRAG retrieval + LLM-generated, evidence-backed recommendations | Not started |
+| **Phase 2** | GraphRAG retrieval + LLM-generated, evidence-backed recommendations | ✅ Complete |
 | Phase 3 | CGCNN crystal-structure embeddings, structural similarity search, element substitution | Not started |
 
 Phase 1 deliverable, as built and verified: a graph of **794 materials**
 spanning **46 elements**, **106 space groups**, **143 chemical systems**,
 **131 oxidation states**, **261 stoichiometric formula patterns**, and
-**5 application domains**, interconnected by **14,681 edges** — built entirely
+**5 application domains**, interconnected by **14,686 edges** — built entirely
 from cached, reproducible Materials Project data with zero LLM calls.
+
+Phase 2 deliverable: natural-language questions answered by graph traversal
+plus exact constraint filtering. Answers are LLM-written explanations in which
+every claim cites a graph edge or Materials Project record, and a
+deterministic checker verifies the citations. On a 55-question benchmark,
+graph retrieval reaches **nDCG@10 0.910** with **0 constraint violations**,
+against 0.308 / 69.6% for vector RAG (§15). New materials can be added by MP
+id or formula and related to the existing graph.
 
 ## 3. Dataset
 
@@ -122,13 +145,13 @@ structural data as extra fields on the same summary document.
 | **Elastic** (PRD: "Elastic Properties") | `bulk_modulus` (VRH), `shear_modulus` (VRH), `universal_anisotropy`, `homogeneous_poisson` | **18.0%** (143/794) |
 | **Dielectric** (PRD: "Dielectric Properties") | `e_total`, `e_electronic`, `e_ionic`, refractive index `n` | **19.9%** (158/794) |
 | **Oxidation states** (PRD: "Oxidation States") | `possible_species` → `OxidationState` nodes | 93.1% (739/794) |
-| Full crystal structure | `structure` (lattice + atomic positions) — cached to disk for Phase 3, not added to the graph (see §12) | 100% |
+| Full crystal structure | `structure` (lattice + atomic positions) — cached to disk for Phase 3, not added to the graph (see §19) | 100% |
 
 Elastic and dielectric tensors require an extra DFPT calculation Materials
 Project hasn't run for every entry, so real coverage is much lower than core
 properties — this was measured directly against the full 794-material set,
 not estimated (an earlier spot-check on 50 materials suggested ~84%/~70%
-coverage, which turned out to be a sampling-bias artifact; see §12).
+coverage, which turned out to be a sampling-bias artifact; see §19).
 
 ## 4. Graph Architecture
 
@@ -269,7 +292,7 @@ shared-node design in §4 produces directly. Concretely, in the built graph:
   (143) but sparser than `Element` (46), a genuinely different grouping axis.
 - **`similar_to` edges add a direct, weighted shortcut.** Rather than a flat
   similarity threshold (which stops scaling once the dataset is larger than
-  a handful of materials — see §12), each material links to its **top-5**
+  a handful of materials — see §19), each material links to its **top-5**
   nearest neighbours by cosine similarity over a **10-dimensional**, z-scored
   property vector spanning electronic (`band_gap`), thermodynamic
   (`formation_energy_per_atom`, `energy_above_hull`), structural-density
@@ -278,9 +301,11 @@ shared-node design in §4 produces directly. Concretely, in the built graph:
   dielectric (`dielectric_total`) behavior — keeping only pairs with
   similarity ≥ 0.6. Fields with partial coverage (elastic, dielectric) are
   mean-imputed rather than dropped, so a missing value contributes neutrally
-  instead of skewing the comparison (see §12 for which fields were
-  deliberately left out, and why). This produced 3,964 directed `similar_to`
-  edges (2,708 unique undirected pairs) in the current graph.
+  instead of skewing the comparison (see §19 for which fields were
+  deliberately left out, and why). Z-scores are clipped to ±3 so no single
+  heavy-tailed field (e.g. h-BN's elastic anisotropy of 461) dominates the
+  cosine, and unphysical elastic tensors are discarded (both Phase 2 fixes,
+  §19). This produced 3,969 directed `similar_to` edges in the current graph.
 
 The net effect: **no material in the graph is an isolated island.** Every
 material has at least a `contains` edge (verified structurally on every
@@ -361,11 +386,11 @@ read directly out of Cognee's graph store — not estimated.
 | CrystalSystem | 7 |
 | ApplicationDomain | 5 |
 
-**Edges — 14,681 total**
+**Edges — 14,686 total**
 
 | Relationship | Count |
 |---|---|
-| `similar_to` | 3,964 |
+| `similar_to` | 3,969 |
 | `has_oxidation_state` | 2,319 |
 | `contains` | 2,269 |
 | `classified_as` | 2,135 |
@@ -389,6 +414,7 @@ read directly out of Cognee's graph store — not estimated.
 
 - ✅ Every `Material` node has at least one `contains` edge (no disconnected materials)
 - ✅ 794 `Material` nodes present, matching the fetch manifest exactly
+- ✅ `Material_formula` / `_description` / `_profile` vector collections embedded from distinct text (guards a cognee bug, §19)
 
 ## 9. Example Graph Traversals
 
@@ -413,62 +439,377 @@ illustrative pseudo-queries:
   similarity 1.000 over the full 10-dimensional property vector (near-identical
   behavior despite being different formulas/polymorphs).
 
-## 10. Project Structure
+---
+
+# Part II — Phase 2: GraphRAG Retrieval and Recommendation
+
+## 10. Phase 2 Overview
+
+Phase 2 answers natural-language materials questions with the Phase 1 graph.
+For example:
+
+> *"stable, cobalt-free Li cathode materials with a band gap above 2 eV"*
+
+The answer has three parts:
+
+- **ranked candidates**, found by **traversing and filtering the graph**
+- a **property comparison table**, with values Materials Project doesn't have
+  shown as "n/a" rather than guessed
+- an **LLM-written explanation** in which every claim cites a numbered fact.
+  A deterministic checker has verified each citation against the graph or the
+  Materials Project record.
+
+```
+question
+   │
+   ▼  1. PARSE      LLM (OpenRouter, JSON-schema output) → typed QueryConstraints
+   │                 └ rule-based fallback; every value grounded against graph vocabulary
+   ▼  2. RETRIEVE   seed constraint nodes → reverse-traverse to Materials → intersect
+   │                 → enforce numeric ranges / flags / exclusions on attributes
+   │                 → rank (constraint margin · anchor proximity · BGE-M3 similarity · stability)
+   ▼  3. EVIDENCE   flatten into atomic facts [E1] [E2] … (MP field or graph edge + rule text)
+   │                 incl. explicit "NOT AVAILABLE" facts for missing properties
+   ▼  4. EXPLAIN    LLM writes claims citing fact ids (or a templated, no-LLM explanation)
+   ▼  5. GROUND     checker: ids exist · every number matches a cited fact · no unretrieved materials
+                     → traceability = grounded claims / all claims
+```
+
+**Design choice: the LLM never selects or filters materials.** It does two
+jobs only:
+
+- turn the question into constraints
+- phrase the explanation
+
+Numeric requirements such as `band_gap ≥ 2 eV`, `E_hull ≤ 0.05`, or "no
+cobalt" are enforced exactly against node attributes and edges. Neither
+semantic search nor an LLM reading triplets can enforce them reliably.
+
+## 11. Query Understanding
+
+`QueryConstraints` (`src/matgraph/query_schema.py`) is the contract between
+parsing and retrieval. It covers:
+
+- application domains
+- numeric property ranges over 13 properties, with units
+- boolean flags (direct gap, metallic, …)
+- property classes
+- required and excluded elements
+- crystal systems, space groups, formula patterns
+- oxidation states
+- anchor materials ("similar to X")
+- sorting ("highest bulk modulus")
+
+The LLM fills this schema through **JSON-schema-constrained output**. The
+enumerated fields are `Literal`s, so the model sees the allowed values
+directly. After parsing, `ground_constraints` checks every free-form value
+against the graph's vocabulary. For example, "lithium" becomes `Li` and
+`Ti+4` becomes `Ti4+`. Anything that doesn't map is reported back to the user
+as an *ignored constraint* with a reason; it is never silently dropped.
+
+`parse_with_rules` is a conservative regex/synonym parser. It handles:
+
+- "Co-free" and "free of lead"
+- "Li-ion" is not a lithium requirement
+- "dielectric constant" is a property, not the dielectric domain
+
+It runs in `--no-llm` mode, in tests, and whenever OpenRouter is unavailable.
+
+**Hybrid parsing.** The free LLMs often return only *part* of the schema. For
+example, from "Manganese cathode materials with energy above hull below 0.02
+eV/atom" one returned just `include_elements: [Mn]`, dropping the domain and
+the range. So when the LLM parse succeeds, the rule parser **fills fields the
+LLM left empty. It never overrides a value the LLM returned**, and the answer
+is labelled `llm+rules`. Measured results are in §15.
+
+## 12. Graph Retrieval
+
+`src/matgraph/retriever.py`, no LLM:
+
+1. **Seed and expand.** Each node constraint becomes a graph node:
+   - ApplicationDomain, PropertyClass, Element, OxidationState, FormulaPattern,
+     SpaceGroup
+   - CrystalSystem, which is two hops away via SpaceGroup
+
+   Each node reverse-traverses to the Materials that reach it, and the
+   resulting sets are intersected.
+2. **Filter.** Numeric ranges, boolean flags, and element exclusions are
+   checked against Material attributes. The missing-data policy is
+   configurable (`config/retrieval.yaml`). The default excludes materials that
+   lack the value and **reports how many were excluded**, which matters
+   because elastic and dielectric data cover only about 20% of materials.
+3. **Rank.** Every candidate that passes gets a transparent weighted score,
+   with each component reported:
+   - constraint margin
+   - **anchor proximity**: IDF-weighted overlap of shared hub nodes plus
+     direct or 2-hop `similar_to` weight
+   - **BGE-M3** embedding similarity to the question, over the material's
+     profile and robocrys description
+   - stability
+4. **Reasoning paths.** Every satisfied constraint carries the graph path that
+   proves it, e.g. `Material:AlN -has_space_group-> SpaceGroup:P6_3mc
+   -crystal_system-> CrystalSystem:Hexagonal`. The dashboard draws these.
+
+Retrieval runs in a few milliseconds. The graph (about 1.5k nodes and 15k
+edges) is loaded into memory once, through backend-independent
+`get_graph_data()`, so the Neo4j swap remains a config change. Embedding the
+question adds about 1 s on the local Ollama BGE-M3.
+
+## 13. Evidence and Grounded Explanations
+
+`evidence.py` flattens the retrieval result into atomic facts, each tagged
+with its source:
+
+```
+[E4]  Li2MnP2O7 band_gap = 4.3677 eV.                   (source: Materials Project summary for mp-aaacqmek, field band_gap)
+[E11] Li2MnP2O7: NOT AVAILABLE in Materials Project: bulk_modulus_vrh, shear_modulus_vrh, …
+[E12] Material:Li2MnP2O7 -suitable_for-> ApplicationDomain:battery_cathode
+      (rule: "contains Li and a transition metal, and energy_above_hull <= 0.05 eV/atom")
+[E2]  Band gaps are DFT (GGA/GGA+U) values … systematically underestimate experimental band gaps
+```
+
+The LLM (`generator.py`) must cite fact ids for every claim, copy numbers
+exactly, recommend only retrieved materials, and state explicitly when data
+is missing. `grounding.py` then checks each claim deterministically:
+
+- **Citations.** Every cited id must exist.
+- **Numbers.** Every number in the claim must match a value in the cited
+  facts, within the precision it was written with, or come from the user's
+  own question.
+- **Materials.** Every formula the claim mentions must be covered by the
+  evidence.
+
+Claims that fail are shown **flagged, not hidden**. The share that passes is
+the PRD's *traceability* metric.
+
+## 14. Adding New Materials
+
+`scripts/add_material.py` and `POST /materials/ingest` take a **Materials
+Project id or a formula**. The pipeline gets the material's properties and
+relates it to the existing graph.
+
+**Crystal-structure (CIF) input is deliberately not accepted.** Structures go
+to the CGCNN model in Phase 3.
+
+Where the properties come from:
+
+| Input | Properties | Provenance |
+|---|---|---|
+| MP id, or formula found in MP | full summary record (min-E<sub>hull</sub> polymorph for a formula) | `mp` |
+| formula not in MP | only what the formula determines: elements, fractions, chemsys, formula pattern, oxidation-state *guesses*; every computed property **unavailable, never estimated** | `derived` / `guessed` |
+
+How the new material connects to the graph:
+
+- **Shared hubs.** It is built with the same `NodeFactory` as the full graph.
+  Identity-keyed hubs (Element, SpaceGroup, OxidationState, FormulaPattern, …)
+  get the *same node ids* as the existing ones, so it attaches to them instead
+  of duplicating them.
+- **Relation report.** The report lists:
+  - shared hubs, ranked by selectivity (sharing `ABC3` with 44 materials says
+    more than sharing `O` with 756)
+  - `similar_to` neighbours on the **frozen build-time z-score scale**
+  - compositional neighbours
+  - every application rule as fired, not fired, or *cannot evaluate*
+- **Explanation.** The report can be explained by the LLM and grounded like a
+  query answer.
+- **Persistence.** The default is preview only: the material goes into an
+  in-memory overlay and is usable as a query anchor. `--persist` writes it to
+  Cognee, and the next full rebuild replays it from the local cache.
+
+## 15. Evaluation
+
+`uv run python scripts/evaluate.py [--llm-sample N] [--ingestion N]`
+writes `artifacts/eval/results.{json,md}`.
+
+- **Benchmark** (`config/benchmark_queries.yaml`): 55 questions in five
+  tiers:
+  1. single constraint
+  2. multi-constraint
+  3. multi-hop / relational
+  4. similarity-anchored
+  5. sparse elastic/dielectric data
+
+  Each question has hand-written **gold constraints**.
+- **Independent oracle** (`eval/oracle.py`): the relevant set is recomputed
+  from the raw Materials Project JSON by code that imports nothing from the
+  graph build or the retriever. A bug there can't also define the right
+  answer.
+- **Configurations.** The LLM, prompt, and K are fixed; only retrieval varies:
+  - **B1** vector RAG over profile and description embeddings
+  - **B2** generic fixed-hop GraphRAG (entity seeds, one-hop expansion, no
+    attribute filtering)
+  - **Proposed**
+  - two ablations
+
+### Retrieval results (gold constraints, no LLM)
+
+| Config | Recall@10 | MRR | nDCG@10 | Top-10 constraint violations |
+|---|---|---|---|---|
+| B1 Vector RAG | 0.326 | 0.386 | 0.308 | 69.6% |
+| B2 fixed-hop GraphRAG | 0.613 | 0.663 | 0.598 | 41.8% |
+| **Proposed** | **0.926** | **0.945** | **0.910** | **0.0%** |
+| Ablation: no semantic ranking | 0.911 | 0.907 | 0.890 | 0.0% |
+| Ablation: no `similar_to` in anchor score | 0.953 | 0.991 | 0.935 | 0.0% |
+
+nDCG@10 by tier:
+
+| Config | T1 single | T2 multi-constraint | T3 multi-hop | T4 similarity | T5 sparse data |
+|---|---|---|---|---|---|
+| B1 Vector RAG | 0.654 | 0.294 | 0.238 | 0.187 | 0.046 |
+| B2 fixed-hop GraphRAG | 0.847 | 0.729 | 0.870 | 0.290 | 0.056 |
+| **Proposed** | **1.000** | **1.000** | **1.000** | 0.517 | **1.000** |
+| no `similar_to` | 1.000 | 1.000 | 1.000 | **0.648** | 1.000 |
+
+What these numbers do and don't show:
+
+- **Filter tiers (1, 2, 3, 5).**
+  - With correct constraints, graph retrieval matches the independent
+    oracle *exactly*. This validates that the graph build and the retriever
+    are faithful to the raw data.
+  - Most of the gap to the baselines is **constraint enforcement**. Vector
+    RAG returns wide-gap *look-alikes* for "band gap above 4 eV". Fixed-hop
+    GraphRAG reaches the right entities but can't apply numeric ranges or
+    exclusions (tier 5: 0.056).
+  - Because these configurations start from gold constraints, the end-to-end
+    quality of the system rests on **question parsing**. That is measured
+    separately below.
+- **Similarity (tier 4) is the open problem.**
+  - Relevance there means *structural-stoichiometric analogue*: the same
+    anonymized formula, plus the same crystal system for full credit.
+  - The Phase 1 `similar_to` edges measure *property* similarity, and they
+    **hurt** on this definition (0.517 with them, 0.648 without). The
+    ablation beats the default configuration here.
+  - This is reported as found rather than tuned away on the test set. It is
+    exactly the gap Phase 3's structural (CGCNN) similarity is meant to close.
+- **Circularity.** The oracle checks fidelity to the data, not the scientific
+  correctness of the rules or of DFT values.
+
+<!-- LLM_RESULTS -->
+
+### New-material ingestion (leave-one-out, 50 materials stratified across clusters)
+
+| Check | Result |
+|---|---|
+| MP path: categorical edges recovered vs. the full build | **100%** |
+| MP path: `similar_to` overlap vs. a rebuild including the material (frozen-scale z-scores) | Jaccard **0.98**. The remaining differences are single near-tie swaps. |
+| Composition-only path: formula pattern / chemical system match MP | 100% / 100% |
+| Composition-only path: guessed oxidation states exactly equal MP's `possible_species` | 70%. This is why they are labelled `guessed` and never fire rules. |
+
+
+## 16. API and Dashboard
+
+`uv run python scripts/serve.py`, then open <http://localhost:8000>.
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /query` | question → parsed constraints, ranked candidates, comparison table, evidence, explanation, grounding report |
+| `GET /material/{id}` | stored properties and 1-hop graph neighbourhood |
+| `POST /materials/ingest` | MP id or formula → relation report (optionally explained, optionally persisted) |
+| `GET /health` | graph loaded, embeddings reachable, LLM configured |
+
+The dashboard is one static page with no build step. It shows:
+
+- how the question was understood (constraint chips, ignored constraints)
+- the ranked candidates with their score breakdown
+- an interactive **evidence-path graph** for the selected candidate
+- the property comparison table
+- the explanation, with each claim marked grounded ✓ or ✗ and its cited
+  facts on hover
+- an **Add material** tab that renders the relation report and a subgraph of
+  how the new material connects
+
+---
+
+# Reference
+
+## 17. Project Structure
 
 ```
 meta_graph/
 ├── config/
-│   ├── materials.yaml      # clusters, buckets, domain rules, similarity config
-│   └── elements.json       # full 103-element periodic table (generated, see below)
-├── data/raw/                # cached MP records, one JSON per material_id (gitignored)
-│   ├── <material_id>.json
-│   └── _manifest.json
+│   ├── materials.yaml          # clusters, buckets, domain rules, similarity config
+│   ├── elements.json           # full 103-element periodic table (generated)
+│   ├── retrieval.yaml          # Phase 2: ranking weights, missing-data policy, anchor scoring
+│   └── benchmark_queries.yaml  # Phase 2: 55-question evaluation set with gold constraints
+├── data/raw/                    # cached MP records, one JSON per material_id (gitignored)
 ├── src/matgraph/
-│   ├── schema.py            # Cognee DataPoint node/edge type definitions
-│   ├── mp_client.py         # Materials Project REST client, cluster query engine
-│   ├── enrich.py            # classification rules, similarity, DataPoint graph builder
-│   ├── pipeline.py          # Cognee low-level pipeline wiring
-│   └── verify.py            # structural verification against the built graph
+│   ├── schema.py                # Cognee DataPoint node/edge types
+│   ├── mp_client.py             # Materials Project REST client (clusters + single lookups)
+│   ├── enrich.py                # rules, similarity, profiles, NodeFactory graph builder
+│   ├── pipeline.py              # Cognee pipeline wiring (build + add_to_graph)
+│   ├── cognee_patches.py        # workaround for a cognee 1.3.0 indexing bug (§19)
+│   ├── verify.py                # structural + vector-index verification
+│   ├── graph_store.py           # in-memory Graph, KnowledgeBase (graph + vector search)
+│   ├── query_schema.py          # QueryConstraints contract
+│   ├── query_parser.py          # LLM parser, rule-based fallback, vocabulary grounding
+│   ├── retriever.py             # seed / expand / filter / rank / reasoning paths
+│   ├── evidence.py              # evidence bundle with [E#] facts
+│   ├── llm.py                   # OpenRouter via LiteLLM: fallback, cache, throttle, cooldown
+│   ├── generator.py             # LLM + templated explanations
+│   ├── grounding.py             # claim verification, traceability
+│   ├── answer.py                # end-to-end question answering
+│   ├── ingest.py                # new-material ingestion + relation report
+│   ├── api.py, static/          # FastAPI service + dashboard
+│   └── eval/                    # oracle, baselines, metrics, runner, ingestion LOO
 ├── scripts/
-│   ├── fetch_materials.py   # step 1: fetch + cache clusters from Materials Project
-│   ├── build_graph.py       # steps 2-4: build, write to Cognee, visualize, verify
-│   └── generate_elements.py # regenerates config/elements.json via pymatgen
-├── artifacts/graph.html     # interactive graph visualization (gitignored, regenerable)
-├── docs/PHASE1_PLAN.md      # original design research and planning document
-└── .cognee_system/          # Cognee's embedded graph/vector/relational stores (gitignored)
+│   ├── fetch_materials.py       # fetch + cache clusters from Materials Project
+│   ├── build_graph.py           # build, write to Cognee, visualize, verify
+│   ├── ask.py                   # ask a question (CLI)
+│   ├── add_material.py          # add/relate a material by MP id or formula
+│   ├── evaluate.py              # run the evaluation -> artifacts/eval/
+│   ├── serve.py                 # API + dashboard
+│   └── generate_elements.py     # regenerates config/elements.json via pymatgen
+├── tests/                       # 44 unit/API tests (synthetic graph; no network)
+├── artifacts/eval/              # evaluation results (json + md)
+├── docs/PHASE1_PLAN.md, docs/PHASE2_PLAN.md
+└── .cognee_system/              # Cognee's embedded stores (gitignored)
 ```
 
-## 11. Getting Started
+## 18. Getting Started
 
 ### Setup
 
 ```bash
 uv sync
-cp .env.example .env    # fill in MP_API_KEY
+cp .env.example .env    # fill in MP_API_KEY and OPENROUTER_API_KEY
+ollama serve & ollama pull bge-m3   # local embeddings (BGE-M3, 1024-d)
 ```
 
-### Run
+### Build the graph
 
 ```bash
-# 0. Only needed if config/elements.json needs regenerating for new elements
-uv run python scripts/generate_elements.py
-
-# 1. Fetch + cache the cluster-defined material set from Materials Project
-uv run python scripts/fetch_materials.py
-
-# 2. Build the graph in Cognee, render a visualization, run verification
-uv run python scripts/build_graph.py
+uv run python scripts/fetch_materials.py   # fetch + cache from Materials Project (once)
+uv run python scripts/build_graph.py       # build + embed + verify (~15 min with BGE-M3)
 ```
 
-`scripts/build_graph.py` prunes and rebuilds from scratch by default; pass
-`--no-reset` to add on top of existing state, or `--skip-visualize` to skip
-the HTML render (useful for quick verification-only reruns).
+`build_graph.py` prunes and rebuilds from scratch by default. Options:
 
-No LLM API key is required to build the graph — embeddings use a local
-`fastembed` model. An `LLM_API_KEY` becomes necessary only for Phase 2's
-natural-language retrieval layer.
+- `--no-reset` adds on top of the existing state.
+- `--skip-visualize` skips the HTML render.
+- `--skip-user-materials` stops it from re-adding materials persisted with
+  `add_material.py --persist`.
 
-## 12. Engineering Notes
+### Use it
+
+```bash
+uv run python scripts/ask.py "stable cobalt-free Li cathodes with band gap above 2 eV"
+uv run python scripts/ask.py "..." --no-llm         # rule parser + templated explanation
+uv run python scripts/add_material.py LaAlO3         # preview how a new material relates
+uv run python scripts/add_material.py mp-2920 --persist
+uv run python scripts/serve.py                       # API + dashboard on :8000
+uv run python scripts/evaluate.py --llm-sample 10 --ingestion 50
+uv run pytest
+```
+
+Embeddings are local (Ollama BGE-M3), so building the graph needs no API
+key. The LLM is an OpenRouter free model (`OPENROUTER_MODEL`, with
+`OPENROUTER_FALLBACK_MODEL` as fallback).
+
+- **Without a key,** or when the free tier is rate-limited, everything still
+  works. Questions go to the rule-based parser, and explanations are
+  templated from the evidence.
+- **LLM responses are cached** in `.llm_cache/`, so reruns cost nothing.
+
+## 19. Engineering Notes
 
 A running log of non-obvious decisions and fixes made while building this,
 kept here rather than scattered across commit messages:
@@ -547,25 +888,75 @@ kept here rather than scattered across commit messages:
   with an explicit `_similarity_value()` extraction shim rather than
   renaming fields to match (the raw JSON shape isn't ours to change).
 
-## 13. Roadmap
+### Phase 2 engineering notes
 
-- **Phase 2 — GraphRAG retrieval.** Natural-language query → graph traversal
-  + vector search → LLM-generated, evidence-backed recommendation, with
-  every claim traceable to a specific edge or Materials Project record.
-  Requires an `LLM_API_KEY`.
-- **Phase 3 — Crystal structure encoding.** Train/reproduce a CGCNN (with a
-  pretrained ALIGNN fallback) on a broad Materials Project structure corpus,
-  independent of which materials are in this graph. Use it purely for
-  inference on the graph's materials to produce structural embeddings,
-  replacing the current z-scored-cosine `similar_to` edges with genuine
-  structural similarity, and adding an ANN index for scale.
-- **Neo4j migration.** Currently on Cognee's embedded Kuzu store for
-  frictionless local iteration. Cognee ships a first-class Neo4j adapter —
-  the switch is a config-only change (`GRAPH_DATABASE_PROVIDER=neo4j` +
-  connection details), with zero changes to `schema.py`, `enrich.py`, or
-  `pipeline.py`. Planned for when Phase 2's backend work begins.
+- **A cognee 1.3.0 bug had put the same text in every vector collection.**
+  - `index_data_points` makes one *shallow* `model_copy()` per index field,
+    then mutates the metadata dict the copies share. So `Material_formula`,
+    `Material_description`, and `Material_profile` were all embedded from
+    the last field, and Phase 1's "formula" and "description" collections
+    were identical.
+  - Found when all three returned identical scores. Patched from our side
+    (`cognee_patches.py`, with a unit test).
+  - `verify.py` now fails the build if it recurs. Afterwards, description
+    search finds genuine ferrite spinels for "ferrimagnetic spinel oxide".
+- **Materials Project ships some unphysical elastic tensors.**
+  - 4 of 794 materials have negative moduli or negative universal anisotropy,
+    e.g. Li(CuO2)2 with a bulk modulus of −300,604 GPa.
+  - They had dominated Phase 1's elastic z-scores: bulk-modulus std was about
+    25,000 GPa, and about 52 GPa after the fix.
+  - Such tensors are now discarded as a block and flagged in the material's
+    profile.
+- **Heavy-tailed features need clipped z-scores.**
+  - Layered h-BN's universal anisotropy (461.6) is extreme but real. It gave
+    z ≈ 184, which made cosine similarity a function of that single field.
+  - Z-scores are clipped to ±3.
+  - Found by the ingestion leave-one-out check: BN's frozen-scale and rebuild
+    neighbours were disjoint.
+- **The evaluation's first nDCG definition was wrong.**
+  - It gave near-miss materials partial relevance, which put
+    constraint-violating materials into the *ideal* ranking. A method
+    returning exactly the 2 correct answers scored below one that padded its
+    list with violations.
+  - Filter-query relevance is now binary; near-misses are measured by the
+    violation rate.
+- **"≥ 6 of 10 similarity dimensions" was the wrong gate for new materials.**
+  - Only about 20% of MP records have elastic or dielectric data, so most
+    would have got no `similar_to` edges.
+  - The gate is now "all 5 core dimensions present", which every MP record
+    meets and a composition-only entry never does.
+- **Local embeddings are slow; keep batches small.**
+  - Ollama serves one embedding at a time, and cognee runs 4 batches
+    concurrently. With the default batch size (36), long robocrys
+    descriptions queued past cognee's 60 s timeout.
+  - `EMBEDDING_BATCH_SIZE=8` fixes it. A full rebuild takes about 15 min.
+- **Free-tier LLM operations.**
+  - The OpenRouter key is free-tier: about 50 free-model requests per day,
+    and the Qwen pool is often rate-limited upstream.
+  - `llm.py` puts a model on a 5-minute cooldown after a 429, falls back to
+    the second model, stops cleanly at the daily cap, and caches every
+    response on disk.
 
-## 14. Tech Stack
+## 20. Roadmap
+
+- **Phase 3: crystal structure encoding.**
+  - Train or reproduce a CGCNN, with a pretrained ALIGNN fallback.
+  - Use it for structural embeddings and for property prediction on
+    **uploaded CIF structures**. Structure input is deliberately routed there,
+    not handled in Phase 2.
+  - Add `STRUCTURALLY_SIMILAR` / `SUBSTITUTABLE_WITH` edges.
+  - Phase 2's evaluation motivates this directly: property-based
+    `similar_to` *hurts* on structural-analogue queries (tier 4, §15).
+  - `ingest.py`'s pluggable property source gets a `cgcnn` source, with
+    values labelled `predicted`.
+- **Neo4j migration.** This is a config swap
+  (`GRAPH_DATABASE_PROVIDER=neo4j`). Retrieval depends only on
+  `get_graph_data()` and vector search, so no retrieval code changes. It was
+  deferred as Phase 2's optional last milestone and not yet done.
+- **Deployment.** Next.js frontend, Docker Compose, and GitHub Actions CI/CD,
+  per the PRD.
+
+## 21. Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -573,6 +964,8 @@ kept here rather than scattered across commit messages:
 | Graph/pipeline framework | [Cognee](https://github.com/topoteretes/cognee) (low-level `DataPoint` pipeline) |
 | Graph store | Kuzu (embedded; Neo4j-ready via config swap) |
 | Vector store | LanceDB (embedded) |
-| Embeddings | `fastembed` (local, `BAAI/bge-small-en-v1.5`) — no API key required |
+| Embeddings | BGE-M3 (1024-d) via local [Ollama](https://ollama.com) (no API key) |
+| LLM | OpenRouter free models via LiteLLM (`qwen/qwen3.8-27b:free`, fallback `nvidia/nemotron-3-super-120b-a12b:free`) |
+| API / dashboard | FastAPI + a static page with Cytoscape.js |
 | Element property data | [pymatgen](https://pymatgen.org) (full 103-element periodic table) |
-| Language / tooling | Python 3.11–3.14, [`uv`](https://github.com/astral-sh/uv) |
+| Language / tooling | Python 3.11–3.14, [`uv`](https://github.com/astral-sh/uv), pytest |
