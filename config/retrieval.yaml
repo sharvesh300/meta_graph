@@ -1,0 +1,36 @@
+# Phase 2 retrieval configuration (see docs/PHASE2_PLAN.md §4).
+#
+# Hard constraints are never weighted: a candidate either satisfies every
+# constraint in the query or is not returned. The weights below only order
+# the candidates that pass.
+
+# What to do when a query constrains a property a material has no value for
+# (elastic/dielectric data cover only ~18-20% of materials):
+#   exclude      - drop it, and report how many were dropped per property
+#   keep_flagged - keep it, rank it after complete matches, flag the gap
+missing_value_policy: exclude
+
+# Relative weights of the ranking components. Components that don't apply to
+# a query (e.g. `anchor` without a "similar to X") are left out and the rest
+# renormalized, so scores stay in [0, 1].
+ranking_weights:
+  constraint_margin: 0.35   # how comfortably numeric ranges are satisfied
+  anchor: 0.30              # proximity to "similar to X" materials
+  semantic: 0.25            # embedding similarity to the question text
+  stability: 0.10           # prefer low energy_above_hull
+
+anchor:
+  # Anchor proximity = hub_weight * (IDF-weighted overlap of shared hub nodes)
+  #                  + similarity_weight * (similar_to edge weight, direct or 2-hop)
+  hub_weight: 0.5
+  similarity_weight: 0.5
+  two_hop_discount: 0.8
+  # Hub relationships counted as "shared structure" with an anchor.
+  hub_relations: [contains, has_oxidation_state, has_formula_pattern, has_space_group,
+                  member_of, classified_as, suitable_for]
+
+# stability component = 1 / (1 + energy_above_hull / stability_scale)
+stability_scale: 0.025
+
+# Vector collections used for the semantic component (BGE-M3 embeddings).
+semantic_collections: [Material_profile, Material_description]
