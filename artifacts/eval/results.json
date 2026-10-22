@@ -1,0 +1,6888 @@
+{
+  "summary": {
+    "B1_vector_rag": {
+      "all": {
+        "recall@10": 0.3255,
+        "mrr": 0.3864,
+        "ndcg@10": 0.3084,
+        "violation_rate": 0.6964
+      },
+      "1": {
+        "recall@10": 0.6583,
+        "mrr": 0.7176,
+        "ndcg@10": 0.6541,
+        "violation_rate": 0.3833
+      },
+      "2": {
+        "recall@10": 0.31,
+        "mrr": 0.3845,
+        "ndcg@10": 0.2944,
+        "violation_rate": 0.76
+      },
+      "3": {
+        "recall@10": 0.2444,
+        "mrr": 0.3827,
+        "ndcg@10": 0.2382,
+        "violation_rate": 0.8
+      },
+      "4": {
+        "recall@10": 0.23,
+        "mrr": 0.2444,
+        "ndcg@10": 0.1873,
+        "violation_rate": 0.72
+      },
+      "5": {
+        "recall@10": 0.0656,
+        "mrr": 0.075,
+        "ndcg@10": 0.0465,
+        "violation_rate": 0.8875
+      }
+    },
+    "B2_graphrag_fixed_hop": {
+      "all": {
+        "recall@10": 0.6133,
+        "mrr": 0.6627,
+        "ndcg@10": 0.5977,
+        "violation_rate": 0.4182
+      },
+      "1": {
+        "recall@10": 0.85,
+        "mrr": 0.8542,
+        "ndcg@10": 0.8468,
+        "violation_rate": 0.15
+      },
+      "2": {
+        "recall@10": 0.76,
+        "mrr": 0.7722,
+        "ndcg@10": 0.7291,
+        "violation_rate": 0.3933
+      },
+      "3": {
+        "recall@10": 0.8667,
+        "mrr": 0.9167,
+        "ndcg@10": 0.8695,
+        "violation_rate": 0.35
+      },
+      "4": {
+        "recall@10": 0.305,
+        "mrr": 0.5,
+        "ndcg@10": 0.2902,
+        "violation_rate": 0.48
+      },
+      "5": {
+        "recall@10": 0.0835,
+        "mrr": 0.0875,
+        "ndcg@10": 0.0564,
+        "violation_rate": 0.875
+      }
+    },
+    "proposed": {
+      "all": {
+        "recall@10": 0.9262,
+        "mrr": 0.9451,
+        "ndcg@10": 0.9105,
+        "violation_rate": 0.0
+      },
+      "1": {
+        "recall@10": 1.0,
+        "mrr": 1.0,
+        "ndcg@10": 1.0,
+        "violation_rate": 0.0
+      },
+      "2": {
+        "recall@10": 1.0,
+        "mrr": 1.0,
+        "ndcg@10": 1.0,
+        "violation_rate": 0.0
+      },
+      "3": {
+        "recall@10": 1.0,
+        "mrr": 1.0,
+        "ndcg@10": 1.0,
+        "violation_rate": 0.0
+      },
+      "4": {
+        "recall@10": 0.6017,
+        "mrr": 0.7036,
+        "ndcg@10": 0.517,
+        "violation_rate": 0.0
+      },
+      "5": {
+        "recall@10": 1.0,
+        "mrr": 1.0,
+        "ndcg@10": 1.0,
+        "violation_rate": 0.0
+      }
+    },
+    "ablation_no_semantic": {
+      "all": {
+        "recall@10": 0.9111,
+        "mrr": 0.907,
+        "ndcg@10": 0.8896,
+        "violation_rate": 0.0
+      },
+      "1": {
+        "recall@10": 1.0,
+        "mrr": 1.0,
+        "ndcg@10": 1.0,
+        "violation_rate": 0.0
+      },
+      "2": {
+        "recall@10": 1.0,
+        "mrr": 1.0,
+        "ndcg@10": 1.0,
+        "violation_rate": 0.0
+      },
+      "3": {
+        "recall@10": 1.0,
+        "mrr": 1.0,
+        "ndcg@10": 1.0,
+        "violation_rate": 0.0
+      },
+      "4": {
+        "recall@10": 0.52,
+        "mrr": 0.4976,
+        "ndcg@10": 0.4041,
+        "violation_rate": 0.0
+      },
+      "5": {
+        "recall@10": 1.0,
+        "mrr": 1.0,
+        "ndcg@10": 1.0,
+        "violation_rate": 0.0
+      }
+    },
+    "ablation_no_similar_to": {
+      "all": {
+        "recall@10": 0.9525,
+        "mrr": 0.9907,
+        "ndcg@10": 0.9348,
+        "violation_rate": 0.0
+      },
+      "1": {
+        "recall@10": 1.0,
+        "mrr": 1.0,
+        "ndcg@10": 1.0,
+        "violation_rate": 0.0
+      },
+      "2": {
+        "recall@10": 1.0,
+        "mrr": 1.0,
+        "ndcg@10": 1.0,
+        "violation_rate": 0.0
+      },
+      "3": {
+        "recall@10": 1.0,
+        "mrr": 1.0,
+        "ndcg@10": 1.0,
+        "violation_rate": 0.0
+      },
+      "4": {
+        "recall@10": 0.7433,
+        "mrr": 0.95,
+        "ndcg@10": 0.6479,
+        "violation_rate": 0.0
+      },
+      "5": {
+        "recall@10": 1.0,
+        "mrr": 1.0,
+        "ndcg@10": 1.0,
+        "violation_rate": 0.0
+      }
+    }
+  },
+  "queries": [
+    {
+      "id": "t1-wide-gap",
+      "tier": 1,
+      "question": "Which materials have a wide band gap?",
+      "relevant": 143,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.5,
+          "mrr": 0.25,
+          "ndcg@10": 0.39138176112557604,
+          "violation_rate": 0.5,
+          "returned": 10,
+          "relevant": 143
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 143
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 143
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 143
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 143
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaadru",
+          "mp-aaaabdmf",
+          "mp-aaaabnxb",
+          "mp-aaaabadk",
+          "mp-aaaelqyt",
+          "mp-aaaabnyt",
+          "mp-aaaaabey",
+          "mp-aaaabnxp",
+          "mp-aaaffpkb",
+          "mp-aaacpxba"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaabadk",
+          "mp-aaaelqyt",
+          "mp-aaaabnyt",
+          "mp-aaaabnxp",
+          "mp-aaacpxba",
+          "mp-aaacgafg",
+          "mp-aaaabnxn",
+          "mp-aaagatrb",
+          "mp-aaaabmyb",
+          "mp-aaaabcrd"
+        ],
+        "proposed": [
+          "mp-aaaabadk",
+          "mp-aaaelqyt",
+          "mp-aaaabnyt",
+          "mp-aaaabnxp",
+          "mp-aaacpxba",
+          "mp-aaacgafg",
+          "mp-aaaabnxn",
+          "mp-aaagatrb",
+          "mp-aaaabcrd",
+          "mp-aaabcsjy"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaabrz",
+          "mp-aaaaaazl",
+          "mp-aaabikuu",
+          "mp-aaabqxxz",
+          "mp-aaaaafar",
+          "mp-aaabqxoy",
+          "mp-aaabewbx",
+          "mp-aaabraex",
+          "mp-aaagatrb",
+          "mp-aaacpxba"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabadk",
+          "mp-aaaelqyt",
+          "mp-aaaabnyt",
+          "mp-aaaabnxp",
+          "mp-aaacpxba",
+          "mp-aaacgafg",
+          "mp-aaaabnxn",
+          "mp-aaagatrb",
+          "mp-aaaabcrd",
+          "mp-aaabcsjy"
+        ]
+      },
+      "retrieval_ms_all_configs": 3.1
+    },
+    {
+      "id": "t1-metals",
+      "tier": 1,
+      "question": "Which materials are metallic?",
+      "relevant": 230,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 230
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 230
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 230
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 230
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 230
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaacew",
+          "mp-aaaabgwb",
+          "mp-aaaaacnc",
+          "mp-aaaaabrf",
+          "mp-aaaaaabg",
+          "mp-aaabctec",
+          "mp-aaaabdgk",
+          "mp-aaaabcpu",
+          "mp-aaaacbgs",
+          "mp-aaaaadkx"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaacew",
+          "mp-aaaabgwb",
+          "mp-aaaaacnc",
+          "mp-aaaaabrf",
+          "mp-aaaaaabg",
+          "mp-aaabctec",
+          "mp-aaaabdgk",
+          "mp-aaaabcpu",
+          "mp-aaaacbgs",
+          "mp-aaaaadkx"
+        ],
+        "proposed": [
+          "mp-aaaabgwb",
+          "mp-aaaaacnc",
+          "mp-aaaaabrf",
+          "mp-aaaaacew",
+          "mp-aaaaaabg",
+          "mp-aaabctec",
+          "mp-aaaabdgk",
+          "mp-aaaaadkx",
+          "mp-aaaaapvc",
+          "mp-aaaabxrp"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaabqkx",
+          "mp-aaaabdhk",
+          "mp-aaaabqcn",
+          "mp-aaaabquf",
+          "mp-aaaaalll",
+          "mp-aaaaahye",
+          "mp-aaaabrgt",
+          "mp-aaaaawft",
+          "mp-aaabeghj",
+          "mp-aaaaagto"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabgwb",
+          "mp-aaaaacnc",
+          "mp-aaaaabrf",
+          "mp-aaaaacew",
+          "mp-aaaaaabg",
+          "mp-aaabctec",
+          "mp-aaaabdgk",
+          "mp-aaaaadkx",
+          "mp-aaaaapvc",
+          "mp-aaaabxrp"
+        ]
+      },
+      "retrieval_ms_all_configs": 4.3
+    },
+    {
+      "id": "t1-cathodes",
+      "tier": 1,
+      "question": "Which materials are battery cathode candidates?",
+      "relevant": 237,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 237
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 237
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 237
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 237
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 237
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaabcpu",
+          "mp-aaaabcdl",
+          "mp-aaaaceqi",
+          "mp-aaabehld",
+          "mp-aaabrfvt",
+          "mp-aaabeegb",
+          "mp-aaabrldx",
+          "mp-aaabqvjn",
+          "mp-aaaaahpf",
+          "mp-aaabsbjj"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaabcpu",
+          "mp-aaaabcdl",
+          "mp-aaaaceqi",
+          "mp-aaabehld",
+          "mp-aaabrfvt",
+          "mp-aaabeegb",
+          "mp-aaabrldx",
+          "mp-aaabqvjn",
+          "mp-aaaaahpf",
+          "mp-aaabsbjj"
+        ],
+        "proposed": [
+          "mp-aaaabcdl",
+          "mp-aaaaceqi",
+          "mp-aaaabcpu",
+          "mp-aaaaahpf",
+          "mp-aaabfrhu",
+          "mp-aaabehld",
+          "mp-aaaaaikc",
+          "mp-aaabrwtv",
+          "mp-aaabrfvt",
+          "mp-aaabeegb"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaabsbck",
+          "mp-aaabscjl",
+          "mp-aaaaaewv",
+          "mp-aaacounf",
+          "mp-aaaaazjz",
+          "mp-aaaabnxd",
+          "mp-aaabsbff",
+          "mp-aaaabcci",
+          "mp-aaacqmek",
+          "mp-aaabnnxf"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabcdl",
+          "mp-aaaaceqi",
+          "mp-aaaabcpu",
+          "mp-aaaaahpf",
+          "mp-aaabfrhu",
+          "mp-aaabehld",
+          "mp-aaaaaikc",
+          "mp-aaabrwtv",
+          "mp-aaabrfvt",
+          "mp-aaabeegb"
+        ]
+      },
+      "retrieval_ms_all_configs": 5.0
+    },
+    {
+      "id": "t1-photocatalysts",
+      "tier": 1,
+      "question": "Find photocatalyst candidates.",
+      "relevant": 249,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 249
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 249
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 249
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 249
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 249
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabrulb",
+          "mp-aaaaaged",
+          "mp-aaabqwgc",
+          "mp-aaacrooi",
+          "mp-aaackrmk",
+          "mp-aaaabmlt",
+          "mp-aaaabmld",
+          "mp-aaaaabgj",
+          "mp-aaaabnyj",
+          "mp-aaaabmqv"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabrulb",
+          "mp-aaaaaged",
+          "mp-aaabqwgc",
+          "mp-aaacrooi",
+          "mp-aaackrmk",
+          "mp-aaaabmlt",
+          "mp-aaaabmld",
+          "mp-aaaaabgj",
+          "mp-aaaabnyj",
+          "mp-aaaabmqv"
+        ],
+        "proposed": [
+          "mp-aaaaaged",
+          "mp-aaaabmld",
+          "mp-aaaaabgj",
+          "mp-aaacrooi",
+          "mp-aaaabnyj",
+          "mp-aaackrmk",
+          "mp-aaaabmlt",
+          "mp-aaabrulb",
+          "mp-aaaaablj",
+          "mp-aaabqwgc"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaabqxxz",
+          "mp-aaaaaezf",
+          "mp-aaabrvkp",
+          "mp-aaaaamip",
+          "mp-aaabrwhy",
+          "mp-aaabraex",
+          "mp-aaagatvz",
+          "mp-aaaabriw",
+          "mp-aaaaafhb",
+          "mp-aaabcsjy"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaaged",
+          "mp-aaaabmld",
+          "mp-aaaaabgj",
+          "mp-aaacrooi",
+          "mp-aaaabnyj",
+          "mp-aaackrmk",
+          "mp-aaaabmlt",
+          "mp-aaabrulb",
+          "mp-aaaaablj",
+          "mp-aaabqwgc"
+        ]
+      },
+      "retrieval_ms_all_configs": 5.3
+    },
+    {
+      "id": "t1-gallium",
+      "tier": 1,
+      "question": "Which materials contain gallium?",
+      "relevant": 5,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 0.9668342083190152,
+          "violation_rate": 0.5,
+          "returned": 10,
+          "relevant": 5
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 5
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 5
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 5
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 5
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaabsm",
+          "mp-aaaaadtm",
+          "mp-aaaaabey",
+          "mp-aaaaadru",
+          "mp-aaaaaabg",
+          "mp-aaackglc",
+          "mp-aaaabgwb",
+          "mp-aaacrjnq",
+          "mp-aaacfyzq",
+          "mp-aaaaabic"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaabsm",
+          "mp-aaaaadtm",
+          "mp-aaaaabey",
+          "mp-aaaaadru",
+          "mp-aaaaabic"
+        ],
+        "proposed": [
+          "mp-aaaaabsm",
+          "mp-aaaaadtm",
+          "mp-aaaaabey",
+          "mp-aaaaadru",
+          "mp-aaaaabic"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaabic",
+          "mp-aaaaadtm",
+          "mp-aaaaabey",
+          "mp-aaaaadru",
+          "mp-aaaaabsm"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaabsm",
+          "mp-aaaaadtm",
+          "mp-aaaaabey",
+          "mp-aaaaadru",
+          "mp-aaaaabic"
+        ]
+      },
+      "retrieval_ms_all_configs": 0.4
+    },
+    {
+      "id": "t1-cubic",
+      "tier": 1,
+      "question": "List cubic materials.",
+      "relevant": 87,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.2,
+          "mrr": 1.0,
+          "ndcg@10": 0.33013764944712026,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 87
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 87
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 87
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 87
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 87
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaaanx",
+          "mp-aaacpbia",
+          "mp-aaaabloj",
+          "mp-aaabrgxk",
+          "mp-aaaaacew",
+          "mp-aaaabawo",
+          "mp-aaabread",
+          "mp-aaabroor",
+          "mp-aaabraqe",
+          "mp-aaaaacnc"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaaanx",
+          "mp-aaaabloj",
+          "mp-aaaaadkx",
+          "mp-aaaaacxk",
+          "mp-aaaaaeme",
+          "mp-aaaabhdw",
+          "mp-aaaaabro",
+          "mp-aaaabdws",
+          "mp-aaaaadwy",
+          "mp-aaaceurj"
+        ],
+        "proposed": [
+          "mp-aaaaaanx",
+          "mp-aaaaadkx",
+          "mp-aaaaacxk",
+          "mp-aaaaaeme",
+          "mp-aaaabloj",
+          "mp-aaaabhdw",
+          "mp-aaaaabro",
+          "mp-aaaabdws",
+          "mp-aaaaadwy",
+          "mp-aaaabrgr"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaadfo",
+          "mp-aaaaachq",
+          "mp-aaaaadwy",
+          "mp-aaaaacex",
+          "mp-aaaabrgt",
+          "mp-aaacevdw",
+          "mp-aaaaaeme",
+          "mp-aaaaabzq",
+          "mp-aaaaaerr",
+          "mp-aaaabrgr"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaaanx",
+          "mp-aaaaadkx",
+          "mp-aaaaacxk",
+          "mp-aaaaaeme",
+          "mp-aaaabloj",
+          "mp-aaaabhdw",
+          "mp-aaaaabro",
+          "mp-aaaabdws",
+          "mp-aaaaadwy",
+          "mp-aaaabrgr"
+        ]
+      },
+      "retrieval_ms_all_configs": 2.0
+    },
+    {
+      "id": "t1-perovskite-pattern",
+      "tier": 1,
+      "question": "Which materials have the ABC3 perovskite stoichiometry?",
+      "relevant": 44,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 44
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 44
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 44
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 44
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 44
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaakxr",
+          "mp-aaaaahir",
+          "mp-aaaaaeme",
+          "mp-aaaaaerr",
+          "mp-aaacpbga",
+          "mp-aaaaaphr",
+          "mp-aaacpkxa",
+          "mp-aaaabrgt",
+          "mp-aaaaagos",
+          "mp-aaacevdw"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaakxr",
+          "mp-aaaaahir",
+          "mp-aaaaaeme",
+          "mp-aaaaaerr",
+          "mp-aaacpbga",
+          "mp-aaaaaphr",
+          "mp-aaacpkxa",
+          "mp-aaaabrgt",
+          "mp-aaaaagos",
+          "mp-aaacevdw"
+        ],
+        "proposed": [
+          "mp-aaaaakxr",
+          "mp-aaaaaeme",
+          "mp-aaaaaerr",
+          "mp-aaacpbga",
+          "mp-aaaabrgt",
+          "mp-aaaaagos",
+          "mp-aaaaaphr",
+          "mp-aaacevdw",
+          "mp-aaaaaluf",
+          "mp-aaaaafja"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaabrgt",
+          "mp-aaacevdw",
+          "mp-aaaaaeme",
+          "mp-aaaaaerr",
+          "mp-aaaaaiof",
+          "mp-aaacgafg",
+          "mp-aaaabrgr",
+          "mp-aaabqyqv",
+          "mp-aaaaagos",
+          "mp-aaaaafyp"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaakxr",
+          "mp-aaaaaeme",
+          "mp-aaaaaerr",
+          "mp-aaacpbga",
+          "mp-aaaabrgt",
+          "mp-aaaaagos",
+          "mp-aaaaaphr",
+          "mp-aaacevdw",
+          "mp-aaaaaluf",
+          "mp-aaaaafja"
+        ]
+      },
+      "retrieval_ms_all_configs": 1.1
+    },
+    {
+      "id": "t1-ti4",
+      "tier": 1,
+      "question": "Which materials contain Ti4+?",
+      "relevant": 107,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.9,
+          "mrr": 1.0,
+          "ndcg@10": 0.933745776545611,
+          "violation_rate": 0.1,
+          "returned": 10,
+          "relevant": 107
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 107
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 107
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 107
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 107
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabrphd",
+          "mp-aaabqztk",
+          "mp-aaabrbco",
+          "mp-aaabetyp",
+          "mp-aaaaavuk",
+          "mp-aaaabrlc",
+          "mp-aaaaasbl",
+          "mp-aaaaanou",
+          "mp-aaaaaikc",
+          "mp-aaabscxc"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabrphd",
+          "mp-aaabqztk",
+          "mp-aaabrbco",
+          "mp-aaabetyp",
+          "mp-aaaaavuk",
+          "mp-aaaabrlc",
+          "mp-aaaaasbl",
+          "mp-aaaaanou",
+          "mp-aaabscxc",
+          "mp-aaaaafar"
+        ],
+        "proposed": [
+          "mp-aaabrphd",
+          "mp-aaabrbco",
+          "mp-aaaaavuk",
+          "mp-aaaabrlc",
+          "mp-aaaaanou",
+          "mp-aaaaafar",
+          "mp-aaaaasbl",
+          "mp-aaabetyp",
+          "mp-aaaaawrb",
+          "mp-aaaaaieu"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaabquf",
+          "mp-aaaaalll",
+          "mp-aaaaafar",
+          "mp-aaabeghj",
+          "mp-aaaabriw",
+          "mp-aaabftrr",
+          "mp-aaabrfnd",
+          "mp-aaaaaiof",
+          "mp-aaadbmtq",
+          "mp-aaaaafyp"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaabrphd",
+          "mp-aaabrbco",
+          "mp-aaaaavuk",
+          "mp-aaaabrlc",
+          "mp-aaaaanou",
+          "mp-aaaaafar",
+          "mp-aaaaasbl",
+          "mp-aaabetyp",
+          "mp-aaaaawrb",
+          "mp-aaaaaieu"
+        ]
+      },
+      "retrieval_ms_all_configs": 2.4
+    },
+    {
+      "id": "t1-gap-above-4",
+      "tier": 1,
+      "question": "Materials with a band gap above 4 eV",
+      "relevant": 42,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.2,
+          "mrr": 0.25,
+          "ndcg@10": 0.1610425878239398,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 42
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.2,
+          "mrr": 0.25,
+          "ndcg@10": 0.1610425878239398,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 42
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 42
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 42
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 42
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaabnwt",
+          "mp-aaaabmqx",
+          "mp-aaaabmld",
+          "mp-aaaabclf",
+          "mp-aaabwiog",
+          "mp-aaaabmlv",
+          "mp-aaabevdy",
+          "mp-aaabrajm",
+          "mp-aaacpxba",
+          "mp-aaabrulb"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaabnwt",
+          "mp-aaaabmqx",
+          "mp-aaaabmld",
+          "mp-aaaabclf",
+          "mp-aaabwiog",
+          "mp-aaaabmlv",
+          "mp-aaabevdy",
+          "mp-aaabrajm",
+          "mp-aaacpxba",
+          "mp-aaabrulb"
+        ],
+        "proposed": [
+          "mp-aaaaakjg",
+          "mp-aaaaabrz",
+          "mp-aaaabmsj",
+          "mp-aaaabmmb",
+          "mp-aaaaanou",
+          "mp-aaaabmpr",
+          "mp-aaaaacxk",
+          "mp-aaacqyxj",
+          "mp-aaaabclf",
+          "mp-aaabftrw"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaabrz",
+          "mp-aaaaakjg",
+          "mp-aaaaacxk",
+          "mp-aaacqyxj",
+          "mp-aaaabmmb",
+          "mp-aaaaanou",
+          "mp-aaaabmsj",
+          "mp-aaabewbx",
+          "mp-aaabqyqv",
+          "mp-aaacqjbx"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaakjg",
+          "mp-aaaaabrz",
+          "mp-aaaabmsj",
+          "mp-aaaabmmb",
+          "mp-aaaaanou",
+          "mp-aaaabmpr",
+          "mp-aaaaacxk",
+          "mp-aaacqyxj",
+          "mp-aaaabclf",
+          "mp-aaabftrw"
+        ]
+      },
+      "retrieval_ms_all_configs": 2.1
+    },
+    {
+      "id": "t1-dense",
+      "tier": 1,
+      "question": "Materials with density above 8 g/cm3",
+      "relevant": 47,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 47
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 47
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 47
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 47
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 47
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabsajy",
+          "mp-aaabodua",
+          "mp-aaabjmwk",
+          "mp-aaabrjdb",
+          "mp-aaabqvxd",
+          "mp-aaabrzmd",
+          "mp-aaaabqjx",
+          "mp-aaabfwyk",
+          "mp-aaabqvnm",
+          "mp-aaadaxfe"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabsajy",
+          "mp-aaabodua",
+          "mp-aaabjmwk",
+          "mp-aaabrjdb",
+          "mp-aaabqvxd",
+          "mp-aaabrzmd",
+          "mp-aaaabqjx",
+          "mp-aaabfwyk",
+          "mp-aaabqvnm",
+          "mp-aaadaxfe"
+        ],
+        "proposed": [
+          "mp-aaaaabvc",
+          "mp-aaaabdsg",
+          "mp-aaaabcrc",
+          "mp-aaaabhqk",
+          "mp-aaaabiks",
+          "mp-aaacrmdz",
+          "mp-aaaaaano",
+          "mp-aaabftlh",
+          "mp-aaaaberd",
+          "mp-aaaabsvn"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaaano",
+          "mp-aaaaabvc",
+          "mp-aaaabcrc",
+          "mp-aaaabhqk",
+          "mp-aaaabdsg",
+          "mp-aaabqzvz",
+          "mp-aaacrhwr",
+          "mp-aaaabiks",
+          "mp-aaabftlh",
+          "mp-aaaaaatq"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaabvc",
+          "mp-aaaabdsg",
+          "mp-aaaabcrc",
+          "mp-aaaabhqk",
+          "mp-aaaabiks",
+          "mp-aaacrmdz",
+          "mp-aaaaaano",
+          "mp-aaabftlh",
+          "mp-aaaaberd",
+          "mp-aaaabsvn"
+        ]
+      },
+      "retrieval_ms_all_configs": 2.1
+    },
+    {
+      "id": "t1-afm",
+      "tier": 1,
+      "question": "Which materials are antiferromagnetic?",
+      "relevant": 31,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.1,
+          "mrr": 0.1111111111111111,
+          "ndcg@10": 0.06625422345438903,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 31
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 31
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 31
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 31
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 31
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabrwps",
+          "mp-aaacukga",
+          "mp-aaabrldx",
+          "mp-aaaablok",
+          "mp-aaaceurj",
+          "mp-aaaaahpf",
+          "mp-aaaabcoo",
+          "mp-aaabkkzb",
+          "mp-aaabraox",
+          "mp-aaaaadwy"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabraox",
+          "mp-aaabqzac",
+          "mp-aaacurfn",
+          "mp-aaacunat",
+          "mp-aaabqwdp",
+          "mp-aaabsbff",
+          "mp-aaacreki",
+          "mp-aaabroor",
+          "mp-aaaabhef",
+          "mp-aaabqyis"
+        ],
+        "proposed": [
+          "mp-aaacurfn",
+          "mp-aaacunat",
+          "mp-aaabqzac",
+          "mp-aaabsbff",
+          "mp-aaabraox",
+          "mp-aaaabhef",
+          "mp-aaabqwdp",
+          "mp-aaabsexv",
+          "mp-aaacsdlz",
+          "mp-aaaabmqx"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaabsexv",
+          "mp-aaacunat",
+          "mp-aaabsbff",
+          "mp-aaabrdis",
+          "mp-aaaabccr",
+          "mp-aaaabhef",
+          "mp-aaaabcpw",
+          "mp-aaaabmqx",
+          "mp-aaacsdlz",
+          "mp-aaabfwru"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaacurfn",
+          "mp-aaacunat",
+          "mp-aaabqzac",
+          "mp-aaabsbff",
+          "mp-aaabraox",
+          "mp-aaaabhef",
+          "mp-aaabqwdp",
+          "mp-aaabsexv",
+          "mp-aaacsdlz",
+          "mp-aaaabmqx"
+        ]
+      },
+      "retrieval_ms_all_configs": 1.0
+    },
+    {
+      "id": "t1-dielectrics",
+      "tier": 1,
+      "question": "Which materials are suitable as dielectrics?",
+      "relevant": 218,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 218
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 218
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 218
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 218
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 218
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabqyqv",
+          "mp-aaaaadwf",
+          "mp-aaaaaiqq",
+          "mp-aaaaaazl",
+          "mp-aaacevdw",
+          "mp-aaabikuu",
+          "mp-aaabqxoy",
+          "mp-aaaaacxk",
+          "mp-aaacejdw",
+          "mp-aaaaagtv"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabqyqv",
+          "mp-aaaaadwf",
+          "mp-aaaaaiqq",
+          "mp-aaaaaazl",
+          "mp-aaacevdw",
+          "mp-aaabikuu",
+          "mp-aaabqxoy",
+          "mp-aaaaacxk",
+          "mp-aaacejdw",
+          "mp-aaaaagtv"
+        ],
+        "proposed": [
+          "mp-aaabqyqv",
+          "mp-aaaaadwf",
+          "mp-aaaaaiqq",
+          "mp-aaaaaazl",
+          "mp-aaacevdw",
+          "mp-aaabikuu",
+          "mp-aaabqxoy",
+          "mp-aaaaacxk",
+          "mp-aaacejdw",
+          "mp-aaaaagtv"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaabrz",
+          "mp-aaaaaazl",
+          "mp-aaaaaaya",
+          "mp-aaaabqad",
+          "mp-aaabikuu",
+          "mp-aaabqxxz",
+          "mp-aaaaaezf",
+          "mp-aaabrvkp",
+          "mp-aaaaafar",
+          "mp-aaaaamip"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaabqyqv",
+          "mp-aaaaadwf",
+          "mp-aaaaaiqq",
+          "mp-aaaaaazl",
+          "mp-aaacevdw",
+          "mp-aaabikuu",
+          "mp-aaabqxoy",
+          "mp-aaaaacxk",
+          "mp-aaacejdw",
+          "mp-aaaaagtv"
+        ]
+      },
+      "retrieval_ms_all_configs": 4.6
+    },
+    {
+      "id": "t2-cathode-cofree",
+      "tier": 2,
+      "question": "Stable, cobalt-free lithium cathode materials with a band gap above 2 eV",
+      "relevant": 39,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.3,
+          "mrr": 0.2,
+          "ndcg@10": 0.22716217481924803,
+          "violation_rate": 0.7,
+          "returned": 10,
+          "relevant": 39
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.5,
+          "mrr": 0.25,
+          "ndcg@10": 0.38317041576387256,
+          "violation_rate": 0.5,
+          "returned": 10,
+          "relevant": 39
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 39
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 39
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 39
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaabcpw",
+          "mp-aaabsbck",
+          "mp-aaaabhik",
+          "mp-aaagbhlq",
+          "mp-aaaaaiqq",
+          "mp-aaaabcrd",
+          "mp-aaabnnxf",
+          "mp-aaabsbgq",
+          "mp-aaaabmlv",
+          "mp-aaaabclf"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaabcpw",
+          "mp-aaabsbck",
+          "mp-aaaabhik",
+          "mp-aaaaaiqq",
+          "mp-aaaabcrd",
+          "mp-aaabnnxf",
+          "mp-aaaabclf",
+          "mp-aaackrph",
+          "mp-aaaaaeit",
+          "mp-aaaabnxd"
+        ],
+        "proposed": [
+          "mp-aaaaaiqq",
+          "mp-aaaabclf",
+          "mp-aaaabnxd",
+          "mp-aaaabmmd",
+          "mp-aaaabasg",
+          "mp-aaacqmek",
+          "mp-aaaabcdl",
+          "mp-aaaabcrd",
+          "mp-aaaabmmb",
+          "mp-aaaabmmt"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaabnxd",
+          "mp-aaacqmek",
+          "mp-aaaabasg",
+          "mp-aaaabmlr",
+          "mp-aaaabupc",
+          "mp-aaaabclf",
+          "mp-aaaaanou",
+          "mp-aaaaavln",
+          "mp-aaaabmmd",
+          "mp-aaaabnyt"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaaiqq",
+          "mp-aaaabclf",
+          "mp-aaaabnxd",
+          "mp-aaaabmmd",
+          "mp-aaaabasg",
+          "mp-aaacqmek",
+          "mp-aaaabcdl",
+          "mp-aaaabcrd",
+          "mp-aaaabmmb",
+          "mp-aaaabmmt"
+        ]
+      },
+      "retrieval_ms_all_configs": 8.6
+    },
+    {
+      "id": "t2-stable-wide-oxides",
+      "tier": 2,
+      "question": "Thermodynamically stable wide-band-gap oxides",
+      "relevant": 87,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.4,
+          "mrr": 0.14285714285714285,
+          "ndcg@10": 0.2726701556894781,
+          "violation_rate": 0.6,
+          "returned": 10,
+          "relevant": 87
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 87
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 87
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 87
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 87
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabrxyr",
+          "mp-aaaffpkb",
+          "mp-aaaaadru",
+          "mp-aaacpzdy",
+          "mp-aaaabdmf",
+          "mp-aaaaadtm",
+          "mp-aaaabafj",
+          "mp-aaabeuzm",
+          "mp-aaaaaezy",
+          "mp-aaacgafg"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaabafj",
+          "mp-aaabeuzm",
+          "mp-aaaaaezy",
+          "mp-aaacgafg",
+          "mp-aaacqalr",
+          "mp-aaaabazd",
+          "mp-aaaaaiqq",
+          "mp-aaaaabwr",
+          "mp-aaabrtzj",
+          "mp-aaaaaefy"
+        ],
+        "proposed": [
+          "mp-aaaabafj",
+          "mp-aaabeuzm",
+          "mp-aaaaaezy",
+          "mp-aaacgafg",
+          "mp-aaacqalr",
+          "mp-aaaabazd",
+          "mp-aaaaaiqq",
+          "mp-aaaaabwr",
+          "mp-aaabrtzj",
+          "mp-aaaaaefy"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaabrz",
+          "mp-aaabqxxz",
+          "mp-aaaaafar",
+          "mp-aaabqxoy",
+          "mp-aaabewbx",
+          "mp-aaabraex",
+          "mp-aaagatrb",
+          "mp-aaacpxba",
+          "mp-aaacqbgg",
+          "mp-aaabcsjy"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabafj",
+          "mp-aaabeuzm",
+          "mp-aaaaaezy",
+          "mp-aaacgafg",
+          "mp-aaacqalr",
+          "mp-aaaabazd",
+          "mp-aaaaaiqq",
+          "mp-aaaaabwr",
+          "mp-aaabrtzj",
+          "mp-aaaaaefy"
+        ]
+      },
+      "retrieval_ms_all_configs": 11.0
+    },
+    {
+      "id": "t2-hex-nitrides-direct",
+      "tier": 2,
+      "question": "Hexagonal nitrides with a direct band gap",
+      "relevant": 2,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 2
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 0.5,
+          "ndcg@10": 0.6509209298071326,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 2
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 2,
+          "relevant": 2
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 2,
+          "relevant": 2
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 2,
+          "relevant": 2
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaadru",
+          "mp-aaaabcdd",
+          "mp-aaabxgim",
+          "mp-aaaabmyb",
+          "mp-aaabrjdb",
+          "mp-aaaaagup",
+          "mp-aaaacdil",
+          "mp-aaabrphd",
+          "mp-aaacpxba",
+          "mp-aaabreia"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabikuu",
+          "mp-aaaaabey",
+          "mp-aaaabgwb",
+          "mp-aaaaaazl",
+          "mp-aaabrjdb",
+          "mp-aaacpxba",
+          "mp-aaaaadeb",
+          "mp-aaaaafuy",
+          "mp-aaaaafoa",
+          "mp-aaabryuj"
+        ],
+        "proposed": [
+          "mp-aaaaabey",
+          "mp-aaaaaazl"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaaazl",
+          "mp-aaaaabey"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaabey",
+          "mp-aaaaaazl"
+        ]
+      },
+      "retrieval_ms_all_configs": 0.8
+    },
+    {
+      "id": "t2-leadfree-perovskite-dielectrics",
+      "tier": 2,
+      "question": "Lead-free ABC3 perovskite dielectrics",
+      "relevant": 16,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.1,
+          "mrr": 0.125,
+          "ndcg@10": 0.06943122193677727,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 16
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.9,
+          "mrr": 0.5,
+          "ndcg@10": 0.7799082337019198,
+          "violation_rate": 0.1,
+          "returned": 10,
+          "relevant": 16
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 16
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 16
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 16
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaabdoc",
+          "mp-aaaabmmp",
+          "mp-aaabskti",
+          "mp-aaaabmol",
+          "mp-aaaabmmd",
+          "mp-aaabexcx",
+          "mp-aaaabmlt",
+          "mp-aaaabcrd",
+          "mp-aaaabmmb",
+          "mp-aaaaajma"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabexcx",
+          "mp-aaaabcrd",
+          "mp-aaacevdw",
+          "mp-aaacgafg",
+          "mp-aaaaagmt",
+          "mp-aaaaagtv",
+          "mp-aaaaakxr",
+          "mp-aaaaafnn",
+          "mp-aaaaafja",
+          "mp-aaaaagrq"
+        ],
+        "proposed": [
+          "mp-aaaabcrd",
+          "mp-aaacevdw",
+          "mp-aaacgafg",
+          "mp-aaaaagmt",
+          "mp-aaaaagtv",
+          "mp-aaaaakxr",
+          "mp-aaaaafnn",
+          "mp-aaaaafja",
+          "mp-aaaaagrq",
+          "mp-aaaaafsk"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaacevdw",
+          "mp-aaaaaiof",
+          "mp-aaacgafg",
+          "mp-aaabqyqv",
+          "mp-aaaaagos",
+          "mp-aaaaafyp",
+          "mp-aaaaagtv",
+          "mp-aaaaakxr",
+          "mp-aaaaafja",
+          "mp-aaaaafnn"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabcrd",
+          "mp-aaacevdw",
+          "mp-aaacgafg",
+          "mp-aaaaagmt",
+          "mp-aaaaagtv",
+          "mp-aaaaakxr",
+          "mp-aaaaafnn",
+          "mp-aaaaafja",
+          "mp-aaaaagrq",
+          "mp-aaaaafsk"
+        ]
+      },
+      "retrieval_ms_all_configs": 2.7
+    },
+    {
+      "id": "t2-ti-photocatalysts",
+      "tier": 2,
+      "question": "Titanium-containing photocatalysts with a band gap between 2 and 3 eV",
+      "relevant": 26,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.3,
+          "mrr": 0.2,
+          "ndcg@10": 0.21501812929496175,
+          "violation_rate": 0.7,
+          "returned": 10,
+          "relevant": 26
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.4,
+          "mrr": 0.3333333333333333,
+          "ndcg@10": 0.3190952506395664,
+          "violation_rate": 0.6,
+          "returned": 10,
+          "relevant": 26
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 26
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 26
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 26
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaaeit",
+          "mp-aaaaafja",
+          "mp-aaaabegx",
+          "mp-aaaaajma",
+          "mp-aaabshcv",
+          "mp-aaabcsfb",
+          "mp-aaaaatld",
+          "mp-aaaaaeyv",
+          "mp-aaaaaiof",
+          "mp-aaacurfn"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaaeit",
+          "mp-aaaabegx",
+          "mp-aaabshcv",
+          "mp-aaabcsfb",
+          "mp-aaaaatld",
+          "mp-aaaaaeyv",
+          "mp-aaaaaiof",
+          "mp-aaacurfn",
+          "mp-aaaaafyp",
+          "mp-aaaaagwx"
+        ],
+        "proposed": [
+          "mp-aaaabboy",
+          "mp-aaaaaged",
+          "mp-aaabshcv",
+          "mp-aaaaaiof",
+          "mp-aaaaafyp",
+          "mp-aaaabriw",
+          "mp-aaacurfn",
+          "mp-aaaaawrb",
+          "mp-aaadbmtq",
+          "mp-aaabmzpq"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaabriw",
+          "mp-aaaaaged",
+          "mp-aaaabboy",
+          "mp-aaaaawrb",
+          "mp-aaabmzpq",
+          "mp-aaaaafyp",
+          "mp-aaaaaiof",
+          "mp-aaabshcv",
+          "mp-aaaaalyf",
+          "mp-aaacurfn"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabboy",
+          "mp-aaaaaged",
+          "mp-aaabshcv",
+          "mp-aaaaaiof",
+          "mp-aaaaafyp",
+          "mp-aaaabriw",
+          "mp-aaacurfn",
+          "mp-aaaaawrb",
+          "mp-aaadbmtq",
+          "mp-aaabmzpq"
+        ]
+      },
+      "retrieval_ms_all_configs": 4.7
+    },
+    {
+      "id": "t2-stable-fm-oxides",
+      "tier": 2,
+      "question": "Stable ferromagnetic oxides",
+      "relevant": 58,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 58
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 58
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 58
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 58
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 58
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaaezy",
+          "mp-aaaaagmt",
+          "mp-aaaaaphr",
+          "mp-aaabqynh",
+          "mp-aaabqvlr",
+          "mp-aaaaaegt",
+          "mp-aaaabafj",
+          "mp-aaabsijp",
+          "mp-aaaaadzt",
+          "mp-aaaaabgy"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaabqnk",
+          "mp-aaadjxvk",
+          "mp-aaaabfxz",
+          "mp-aaacphjs",
+          "mp-aaaabcwl",
+          "mp-aaabeujp",
+          "mp-aaaabcoc",
+          "mp-aaaabcrc",
+          "mp-aaacotap",
+          "mp-aaafdqij"
+        ],
+        "proposed": [
+          "mp-aaaabqnk",
+          "mp-aaadjxvk",
+          "mp-aaaabfxz",
+          "mp-aaacphjs",
+          "mp-aaaabcwl",
+          "mp-aaabeujp",
+          "mp-aaaabcoc",
+          "mp-aaaabcrc",
+          "mp-aaacotap",
+          "mp-aaafdqij"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaabqkx",
+          "mp-aaaaalll",
+          "mp-aaabeghj",
+          "mp-aaacphjs",
+          "mp-aaabrfnd",
+          "mp-aaaabwgj",
+          "mp-aaacujjd",
+          "mp-aaaeijdm",
+          "mp-aaabsawe",
+          "mp-aaabrete"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabqnk",
+          "mp-aaadjxvk",
+          "mp-aaaabfxz",
+          "mp-aaacphjs",
+          "mp-aaaabcwl",
+          "mp-aaabeujp",
+          "mp-aaaabcoc",
+          "mp-aaaabcrc",
+          "mp-aaacotap",
+          "mp-aaafdqij"
+        ]
+      },
+      "retrieval_ms_all_configs": 10.8
+    },
+    {
+      "id": "t2-mn-cathodes-low-hull",
+      "tier": 2,
+      "question": "Manganese cathode materials with energy above hull below 0.02 eV/atom",
+      "relevant": 34,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.4,
+          "mrr": 0.5,
+          "ndcg@10": 0.38504814933911535,
+          "violation_rate": 0.6,
+          "returned": 10,
+          "relevant": 34
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 34
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 34
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 34
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 34
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabkrla",
+          "mp-aaaabmpf",
+          "mp-aaaabcpu",
+          "mp-aaabefnx",
+          "mp-aaabqyjg",
+          "mp-aaacsdlz",
+          "mp-aaaaagos",
+          "mp-aaabeeeo",
+          "mp-aaabnuhn",
+          "mp-aaabeegz"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaabmpf",
+          "mp-aaabefnx",
+          "mp-aaabqyjg",
+          "mp-aaabnuhn",
+          "mp-aaabqwit",
+          "mp-aaabsmlm",
+          "mp-aaabnijj",
+          "mp-aaabrvvy",
+          "mp-aaabngyr",
+          "mp-aaabrqjm"
+        ],
+        "proposed": [
+          "mp-aaabqyjg",
+          "mp-aaabnijj",
+          "mp-aaacqmek",
+          "mp-aaaabvfw",
+          "mp-aaabeehl",
+          "mp-aaaabmnj",
+          "mp-aaaabccr",
+          "mp-aaabsmlm",
+          "mp-aaaabnxp",
+          "mp-aaaabcci"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaabcci",
+          "mp-aaacqmek",
+          "mp-aaabnijj",
+          "mp-aaabeehl",
+          "mp-aaaabmnj",
+          "mp-aaaabmmt",
+          "mp-aaaabnxv",
+          "mp-aaacukwa",
+          "mp-aaaabnxp",
+          "mp-aaaabmmf"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaabqyjg",
+          "mp-aaabnijj",
+          "mp-aaacqmek",
+          "mp-aaaabvfw",
+          "mp-aaabeehl",
+          "mp-aaaabmnj",
+          "mp-aaaabccr",
+          "mp-aaabsmlm",
+          "mp-aaaabnxp",
+          "mp-aaaabcci"
+        ]
+      },
+      "retrieval_ms_all_configs": 4.2
+    },
+    {
+      "id": "t2-arsenide-narrow",
+      "tier": 2,
+      "question": "Arsenic-containing semiconductors with a band gap below 1.5 eV",
+      "relevant": 1,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 1
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 1
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 1,
+          "relevant": 1
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 1,
+          "relevant": 1
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 1,
+          "relevant": 1
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaadtm",
+          "mp-aaaaadfo",
+          "mp-aaaaadru",
+          "mp-aaaaachq",
+          "mp-aaaaadwy",
+          "mp-aaacqnpk",
+          "mp-aaaaabey",
+          "mp-aaaaaaya",
+          "mp-aaacqjgy",
+          "mp-aaahilqv"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaadtm",
+          "mp-aaaaadfo",
+          "mp-aaaaaaya",
+          "mp-aaaaadru",
+          "mp-aaaaachq",
+          "mp-aaaaadwy",
+          "mp-aaacqnpk",
+          "mp-aaaaabey",
+          "mp-aaacqjgy",
+          "mp-aaahilqv"
+        ],
+        "proposed": [
+          "mp-aaaaadtm"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaadtm"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaadtm"
+        ]
+      },
+      "retrieval_ms_all_configs": 5.2
+    },
+    {
+      "id": "t2-nm-light-oxides",
+      "tier": 2,
+      "question": "Non-magnetic oxides with density below 4 g/cm3",
+      "relevant": 67,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 67
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.3,
+          "mrr": 1.0,
+          "ndcg@10": 0.38113435412201996,
+          "violation_rate": 0.7,
+          "returned": 10,
+          "relevant": 67
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 67
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 67
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 67
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabljsx",
+          "mp-aaabrbfu",
+          "mp-aaabrphd",
+          "mp-aaaaaohj",
+          "mp-aaabrahw",
+          "mp-aaacoyss",
+          "mp-aaabrgbj",
+          "mp-aaaabbtn",
+          "mp-aaaaakte",
+          "mp-aaabskik"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaawem",
+          "mp-aaabrhsx",
+          "mp-aaabrspq",
+          "mp-aaaabnyj",
+          "mp-aaabeewp",
+          "mp-aaacouak",
+          "mp-aaaabsbw",
+          "mp-aaaaagix",
+          "mp-aaabrbco",
+          "mp-aaagatvz"
+        ],
+        "proposed": [
+          "mp-aaaabnyj",
+          "mp-aaabrbco",
+          "mp-aaacshah",
+          "mp-aaaaazjz",
+          "mp-aaabrvqk",
+          "mp-aaaaawem",
+          "mp-aaaabasg",
+          "mp-aaabrwbw",
+          "mp-aaaaavln",
+          "mp-aaabmyah"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaacshah",
+          "mp-aaabryuj",
+          "mp-aaaaazjz",
+          "mp-aaaabnyj",
+          "mp-aaaaaibv",
+          "mp-aaabrbco",
+          "mp-aaabsmsy",
+          "mp-aaabrvqk",
+          "mp-aaabmyah",
+          "mp-aaabshcv"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabnyj",
+          "mp-aaabrbco",
+          "mp-aaacshah",
+          "mp-aaaaazjz",
+          "mp-aaabrvqk",
+          "mp-aaaaawem",
+          "mp-aaaabasg",
+          "mp-aaabrwbw",
+          "mp-aaaaavln",
+          "mp-aaabmyah"
+        ]
+      },
+      "retrieval_ms_all_configs": 10.1
+    },
+    {
+      "id": "t2-cubic-oxides-gap3",
+      "tier": 2,
+      "question": "Cubic oxides with a band gap above 3 eV",
+      "relevant": 10,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.1,
+          "mrr": 0.1,
+          "ndcg@10": 0.06362078819895171,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 10
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.2,
+          "mrr": 0.5,
+          "ndcg@10": 0.2489083270225946,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 10
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 10
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 10
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 10
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabrgxk",
+          "mp-aaaabdoc",
+          "mp-aaaaakxr",
+          "mp-aaaaabic",
+          "mp-aaabexcx",
+          "mp-aaaffpkb",
+          "mp-aaaabhqk",
+          "mp-aaaabegx",
+          "mp-aaaaaanx",
+          "mp-aaaabupc"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaaanx",
+          "mp-aaaabupc",
+          "mp-aaacevdw",
+          "mp-aaaabhdw",
+          "mp-aaaaafja",
+          "mp-aaaaabzq",
+          "mp-aaaabhle",
+          "mp-aaabwise",
+          "mp-aaaaaerr",
+          "mp-aaaaaeme"
+        ],
+        "proposed": [
+          "mp-aaaabupc",
+          "mp-aaaaacxk",
+          "mp-aaaaabwr",
+          "mp-aaaaadya",
+          "mp-aaacevdw",
+          "mp-aaaaaaii",
+          "mp-aaabqzmr",
+          "mp-aaaaadwf",
+          "mp-aaaaadvp",
+          "mp-aaaaadrc"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaacxk",
+          "mp-aaaaabwr",
+          "mp-aaabqzmr",
+          "mp-aaaaadya",
+          "mp-aaaaaaii",
+          "mp-aaaabupc",
+          "mp-aaaaadwf",
+          "mp-aaaaadvp",
+          "mp-aaacevdw",
+          "mp-aaaaadrc"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabupc",
+          "mp-aaaaacxk",
+          "mp-aaaaabwr",
+          "mp-aaaaadya",
+          "mp-aaacevdw",
+          "mp-aaaaaaii",
+          "mp-aaabqzmr",
+          "mp-aaaaadwf",
+          "mp-aaaaadvp",
+          "mp-aaaaadrc"
+        ]
+      },
+      "retrieval_ms_all_configs": 9.8
+    },
+    {
+      "id": "t2-stable-zn-semis",
+      "tier": 2,
+      "question": "Stable zinc compounds usable as semiconductors",
+      "relevant": 11,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.6,
+          "mrr": 1.0,
+          "ndcg@10": 0.7019727018777484,
+          "violation_rate": 0.4,
+          "returned": 10,
+          "relevant": 11
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 11
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 11
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 11
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 11
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabfotg",
+          "mp-aaaaabtu",
+          "mp-aaaaadeb",
+          "mp-aaacqnpk",
+          "mp-aaaabcov",
+          "mp-aaaaadfs",
+          "mp-aaabqxcp",
+          "mp-aaacksyl",
+          "mp-aaaaaazw",
+          "mp-aaabexcx"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabfotg",
+          "mp-aaaaabtu",
+          "mp-aaaaadeb",
+          "mp-aaaabcov",
+          "mp-aaaaadfs",
+          "mp-aaacksyl",
+          "mp-aaachpna",
+          "mp-aaadbwmr",
+          "mp-aaaaaewv",
+          "mp-aaabraey"
+        ],
+        "proposed": [
+          "mp-aaabfotg",
+          "mp-aaaaabtu",
+          "mp-aaaaadeb",
+          "mp-aaaabcov",
+          "mp-aaaaadfs",
+          "mp-aaacksyl",
+          "mp-aaachpna",
+          "mp-aaadbwmr",
+          "mp-aaaaaewv",
+          "mp-aaabraey"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaaewv",
+          "mp-aaaabbtf",
+          "mp-aaadbwmr",
+          "mp-aaaabcov",
+          "mp-aaachpna",
+          "mp-aaabraey",
+          "mp-aaaaadeb",
+          "mp-aaabfotg",
+          "mp-aaaaabtu",
+          "mp-aaacksyl"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaabfotg",
+          "mp-aaaaabtu",
+          "mp-aaaaadeb",
+          "mp-aaaabcov",
+          "mp-aaaaadfs",
+          "mp-aaacksyl",
+          "mp-aaachpna",
+          "mp-aaadbwmr",
+          "mp-aaaaaewv",
+          "mp-aaabraey"
+        ]
+      },
+      "retrieval_ms_all_configs": 8.3
+    },
+    {
+      "id": "t2-ortho-phosphate-cathodes",
+      "tier": 2,
+      "question": "Orthorhombic phosphate battery cathodes",
+      "relevant": 19,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.3,
+          "mrr": 1.0,
+          "ndcg@10": 0.39375843764607193,
+          "violation_rate": 0.7,
+          "returned": 10,
+          "relevant": 19
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 19
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 19
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 19
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 19
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaabcdl",
+          "mp-aaabsbjj",
+          "mp-aaaaajwm",
+          "mp-aaabrfvt",
+          "mp-aaacozxo",
+          "mp-aaabeexs",
+          "mp-aaabqyqv",
+          "mp-aaaabcpu",
+          "mp-aaaabclf",
+          "mp-aaaabnxb"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaabcdl",
+          "mp-aaaaajwm",
+          "mp-aaaabnxb",
+          "mp-aaaabmqv",
+          "mp-aaaabmmb",
+          "mp-aaaabmld",
+          "mp-aaaabmqx",
+          "mp-aaacqeas",
+          "mp-aaaabmqj",
+          "mp-aaaabhef"
+        ],
+        "proposed": [
+          "mp-aaaabcdl",
+          "mp-aaaaajwm",
+          "mp-aaaabnxb",
+          "mp-aaaabmmb",
+          "mp-aaaabmld",
+          "mp-aaaabmqv",
+          "mp-aaaabmqx",
+          "mp-aaacqeas",
+          "mp-aaaabhef",
+          "mp-aaaabnwt"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaabnyj",
+          "mp-aaaabnxf",
+          "mp-aaaabmld",
+          "mp-aaaabcdl",
+          "mp-aaaabnxv",
+          "mp-aaaabccr",
+          "mp-aaaabmmb",
+          "mp-aaaabhef",
+          "mp-aaaaajwm",
+          "mp-aaaabnwt"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabcdl",
+          "mp-aaaaajwm",
+          "mp-aaaabnxb",
+          "mp-aaaabmmb",
+          "mp-aaaabmld",
+          "mp-aaaabmqv",
+          "mp-aaaabmqx",
+          "mp-aaacqeas",
+          "mp-aaaabhef",
+          "mp-aaaabnwt"
+        ]
+      },
+      "retrieval_ms_all_configs": 10.4
+    },
+    {
+      "id": "t2-direct-gap-semis",
+      "tier": 2,
+      "question": "Direct band gap semiconductors",
+      "relevant": 99,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.4,
+          "mrr": 0.5,
+          "ndcg@10": 0.3819603371583236,
+          "violation_rate": 0.6,
+          "returned": 10,
+          "relevant": 99
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.4,
+          "mrr": 0.5,
+          "ndcg@10": 0.3819603371583236,
+          "violation_rate": 0.6,
+          "returned": 10,
+          "relevant": 99
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 99
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 99
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 99
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaadru",
+          "mp-aaaaaazw",
+          "mp-aaaaabey",
+          "mp-aaaabqad",
+          "mp-aaaabgpu",
+          "mp-aaaaagup",
+          "mp-aaaabdmf",
+          "mp-aaaaadtm",
+          "mp-aaacpgub",
+          "mp-aaaabhqk"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaadru",
+          "mp-aaaaaazw",
+          "mp-aaaaabey",
+          "mp-aaaabqad",
+          "mp-aaaabgpu",
+          "mp-aaaaagup",
+          "mp-aaaabdmf",
+          "mp-aaaaadtm",
+          "mp-aaacpgub",
+          "mp-aaaabhqk"
+        ],
+        "proposed": [
+          "mp-aaaaaazw",
+          "mp-aaaaabey",
+          "mp-aaaaadtm",
+          "mp-aaaaabpe",
+          "mp-aaaaaapq",
+          "mp-aaaaabzq",
+          "mp-aaaabect",
+          "mp-aaaabhqk",
+          "mp-aaaabcpw",
+          "mp-aaabrxyr"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaaaya",
+          "mp-aaabrvkp",
+          "mp-aaagatvz",
+          "mp-aaaaabzq",
+          "mp-aaaaabqn",
+          "mp-aaaaaurr",
+          "mp-aaaabtwy",
+          "mp-aaaaafyp",
+          "mp-aaaaaazw",
+          "mp-aaaaabpe"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaaazw",
+          "mp-aaaaabey",
+          "mp-aaaaadtm",
+          "mp-aaaaabpe",
+          "mp-aaaaaapq",
+          "mp-aaaaabzq",
+          "mp-aaaabect",
+          "mp-aaaabhqk",
+          "mp-aaaabcpw",
+          "mp-aaabrxyr"
+        ]
+      },
+      "retrieval_ms_all_configs": 7.4
+    },
+    {
+      "id": "t2-metallic-v-oxides",
+      "tier": 2,
+      "question": "Metallic vanadium oxides",
+      "relevant": 4,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.25,
+          "mrr": 0.5,
+          "ndcg@10": 0.24630238874073,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 4
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.6,
+          "returned": 10,
+          "relevant": 4
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 4,
+          "relevant": 4
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 4,
+          "relevant": 4
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 4,
+          "relevant": 4
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaabcjw",
+          "mp-aaaabfxz",
+          "mp-aaabeuxg",
+          "mp-aaaaborv",
+          "mp-aaacrmdz",
+          "mp-aaaaadkx",
+          "mp-aaaaakji",
+          "mp-aaaabcrd",
+          "mp-aaabjlbs",
+          "mp-aaacrmgn"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaabfxz",
+          "mp-aaabrayf",
+          "mp-aaabqxyo",
+          "mp-aaabrpsj",
+          "mp-aaaabcjw",
+          "mp-aaabeuxg",
+          "mp-aaaaborv",
+          "mp-aaacrmdz",
+          "mp-aaaaadkx",
+          "mp-aaaaakji"
+        ],
+        "proposed": [
+          "mp-aaaabfxz",
+          "mp-aaabqxyo",
+          "mp-aaabrayf",
+          "mp-aaabrpsj"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaabfxz",
+          "mp-aaabqxyo",
+          "mp-aaabrpsj",
+          "mp-aaabrayf"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabfxz",
+          "mp-aaabqxyo",
+          "mp-aaabrayf",
+          "mp-aaabrpsj"
+        ]
+      },
+      "retrieval_ms_all_configs": 8.2
+    },
+    {
+      "id": "t2-nickel-free-spinels",
+      "tier": 2,
+      "question": "Nickel-free AB2C4 spinel-type oxides",
+      "relevant": 45,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.5,
+          "mrr": 0.5,
+          "ndcg@10": 0.45841207143847534,
+          "violation_rate": 0.5,
+          "returned": 10,
+          "relevant": 45
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.7,
+          "mrr": 1.0,
+          "ndcg@10": 0.7917267193679838,
+          "violation_rate": 0.3,
+          "returned": 10,
+          "relevant": 45
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 45
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 45
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 45
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabljsx",
+          "mp-aaaaaezf",
+          "mp-aaagatvz",
+          "mp-aaaabcso",
+          "mp-aaabrspq",
+          "mp-aaabctuz",
+          "mp-aaaaagix",
+          "mp-aaabrbfu",
+          "mp-aaaabsbw",
+          "mp-aaabrbco"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaaezf",
+          "mp-aaaabcso",
+          "mp-aaabrspq",
+          "mp-aaaaagix",
+          "mp-aaaabsbw",
+          "mp-aaaaccnb",
+          "mp-aaaabbtf",
+          "mp-aaacukwa",
+          "mp-aaaacarc",
+          "mp-aaacuoho"
+        ],
+        "proposed": [
+          "mp-aaaaaezf",
+          "mp-aaaabcso",
+          "mp-aaabrspq",
+          "mp-aaaaagix",
+          "mp-aaaabsbw",
+          "mp-aaaabbtf",
+          "mp-aaacukwa",
+          "mp-aaabqxxz",
+          "mp-aaacrnrw",
+          "mp-aaaaaikc"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaabqxxz",
+          "mp-aaaaaezf",
+          "mp-aaaaafar",
+          "mp-aaaaamip",
+          "mp-aaaaahap",
+          "mp-aaaabsbw",
+          "mp-aaaabesk",
+          "mp-aaackwds",
+          "mp-aaabsbck",
+          "mp-aaaaazjz"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaaezf",
+          "mp-aaaabcso",
+          "mp-aaabrspq",
+          "mp-aaaaagix",
+          "mp-aaaabsbw",
+          "mp-aaaabbtf",
+          "mp-aaacukwa",
+          "mp-aaabqxxz",
+          "mp-aaacrnrw",
+          "mp-aaaaaikc"
+        ]
+      },
+      "retrieval_ms_all_configs": 7.9
+    },
+    {
+      "id": "t3-ti4-dielectrics",
+      "tier": 3,
+      "question": "Dielectric materials that contain Ti4+ ions",
+      "relevant": 40,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.4,
+          "mrr": 0.3333333333333333,
+          "ndcg@10": 0.3683756341388872,
+          "violation_rate": 0.6,
+          "returned": 10,
+          "relevant": 40
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 40
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 40
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 40
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 40
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabrphd",
+          "mp-aaabqztk",
+          "mp-aaaaavuk",
+          "mp-aaabrbco",
+          "mp-aaaaanou",
+          "mp-aaaaafar",
+          "mp-aaacqxru",
+          "mp-aaabscxc",
+          "mp-aaackrnc",
+          "mp-aaaabmqj"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaavuk",
+          "mp-aaabrbco",
+          "mp-aaaaanou",
+          "mp-aaaaafar",
+          "mp-aaaaawrb",
+          "mp-aaabrygd",
+          "mp-aaabegsq",
+          "mp-aaacurfn",
+          "mp-aaabmzpq",
+          "mp-aaaabboy"
+        ],
+        "proposed": [
+          "mp-aaaaavuk",
+          "mp-aaabrbco",
+          "mp-aaaaanou",
+          "mp-aaaaafar",
+          "mp-aaaaawrb",
+          "mp-aaacurfn",
+          "mp-aaabmzpq",
+          "mp-aaaabboy",
+          "mp-aaaaaapa",
+          "mp-aaaabriw"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaafar",
+          "mp-aaaabriw",
+          "mp-aaabftrr",
+          "mp-aaaaaiof",
+          "mp-aaadbmtq",
+          "mp-aaaaafyp",
+          "mp-aaaabpnv",
+          "mp-aaaaalyf",
+          "mp-aaaaatld",
+          "mp-aaabrbco"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaavuk",
+          "mp-aaabrbco",
+          "mp-aaaaanou",
+          "mp-aaaaafar",
+          "mp-aaaaawrb",
+          "mp-aaacurfn",
+          "mp-aaabmzpq",
+          "mp-aaaabboy",
+          "mp-aaaaaapa",
+          "mp-aaaabriw"
+        ]
+      },
+      "retrieval_ms_all_configs": 3.6
+    },
+    {
+      "id": "t3-fe2-cathodes",
+      "tier": 3,
+      "question": "Battery cathodes containing Fe2+",
+      "relevant": 15,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.5,
+          "mrr": 1.0,
+          "ndcg@10": 0.5739723394665964,
+          "violation_rate": 0.5,
+          "returned": 10,
+          "relevant": 15
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 15
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 15
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 15
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 15
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabqzac",
+          "mp-aaaabnxx",
+          "mp-aaaablok",
+          "mp-aaabqwky",
+          "mp-aaacvwxs",
+          "mp-aaabrcta",
+          "mp-aaabrldx",
+          "mp-aaaabmlt",
+          "mp-aaabsils",
+          "mp-aaabrbpw"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabqzac",
+          "mp-aaaabnxx",
+          "mp-aaacvwxs",
+          "mp-aaabsils",
+          "mp-aaabrbpw",
+          "mp-aaaabmqv",
+          "mp-aaabrzmq",
+          "mp-aaaabveo",
+          "mp-aaabruix",
+          "mp-aaaabcdl"
+        ],
+        "proposed": [
+          "mp-aaabqzac",
+          "mp-aaaabnxx",
+          "mp-aaabsils",
+          "mp-aaacvwxs",
+          "mp-aaaabmqv",
+          "mp-aaabrbpw",
+          "mp-aaaabveo",
+          "mp-aaaabcdl",
+          "mp-aaaabnyt",
+          "mp-aaabrzmq"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaabmmd",
+          "mp-aaaabnyt",
+          "mp-aaaabcdl",
+          "mp-aaabqzac",
+          "mp-aaaabnxx",
+          "mp-aaabsils",
+          "mp-aaaabveo",
+          "mp-aaaabmqv",
+          "mp-aaabrqfn",
+          "mp-aaabrbpw"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaabqzac",
+          "mp-aaaabnxx",
+          "mp-aaabsils",
+          "mp-aaacvwxs",
+          "mp-aaaabmqv",
+          "mp-aaabrbpw",
+          "mp-aaaabveo",
+          "mp-aaaabcdl",
+          "mp-aaaabnyt",
+          "mp-aaabrzmq"
+        ]
+      },
+      "retrieval_ms_all_configs": 2.9
+    },
+    {
+      "id": "t3-abc3-low-formation",
+      "tier": 3,
+      "question": "ABC3 materials with formation energy below -3 eV/atom",
+      "relevant": 16,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.2,
+          "mrr": 0.2,
+          "ndcg@10": 0.15139734109601002,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 16
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.4,
+          "mrr": 0.25,
+          "ndcg@10": 0.31691619230948354,
+          "violation_rate": 0.6,
+          "returned": 10,
+          "relevant": 16
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 16
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 16
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 16
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaabcrd",
+          "mp-aaabdbbp",
+          "mp-aaaaakxr",
+          "mp-aaacpbga",
+          "mp-aaaaaeme",
+          "mp-aaaffpkb",
+          "mp-aaabewgf",
+          "mp-aaabsexv",
+          "mp-aaacevdw",
+          "mp-aaaabdoc"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaabcrd",
+          "mp-aaaaakxr",
+          "mp-aaacpbga",
+          "mp-aaaaaeme",
+          "mp-aaacevdw",
+          "mp-aaaaagrq",
+          "mp-aaacgafg",
+          "mp-aaaaaerr",
+          "mp-aaaabctc",
+          "mp-aaaaafja"
+        ],
+        "proposed": [
+          "mp-aaacevdw",
+          "mp-aaacgafg",
+          "mp-aaabqyqv",
+          "mp-aaaaagtv",
+          "mp-aaaaaiof",
+          "mp-aaaaaezy",
+          "mp-aaaaaeme",
+          "mp-aaaaafyp",
+          "mp-aaaaagmt",
+          "mp-aaabqykc"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaabqyqv",
+          "mp-aaaaaezy",
+          "mp-aaacevdw",
+          "mp-aaaaagtv",
+          "mp-aaaaagmt",
+          "mp-aaacgafg",
+          "mp-aaaaafyp",
+          "mp-aaaaagwx",
+          "mp-aaaaaiof",
+          "mp-aaaaaeme"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaacevdw",
+          "mp-aaacgafg",
+          "mp-aaabqyqv",
+          "mp-aaaaagtv",
+          "mp-aaaaaiof",
+          "mp-aaaaaezy",
+          "mp-aaaaaeme",
+          "mp-aaaaafyp",
+          "mp-aaaaagmt",
+          "mp-aaabqykc"
+        ]
+      },
+      "retrieval_ms_all_configs": 1.4
+    },
+    {
+      "id": "t3-nb5-wide",
+      "tier": 3,
+      "question": "Wide-band-gap materials containing Nb5+",
+      "relevant": 13,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.1,
+          "mrr": 0.1111111111111111,
+          "ndcg@10": 0.06625422345438903,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 13
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 13
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 13
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 13
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 13
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabrwaj",
+          "mp-aaabhcxj",
+          "mp-aaaaaicr",
+          "mp-aaaaafhb",
+          "mp-aaabrhvl",
+          "mp-aaabfoux",
+          "mp-aaacqyig",
+          "mp-aaaabnxb",
+          "mp-aaacpvvc",
+          "mp-aaaabptc"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaacpvvc",
+          "mp-aaaelqyt",
+          "mp-aaacpxba",
+          "mp-aaabewbx",
+          "mp-aaaabtwy",
+          "mp-aaaabqvc",
+          "mp-aaaabpmc",
+          "mp-aaaaazht",
+          "mp-aaaabupc",
+          "mp-aaaaafnn"
+        ],
+        "proposed": [
+          "mp-aaacpvvc",
+          "mp-aaaelqyt",
+          "mp-aaacpxba",
+          "mp-aaabewbx",
+          "mp-aaaabtwy",
+          "mp-aaaabqvc",
+          "mp-aaaabpmc",
+          "mp-aaaaazht",
+          "mp-aaaabupc",
+          "mp-aaaaafnn"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaabewbx",
+          "mp-aaacpxba",
+          "mp-aaaelqyt",
+          "mp-aaaaaurr",
+          "mp-aaaabtwy",
+          "mp-aaaaazht",
+          "mp-aaaabupc",
+          "mp-aaaabpmc",
+          "mp-aaaaafnn",
+          "mp-aaaabohz"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaacpvvc",
+          "mp-aaaelqyt",
+          "mp-aaacpxba",
+          "mp-aaabewbx",
+          "mp-aaaabtwy",
+          "mp-aaaabqvc",
+          "mp-aaaabpmc",
+          "mp-aaaaazht",
+          "mp-aaaabupc",
+          "mp-aaaaafnn"
+        ]
+      },
+      "retrieval_ms_all_configs": 2.0
+    },
+    {
+      "id": "t3-spinel-ferrimagnets",
+      "tier": 3,
+      "question": "Ferrimagnetic AB2C4 materials",
+      "relevant": 4,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 4
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.6,
+          "returned": 10,
+          "relevant": 4
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 4,
+          "relevant": 4
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 4,
+          "relevant": 4
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 4,
+          "relevant": 4
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabruix",
+          "mp-aaabqwgc",
+          "mp-aaaabcwl",
+          "mp-aaaabcoo",
+          "mp-aaabqxxz",
+          "mp-aaabrwps",
+          "mp-aaaacarc",
+          "mp-aaabwise",
+          "mp-aaabskik",
+          "mp-aaabraqe"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaackwds",
+          "mp-aaacuoho",
+          "mp-aaacvhrf",
+          "mp-aaabkkzb",
+          "mp-aaabqwgc",
+          "mp-aaabqxxz",
+          "mp-aaaacarc",
+          "mp-aaaaamip",
+          "mp-aaaabsbw",
+          "mp-aaabqyis"
+        ],
+        "proposed": [
+          "mp-aaackwds",
+          "mp-aaacuoho",
+          "mp-aaacvhrf",
+          "mp-aaabkkzb"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaackwds",
+          "mp-aaabkkzb",
+          "mp-aaacvhrf",
+          "mp-aaacuoho"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaackwds",
+          "mp-aaacuoho",
+          "mp-aaacvhrf",
+          "mp-aaabkkzb"
+        ]
+      },
+      "retrieval_ms_all_configs": 1.1
+    },
+    {
+      "id": "t3-co3-stable",
+      "tier": 3,
+      "question": "Stable materials containing Co3+",
+      "relevant": 5,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.2,
+          "mrr": 1.0,
+          "ndcg@10": 0.3391602052736161,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 5
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.5,
+          "returned": 10,
+          "relevant": 5
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 5
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 5
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 5
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaacujjd",
+          "mp-aaabqvjn",
+          "mp-aaacpbga",
+          "mp-aaabxabl",
+          "mp-aaabrfyf",
+          "mp-aaabrgxk",
+          "mp-aaabcsex",
+          "mp-aaaabctc",
+          "mp-aaaabmmp",
+          "mp-aaadbsja"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaacujjd",
+          "mp-aaaabnyj",
+          "mp-aaabsbck",
+          "mp-aaaabhik",
+          "mp-aaabxaye",
+          "mp-aaabqvjn",
+          "mp-aaacpbga",
+          "mp-aaabxabl",
+          "mp-aaabrgxk",
+          "mp-aaabcsex"
+        ],
+        "proposed": [
+          "mp-aaacujjd",
+          "mp-aaaabnyj",
+          "mp-aaabsbck",
+          "mp-aaaabhik",
+          "mp-aaabxaye"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaacujjd",
+          "mp-aaabsbck",
+          "mp-aaaabnyj",
+          "mp-aaaabhik",
+          "mp-aaabxaye"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaacujjd",
+          "mp-aaaabnyj",
+          "mp-aaabsbck",
+          "mp-aaaabhik",
+          "mp-aaabxaye"
+        ]
+      },
+      "retrieval_ms_all_configs": 3.7
+    },
+    {
+      "id": "t3-trigonal-li-wide",
+      "tier": 3,
+      "question": "Trigonal lithium compounds with a band gap above 3 eV",
+      "relevant": 5,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.2,
+          "mrr": 0.1,
+          "ndcg@10": 0.09803928583135704,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 5
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.4,
+          "mrr": 1.0,
+          "ndcg@10": 0.5087403079104241,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 5
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 5
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 5
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 5
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaajma",
+          "mp-aaaabmmt",
+          "mp-aaabshcv",
+          "mp-aaaabcrd",
+          "mp-aaaabmmd",
+          "mp-aaaabclf",
+          "mp-aaaabmmb",
+          "mp-aaabsbgq",
+          "mp-aaackrph",
+          "mp-aaaaafnn"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaafnn",
+          "mp-aaaabnyz",
+          "mp-aaaabnxn",
+          "mp-aaabfnrh",
+          "mp-aaabrtaw",
+          "mp-aaaabcpw",
+          "mp-aaaabboy",
+          "mp-aaabgfrd",
+          "mp-aaabrygd",
+          "mp-aaabsbjj"
+        ],
+        "proposed": [
+          "mp-aaaaafnn",
+          "mp-aaaabasg",
+          "mp-aaaabnxn",
+          "mp-aaaacdil",
+          "mp-aaaabbuv"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaabasg",
+          "mp-aaaaafnn",
+          "mp-aaaacdil",
+          "mp-aaaabnxn",
+          "mp-aaaabbuv"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaafnn",
+          "mp-aaaabasg",
+          "mp-aaaabnxn",
+          "mp-aaaacdil",
+          "mp-aaaabbuv"
+        ]
+      },
+      "retrieval_ms_all_configs": 4.1
+    },
+    {
+      "id": "t3-rocksalt-sg",
+      "tier": 3,
+      "question": "Materials in space group Fm-3m",
+      "relevant": 20,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.2,
+          "mrr": 0.2,
+          "ndcg@10": 0.15850703974098102,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 20
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 20
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 20
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 20
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 20
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaabmmt",
+          "mp-aaabmjtq",
+          "mp-aaaabmmd",
+          "mp-aaaceurj",
+          "mp-aaacpnyx",
+          "mp-aaabriuu",
+          "mp-aaaabcjw",
+          "mp-aaaabdre",
+          "mp-aaacpkxa",
+          "mp-aaaabrgr"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaacpnyx",
+          "mp-aaaabcjw",
+          "mp-aaaaabwr",
+          "mp-aaabkrjt",
+          "mp-aaacqrby",
+          "mp-aaaaadwf",
+          "mp-aaaaapvc",
+          "mp-aaaaabro",
+          "mp-aaaaadrc",
+          "mp-aaaabcdd"
+        ],
+        "proposed": [
+          "mp-aaaabcjw",
+          "mp-aaacpnyx",
+          "mp-aaaaabwr",
+          "mp-aaaaadwf",
+          "mp-aaaaapvc",
+          "mp-aaaaabro",
+          "mp-aaaaadrc",
+          "mp-aaacqrby",
+          "mp-aaaabcdd",
+          "mp-aaaaabzq"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaabzq",
+          "mp-aaaaadwf",
+          "mp-aaaaabro",
+          "mp-aaaaapvc",
+          "mp-aaaabdws",
+          "mp-aaaaablj",
+          "mp-aaaaacxk",
+          "mp-aaaaabwr",
+          "mp-aaaabctu",
+          "mp-aaaaadmm"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabcjw",
+          "mp-aaacpnyx",
+          "mp-aaaaabwr",
+          "mp-aaaaadwf",
+          "mp-aaaaapvc",
+          "mp-aaaaabro",
+          "mp-aaaaadrc",
+          "mp-aaacqrby",
+          "mp-aaaabcdd",
+          "mp-aaaaabzq"
+        ]
+      },
+      "retrieval_ms_all_configs": 0.8
+    },
+    {
+      "id": "t3-mn3-magnets",
+      "tier": 3,
+      "question": "Magnetic materials containing Mn3+",
+      "relevant": 36,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.4,
+          "mrr": 0.5,
+          "ndcg@10": 0.3885264725763437,
+          "violation_rate": 0.6,
+          "returned": 10,
+          "relevant": 36
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 36
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 36
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 36
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 36
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabqxwg",
+          "mp-aaabmjtq",
+          "mp-aaacvlbc",
+          "mp-aaaabcpn",
+          "mp-aaabreny",
+          "mp-aaacpvlu",
+          "mp-aaabrayq",
+          "mp-aaabsajy",
+          "mp-aaacrnnh",
+          "mp-aaabrfyf"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabmjtq",
+          "mp-aaacvlbc",
+          "mp-aaabrayq",
+          "mp-aaacrnnh",
+          "mp-aaabrgrt",
+          "mp-aaacotap",
+          "mp-aaaabmnn",
+          "mp-aaaabmrn",
+          "mp-aaabrcqj",
+          "mp-aaacroiv"
+        ],
+        "proposed": [
+          "mp-aaacvlbc",
+          "mp-aaabmjtq",
+          "mp-aaacotap",
+          "mp-aaaabmnn",
+          "mp-aaabrayq",
+          "mp-aaacrnnh",
+          "mp-aaaabmrn",
+          "mp-aaabrcqj",
+          "mp-aaabsmlm",
+          "mp-aaabrgrt"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaabeehl",
+          "mp-aaaabmnj",
+          "mp-aaaabnxv",
+          "mp-aaacukwa",
+          "mp-aaaabvfw",
+          "mp-aaacrnrw",
+          "mp-aaacotap",
+          "mp-aaaabmtg",
+          "mp-aaaabmnn",
+          "mp-aaaabmrn"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaacvlbc",
+          "mp-aaabmjtq",
+          "mp-aaacotap",
+          "mp-aaaabmnn",
+          "mp-aaabrayq",
+          "mp-aaacrnnh",
+          "mp-aaaabmrn",
+          "mp-aaabrcqj",
+          "mp-aaabsmlm",
+          "mp-aaabrgrt"
+        ]
+      },
+      "retrieval_ms_all_configs": 4.1
+    },
+    {
+      "id": "t3-oxynitrides",
+      "tier": 3,
+      "question": "Materials containing both oxygen and nitrogen",
+      "relevant": 0,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": NaN,
+          "mrr": NaN,
+          "ndcg@10": NaN,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 0
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": NaN,
+          "mrr": NaN,
+          "ndcg@10": NaN,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 0
+        },
+        "proposed": {
+          "recall@10": NaN,
+          "mrr": NaN,
+          "ndcg@10": NaN,
+          "violation_rate": 0.0,
+          "returned": 0,
+          "relevant": 0
+        },
+        "ablation_no_semantic": {
+          "recall@10": NaN,
+          "mrr": NaN,
+          "ndcg@10": NaN,
+          "violation_rate": 0.0,
+          "returned": 0,
+          "relevant": 0
+        },
+        "ablation_no_similar_to": {
+          "recall@10": NaN,
+          "mrr": NaN,
+          "ndcg@10": NaN,
+          "violation_rate": 0.0,
+          "returned": 0,
+          "relevant": 0
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaadkx",
+          "mp-aaabfsbh",
+          "mp-aaabreia",
+          "mp-aaabkrla",
+          "mp-aaabljsu",
+          "mp-aaaabcdd",
+          "mp-aaabljsx",
+          "mp-aaabkkzb",
+          "mp-aaaaakji",
+          "mp-aaadjxvk"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaadkx",
+          "mp-aaabfsbh",
+          "mp-aaabreia",
+          "mp-aaabkrla",
+          "mp-aaabljsu",
+          "mp-aaaabcdd",
+          "mp-aaabljsx",
+          "mp-aaabkkzb",
+          "mp-aaaaakji",
+          "mp-aaadjxvk"
+        ],
+        "proposed": [],
+        "ablation_no_semantic": [],
+        "ablation_no_similar_to": []
+      },
+      "retrieval_ms_all_configs": 6.9
+    },
+    {
+      "id": "t4-lifepo4-mn",
+      "tier": 4,
+      "question": "Materials similar to LiFePO4 but based on manganese",
+      "relevant": 1,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.5,
+          "returned": 10,
+          "relevant": 1
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 1
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 1
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 0.16666666666666666,
+          "ndcg@10": 0.3562071871080222,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 1
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 1
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaabccr",
+          "mp-aaaabmrn",
+          "mp-aaaabcdl",
+          "mp-aaaabmqv",
+          "mp-aaabqyis",
+          "mp-aaabqwit",
+          "mp-aaaabhef",
+          "mp-aaaabmpr",
+          "mp-aaaabmld",
+          "mp-aaaabnfr"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaabccr",
+          "mp-aaaabmrn",
+          "mp-aaabqyis",
+          "mp-aaabqwit",
+          "mp-aaaabmpr",
+          "mp-aaabrvvx",
+          "mp-aaaabnxv",
+          "mp-aaacukwa",
+          "mp-aaabqxbn",
+          "mp-aaaabmnn"
+        ],
+        "proposed": [
+          "mp-aaaabccr",
+          "mp-aaacqmek",
+          "mp-aaaabnxp",
+          "mp-aaaabmmt",
+          "mp-aaaabmrn",
+          "mp-aaaabmpr",
+          "mp-aaaabnxv",
+          "mp-aaaabmmf",
+          "mp-aaabqwit",
+          "mp-aaacukwa"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaacqmek",
+          "mp-aaaabnxp",
+          "mp-aaaabmmt",
+          "mp-aaaabmmf",
+          "mp-aaaabptq",
+          "mp-aaaabccr",
+          "mp-aaaabvfw",
+          "mp-aaaabmnj",
+          "mp-aaaabnxv",
+          "mp-aaaabmpr"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabccr",
+          "mp-aaaabmpr",
+          "mp-aaaabmrn",
+          "mp-aaaabnxv",
+          "mp-aaabqwit",
+          "mp-aaaabmnn",
+          "mp-aaacukwa",
+          "mp-aaabrvvx",
+          "mp-aaabnijj",
+          "mp-aaabqxbn"
+        ]
+      },
+      "retrieval_ms_all_configs": 7.5
+    },
+    {
+      "id": "t4-batio3-noba",
+      "tier": 4,
+      "question": "Analogues of BaTiO3 without barium",
+      "relevant": 37,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 37
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 37
+        },
+        "proposed": {
+          "recall@10": 0.5,
+          "mrr": 0.25,
+          "ndcg@10": 0.23364061565394748,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 37
+        },
+        "ablation_no_semantic": {
+          "recall@10": 0.4,
+          "mrr": 0.14285714285714285,
+          "ndcg@10": 0.17301703889441905,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 37
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 0.8,
+          "mrr": 1.0,
+          "ndcg@10": 0.5088042671127869,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 37
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaaiof",
+          "mp-aaabqykc",
+          "mp-aaacgafg",
+          "mp-aaagatvz",
+          "mp-aaaaaerr",
+          "mp-aaaaaeit",
+          "mp-aaaaaeme",
+          "mp-aaabqvbj",
+          "mp-aaaaalll",
+          "mp-aaaabriw"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabqykc",
+          "mp-aaacgafg",
+          "mp-aaagatvz",
+          "mp-aaaaaerr",
+          "mp-aaaaaeit",
+          "mp-aaaaaeme",
+          "mp-aaabqvbj",
+          "mp-aaaaalll",
+          "mp-aaaabriw",
+          "mp-aaabqxoy"
+        ],
+        "proposed": [
+          "mp-aaabcsfb",
+          "mp-aaaabuen",
+          "mp-aaaaaeit",
+          "mp-aaaaafyp",
+          "mp-aaaaaufo",
+          "mp-aaaaafja",
+          "mp-aaabrhvl",
+          "mp-aaaabctc",
+          "mp-aaaaagwx",
+          "mp-aaacurfn"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaabcsfb",
+          "mp-aaabrhvl",
+          "mp-aaaaaufo",
+          "mp-aaabxgim",
+          "mp-aaaabuen",
+          "mp-aaaabsbw",
+          "mp-aaaaafyp",
+          "mp-aaacurfn",
+          "mp-aaaabcfy",
+          "mp-aaaaagwx"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaafyp",
+          "mp-aaaaaeit",
+          "mp-aaacurfn",
+          "mp-aaaaagwx",
+          "mp-aaaabcfy",
+          "mp-aaaaafja",
+          "mp-aaaabegx",
+          "mp-aaaabctc",
+          "mp-aaaabbsm",
+          "mp-aaaaatld"
+        ]
+      },
+      "retrieval_ms_all_configs": 37.7
+    },
+    {
+      "id": "t4-gan",
+      "tier": 4,
+      "question": "Materials like GaN",
+      "relevant": 48,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.6,
+          "mrr": 0.5,
+          "ndcg@10": 0.39512583455453115,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 48
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.6,
+          "mrr": 1.0,
+          "ndcg@10": 0.48869614648786525,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 48
+        },
+        "proposed": {
+          "recall@10": 0.7,
+          "mrr": 1.0,
+          "ndcg@10": 0.5753817691113603,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 48
+        },
+        "ablation_no_semantic": {
+          "recall@10": 0.5,
+          "mrr": 1.0,
+          "ndcg@10": 0.42212040987330074,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 48
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 0.9,
+          "mrr": 1.0,
+          "ndcg@10": 0.6782272780436103,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 48
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaabey",
+          "mp-aaaaadtm",
+          "mp-aaaaaazl",
+          "mp-aaaaadru",
+          "mp-aaaaabsm",
+          "mp-aaaabgwb",
+          "mp-aaaaaabg",
+          "mp-aaabfotg",
+          "mp-aaaaaaen",
+          "mp-aaaaabic"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaadtm",
+          "mp-aaaaaazl",
+          "mp-aaaaadru",
+          "mp-aaaaabsm",
+          "mp-aaaabgwb",
+          "mp-aaaaaabg",
+          "mp-aaabfotg",
+          "mp-aaaaaaen",
+          "mp-aaaaabic",
+          "mp-aaaaagos"
+        ],
+        "proposed": [
+          "mp-aaaaaazl",
+          "mp-aaaaadtm",
+          "mp-aaaaaasc",
+          "mp-aaaaadru",
+          "mp-aaaabgwb",
+          "mp-aaaabqad",
+          "mp-aaaaabsm",
+          "mp-aaaaacex",
+          "mp-aaaaabic",
+          "mp-aaabikuu"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaaazl",
+          "mp-aaaabqad",
+          "mp-aaaaaasc",
+          "mp-aaaaacex",
+          "mp-aaacujjd",
+          "mp-aaaaacnp",
+          "mp-aaaabgwb",
+          "mp-aaaaadru",
+          "mp-aaaaadtm",
+          "mp-aaaaabic"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaadtm",
+          "mp-aaaaaazl",
+          "mp-aaaabgwb",
+          "mp-aaaaadru",
+          "mp-aaaaabsm",
+          "mp-aaaaabic",
+          "mp-aaabikuu",
+          "mp-aaaaadeb",
+          "mp-aaabfotg",
+          "mp-aaacsdlz"
+        ]
+      },
+      "retrieval_ms_all_configs": 33.2
+    },
+    {
+      "id": "t4-licoo2-cofree",
+      "tier": 4,
+      "question": "Materials similar to LiCoO2 without cobalt",
+      "relevant": 14,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 14
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 14
+        },
+        "proposed": {
+          "recall@10": 0.3,
+          "mrr": 0.14285714285714285,
+          "ndcg@10": 0.22296334988894245,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 14
+        },
+        "ablation_no_semantic": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 14
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 0.9,
+          "mrr": 1.0,
+          "ndcg@10": 0.8283303381621956,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 14
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaabhik",
+          "mp-aaabsbck",
+          "mp-aaadbsja",
+          "mp-aaaabbzx",
+          "mp-aaacounf",
+          "mp-aaaabphw",
+          "mp-aaabskik",
+          "mp-aaabrgml",
+          "mp-aaabqvjn",
+          "mp-aaaabmlv"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabsbck",
+          "mp-aaadbsja",
+          "mp-aaaabbzx",
+          "mp-aaacounf",
+          "mp-aaaabphw",
+          "mp-aaabskik",
+          "mp-aaabrgml",
+          "mp-aaabqvjn",
+          "mp-aaaabmlv",
+          "mp-aaaabmpl"
+        ],
+        "proposed": [
+          "mp-aaabkrla",
+          "mp-aaagbhlq",
+          "mp-aaabnnxf",
+          "mp-aaagbmeo",
+          "mp-aaagbbgf",
+          "mp-aaaabcjp",
+          "mp-aaaabbuv",
+          "mp-aaaaanog",
+          "mp-aaaabcpw",
+          "mp-aaacsdlz"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaabkrla",
+          "mp-aaagbbgf",
+          "mp-aaaaadvr",
+          "mp-aaaabbtn",
+          "mp-aaagbmeo",
+          "mp-aaacsdlz",
+          "mp-aaagbhlq",
+          "mp-aaabnnxf",
+          "mp-aaaabcjp",
+          "mp-aaackwds"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabbuv",
+          "mp-aaaabcpw",
+          "mp-aaaaanog",
+          "mp-aaabqyjg",
+          "mp-aaabrcta",
+          "mp-aaaaaiqq",
+          "mp-aaafdqij",
+          "mp-aaaaafuy",
+          "mp-aaaaceqi",
+          "mp-aaaaahpf"
+        ]
+      },
+      "retrieval_ms_all_configs": 37.6
+    },
+    {
+      "id": "t4-zno-cd",
+      "tier": 4,
+      "question": "Materials like ZnO but containing cadmium",
+      "relevant": 4,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.25,
+          "mrr": 0.1111111111111111,
+          "ndcg@10": 0.07180140873718398,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 4
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 0.7283227684634517,
+          "violation_rate": 0.3,
+          "returned": 10,
+          "relevant": 4
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 0.8016929696751668,
+          "violation_rate": 0.0,
+          "returned": 7,
+          "relevant": 4
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 0.8807404415317287,
+          "violation_rate": 0.0,
+          "returned": 7,
+          "relevant": 4
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 0.8016929696751668,
+          "violation_rate": 0.0,
+          "returned": 7,
+          "relevant": 4
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaadeb",
+          "mp-aaaaagos",
+          "mp-aaackqym",
+          "mp-aaacsdlz",
+          "mp-aaabqvyo",
+          "mp-aaaaadwf",
+          "mp-aaabqxcp",
+          "mp-aaaabrgr",
+          "mp-aaaaabro",
+          "mp-aaaaadkw"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaabro",
+          "mp-aaaaadkw",
+          "mp-aaaaaazw",
+          "mp-aaackioj",
+          "mp-aaaaaapq",
+          "mp-aaackimi",
+          "mp-aaaaabpe",
+          "mp-aaaaagos",
+          "mp-aaackqym",
+          "mp-aaacsdlz"
+        ],
+        "proposed": [
+          "mp-aaaaabro",
+          "mp-aaaaaazw",
+          "mp-aaaaadkw",
+          "mp-aaackioj",
+          "mp-aaaaaapq",
+          "mp-aaaaabpe",
+          "mp-aaackimi"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaabro",
+          "mp-aaaaabpe",
+          "mp-aaaaaazw",
+          "mp-aaaaaapq",
+          "mp-aaackioj",
+          "mp-aaackimi",
+          "mp-aaaaadkw"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaabro",
+          "mp-aaaaaazw",
+          "mp-aaaaadkw",
+          "mp-aaackioj",
+          "mp-aaaaaapq",
+          "mp-aaaaabpe",
+          "mp-aaackimi"
+        ]
+      },
+      "retrieval_ms_all_configs": 2.9
+    },
+    {
+      "id": "t4-tio2-wide",
+      "tier": 4,
+      "question": "Materials similar to TiO2 with a band gap above 3 eV",
+      "relevant": 5,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 5
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 5
+        },
+        "proposed": {
+          "recall@10": 0.4,
+          "mrr": 1.0,
+          "ndcg@10": 0.48522855511632257,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 5
+        },
+        "ablation_no_semantic": {
+          "recall@10": 0.4,
+          "mrr": 0.5,
+          "ndcg@10": 0.38356636737133565,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 5
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 0.4,
+          "mrr": 1.0,
+          "ndcg@10": 0.5531464700081437,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 5
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaaapa",
+          "mp-aaacurfn",
+          "mp-aaaabegx",
+          "mp-aaaaaeit",
+          "mp-aaabcsfb",
+          "mp-aaaabcfy",
+          "mp-aaaabctc",
+          "mp-aaabqvbj",
+          "mp-aaaaaarq",
+          "mp-aaabrzkw"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaacurfn",
+          "mp-aaaabegx",
+          "mp-aaaaaeit",
+          "mp-aaabcsfb",
+          "mp-aaaabcfy",
+          "mp-aaaabctc",
+          "mp-aaabqvbj",
+          "mp-aaaaaarq",
+          "mp-aaabrzkw",
+          "mp-aaabsbgq"
+        ],
+        "proposed": [
+          "mp-aaaaakjg",
+          "mp-aaaaabrz",
+          "mp-aaabewbx",
+          "mp-aaaaacxk",
+          "mp-aaaaanou",
+          "mp-aaabqyqv",
+          "mp-aaaabmmb",
+          "mp-aaacqyxj",
+          "mp-aaabsmsy",
+          "mp-aaaaaaii"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaanou",
+          "mp-aaaaacxk",
+          "mp-aaaaakjg",
+          "mp-aaabewbx",
+          "mp-aaaaabrz",
+          "mp-aaaaabwr",
+          "mp-aaabqyqv",
+          "mp-aaacqjbx",
+          "mp-aaabikuu",
+          "mp-aaaabmmb"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaakjg",
+          "mp-aaaaacxk",
+          "mp-aaaaabrz",
+          "mp-aaabewbx",
+          "mp-aaaaanou",
+          "mp-aaabqyqv",
+          "mp-aaaabmmb",
+          "mp-aaacqyxj",
+          "mp-aaabsmsy",
+          "mp-aaaaafar"
+        ]
+      },
+      "retrieval_ms_all_configs": 11.4
+    },
+    {
+      "id": "t4-fe3o4-nofe",
+      "tier": 4,
+      "question": "Analogues of Fe3O4 that do not contain iron",
+      "relevant": 6,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 6
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 6
+        },
+        "proposed": {
+          "recall@10": 0.16666666666666666,
+          "mrr": 0.14285714285714285,
+          "ndcg@10": 0.10086747116627115,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 6
+        },
+        "ablation_no_semantic": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 6
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 0.8333333333333334,
+          "mrr": 0.5,
+          "ndcg@10": 0.6812024645294942,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 6
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaabcoo",
+          "mp-aaabqwgc",
+          "mp-aaacoyss",
+          "mp-aaabwise",
+          "mp-aaaabdgk",
+          "mp-aaabqyis",
+          "mp-aaabraox",
+          "mp-aaaabmqv",
+          "mp-aaagatvz",
+          "mp-aaaabmld"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabqwgc",
+          "mp-aaacoyss",
+          "mp-aaabwise",
+          "mp-aaaabdgk",
+          "mp-aaabqyis",
+          "mp-aaabraox",
+          "mp-aaaabmqv",
+          "mp-aaagatvz",
+          "mp-aaaabmld",
+          "mp-aaackqwg"
+        ],
+        "proposed": [
+          "mp-aaabrsfz",
+          "mp-aaabqxyo",
+          "mp-aaacrnrw",
+          "mp-aaagatvz",
+          "mp-aaaaccnb",
+          "mp-aaacpvlu",
+          "mp-aaacujjd",
+          "mp-aaacvlbc",
+          "mp-aaabntuo",
+          "mp-aaabrrvb"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaabntuo",
+          "mp-aaabrsfz",
+          "mp-aaaaccnb",
+          "mp-aaabodtc",
+          "mp-aaabrrvb",
+          "mp-aaaabbzu",
+          "mp-aaacrnro",
+          "mp-aaacrnrw",
+          "mp-aaacrboo",
+          "mp-aaacpvlu"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaagatvz",
+          "mp-aaacujjd",
+          "mp-aaaaacew",
+          "mp-aaabljsx",
+          "mp-aaagbmeo",
+          "mp-aaaabbtn",
+          "mp-aaaabhmn",
+          "mp-aaabread",
+          "mp-aaaaawrb",
+          "mp-aaabrgxk"
+        ]
+      },
+      "retrieval_ms_all_configs": 37.0
+    },
+    {
+      "id": "t4-srtio3-dielectric",
+      "tier": 4,
+      "question": "Dielectrics similar to SrTiO3",
+      "relevant": 19,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.2,
+          "mrr": 0.3333333333333333,
+          "ndcg@10": 0.15997895091357786,
+          "violation_rate": 0.6,
+          "returned": 10,
+          "relevant": 19
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.2,
+          "mrr": 1.0,
+          "ndcg@10": 0.2942026330205877,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 19
+        },
+        "proposed": {
+          "recall@10": 0.5,
+          "mrr": 1.0,
+          "ndcg@10": 0.6220658801622149,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 19
+        },
+        "ablation_no_semantic": {
+          "recall@10": 0.7,
+          "mrr": 1.0,
+          "ndcg@10": 0.7492871381506523,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 19
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 0.4,
+          "mrr": 1.0,
+          "ndcg@10": 0.4413039495308815,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 19
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaagwx",
+          "mp-aaacqdqr",
+          "mp-aaaaagmt",
+          "mp-aaaaaeyv",
+          "mp-aaaaaezy",
+          "mp-aaaaaieu",
+          "mp-aaaabuen",
+          "mp-aaaaaegt",
+          "mp-aaabqvlr",
+          "mp-aaabrtyq"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaagmt",
+          "mp-aaaaaezy",
+          "mp-aaabqvlr",
+          "mp-aaabrtyq",
+          "mp-aaaabagl",
+          "mp-aaaaaaii",
+          "mp-aaabrtzj",
+          "mp-aaabqvbj",
+          "mp-aaaaaeit",
+          "mp-aaabsijp"
+        ],
+        "proposed": [
+          "mp-aaaaafyp",
+          "mp-aaaaafja",
+          "mp-aaacgafg",
+          "mp-aaaaagmt",
+          "mp-aaaaaezy",
+          "mp-aaabrtzj",
+          "mp-aaaaaeit",
+          "mp-aaaaabrz",
+          "mp-aaaabagl",
+          "mp-aaabeuzm"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaafyp",
+          "mp-aaacgafg",
+          "mp-aaaaafja",
+          "mp-aaaaabrz",
+          "mp-aaaaaiof",
+          "mp-aaacurfn",
+          "mp-aaaaaezy",
+          "mp-aaaaagmt",
+          "mp-aaaaagup",
+          "mp-aaaaadzt"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaagmt",
+          "mp-aaaaaezy",
+          "mp-aaaaaiof",
+          "mp-aaaabagl",
+          "mp-aaaaaeit",
+          "mp-aaabrtzj",
+          "mp-aaabeuzm",
+          "mp-aaacurfn",
+          "mp-aaaaadzt",
+          "mp-aaaabafj"
+        ]
+      },
+      "retrieval_ms_all_configs": 15.7
+    },
+    {
+      "id": "t4-limn2o4-noli",
+      "tier": 4,
+      "question": "Materials similar to LiMn2O4 without lithium",
+      "relevant": 42,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 42
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 42
+        },
+        "proposed": {
+          "recall@10": 0.7,
+          "mrr": 0.5,
+          "ndcg@10": 0.37820421983303665,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 42
+        },
+        "ablation_no_semantic": {
+          "recall@10": 0.2,
+          "mrr": 0.16666666666666666,
+          "ndcg@10": 0.07588109553901769,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 42
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 0.7,
+          "mrr": 1.0,
+          "ndcg@10": 0.44492811483924066,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 42
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaacukwa",
+          "mp-aaaabccr",
+          "mp-aaaabnxv",
+          "mp-aaabrvvx",
+          "mp-aaabqxbn",
+          "mp-aaabqyjg",
+          "mp-aaabsbam",
+          "mp-aaaabmpr",
+          "mp-aaaabmqx",
+          "mp-aaacvhrf"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaabccr",
+          "mp-aaaabnxv",
+          "mp-aaabrvvx",
+          "mp-aaabqxbn",
+          "mp-aaabqyjg",
+          "mp-aaabsbam",
+          "mp-aaaabmpr",
+          "mp-aaaabmqx",
+          "mp-aaacvhrf",
+          "mp-aaaabmrn"
+        ],
+        "proposed": [
+          "mp-aaabftvb",
+          "mp-aaaabbtf",
+          "mp-aaacrnrw",
+          "mp-aaaabbtn",
+          "mp-aaabetyp",
+          "mp-aaaabsbw",
+          "mp-aaaabctu",
+          "mp-aaaaaezf",
+          "mp-aaabrspq",
+          "mp-aaaabptq"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaabftvb",
+          "mp-aaaabteu",
+          "mp-aaabqyzh",
+          "mp-aaaabqov",
+          "mp-aaaaaakz",
+          "mp-aaacrnrw",
+          "mp-aaaabbtf",
+          "mp-aaacotap",
+          "mp-aaabkrla",
+          "mp-aaabcsex"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaabbtf",
+          "mp-aaacrnrw",
+          "mp-aaaabbtn",
+          "mp-aaaaccnb",
+          "mp-aaabcsex",
+          "mp-aaabetyp",
+          "mp-aaaabctu",
+          "mp-aaaabynb",
+          "mp-aaaabptq",
+          "mp-aaaabsbw"
+        ]
+      },
+      "retrieval_ms_all_configs": 183.4
+    },
+    {
+      "id": "t4-gaas-p",
+      "tier": 4,
+      "question": "Materials like GaAs that contain phosphorus",
+      "relevant": 4,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.25,
+          "mrr": 0.5,
+          "ndcg@10": 0.24630238874073,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 4
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.25,
+          "mrr": 1.0,
+          "ndcg@10": 0.3903800499921017,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 4
+        },
+        "proposed": {
+          "recall@10": 0.75,
+          "mrr": 1.0,
+          "ndcg@10": 0.7495275800817669,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 4
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 4
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 0.5,
+          "mrr": 1.0,
+          "ndcg@10": 0.5413996682199069,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 4
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaadtm",
+          "mp-aaaaadru",
+          "mp-aaaaabey",
+          "mp-aaaaabsm",
+          "mp-aaaaadfo",
+          "mp-aaaaaasc",
+          "mp-aaaaadvp",
+          "mp-aaaaaaya",
+          "mp-aaaaabic",
+          "mp-aaaabveo"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaadru",
+          "mp-aaaabmqv",
+          "mp-aaacqeas",
+          "mp-aaaabmlt",
+          "mp-aaabwiog",
+          "mp-aaabqwit",
+          "mp-aaaabmld",
+          "mp-aaaabmsh",
+          "mp-aaaabmlv",
+          "mp-aaaabmrn"
+        ],
+        "proposed": [
+          "mp-aaaaadru",
+          "mp-aaaabect",
+          "mp-aaacqeas",
+          "mp-aaabsils",
+          "mp-aaaabveo",
+          "mp-aaaabmqv",
+          "mp-aaaabmld",
+          "mp-aaabwiog",
+          "mp-aaaabmlt",
+          "mp-aaaaachq"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaadru",
+          "mp-aaaabect",
+          "mp-aaaaachq",
+          "mp-aaaaacex",
+          "mp-aaaabnxv",
+          "mp-aaaabnwt",
+          "mp-aaaabmeu",
+          "mp-aaabpnkl",
+          "mp-aaaabqad",
+          "mp-aaaabmnj"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaadru",
+          "mp-aaacqeas",
+          "mp-aaabsils",
+          "mp-aaaabveo",
+          "mp-aaaaachq",
+          "mp-aaaabmqv",
+          "mp-aaaabmld",
+          "mp-aaabwiog",
+          "mp-aaaabmlt",
+          "mp-aaabqwit"
+        ]
+      },
+      "retrieval_ms_all_configs": 7.4
+    },
+    {
+      "id": "t5-bulk-200",
+      "tier": 5,
+      "question": "Materials with a bulk modulus above 200 GPa",
+      "relevant": 6,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 6
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 6
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 6,
+          "relevant": 6
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 6,
+          "relevant": 6
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 6,
+          "relevant": 6
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaadtm",
+          "mp-aaaaaabg",
+          "mp-aaaaabsm",
+          "mp-aaaaabey",
+          "mp-aaaabgwb",
+          "mp-aaaaadvp",
+          "mp-aaaaabrf",
+          "mp-aaaaachq",
+          "mp-aaaaabvc",
+          "mp-aaaabqad"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaadtm",
+          "mp-aaaaaabg",
+          "mp-aaaaabsm",
+          "mp-aaaaabey",
+          "mp-aaaabgwb",
+          "mp-aaaaadvp",
+          "mp-aaaaabrf",
+          "mp-aaaaachq",
+          "mp-aaaaabvc",
+          "mp-aaaabqad"
+        ],
+        "proposed": [
+          "mp-aaaaadkx",
+          "mp-aaaaaasc",
+          "mp-aaaaabrz",
+          "mp-aaabfsbh",
+          "mp-aaaaaarq",
+          "mp-aaaaaano"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaadkx",
+          "mp-aaaaabrz",
+          "mp-aaaaaarq",
+          "mp-aaabfsbh",
+          "mp-aaaaaano",
+          "mp-aaaaaasc"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaadkx",
+          "mp-aaaaaasc",
+          "mp-aaaaabrz",
+          "mp-aaabfsbh",
+          "mp-aaaaaarq",
+          "mp-aaaaaano"
+        ]
+      },
+      "retrieval_ms_all_configs": 1.5
+    },
+    {
+      "id": "t5-shear-100",
+      "tier": 5,
+      "question": "Materials with a shear modulus above 100 GPa",
+      "relevant": 19,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.1,
+          "mrr": 0.16666666666666666,
+          "ndcg@10": 0.07839826897867533,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 19
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.1,
+          "mrr": 0.16666666666666666,
+          "ndcg@10": 0.07839826897867533,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 19
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 19
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 19
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 19
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaadtm",
+          "mp-aaaaaabg",
+          "mp-aaaaadru",
+          "mp-aaaaaaen",
+          "mp-aaacrjnq",
+          "mp-aaaaabey",
+          "mp-aaackglc",
+          "mp-aaaaabrf",
+          "mp-aaaaapvc",
+          "mp-aaaaachq"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaadtm",
+          "mp-aaaaaabg",
+          "mp-aaaaadru",
+          "mp-aaaaaaen",
+          "mp-aaacrjnq",
+          "mp-aaaaabey",
+          "mp-aaackglc",
+          "mp-aaaaabrf",
+          "mp-aaaaapvc",
+          "mp-aaaaachq"
+        ],
+        "proposed": [
+          "mp-aaaaacex",
+          "mp-aaaaaasc",
+          "mp-aaaaadkx",
+          "mp-aaaabqad",
+          "mp-aaaaabwr",
+          "mp-aaaaaazl",
+          "mp-aaaaabrz",
+          "mp-aaaaafja",
+          "mp-aaaaabey",
+          "mp-aaaaceqi"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaabqad",
+          "mp-aaaaacex",
+          "mp-aaaaadkx",
+          "mp-aaaaaasc",
+          "mp-aaaaabrz",
+          "mp-aaaaceqi",
+          "mp-aaaaafja",
+          "mp-aaaaaazl",
+          "mp-aaaaabwr",
+          "mp-aaaaabut"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaacex",
+          "mp-aaaaaasc",
+          "mp-aaaaadkx",
+          "mp-aaaabqad",
+          "mp-aaaaabwr",
+          "mp-aaaaaazl",
+          "mp-aaaaabrz",
+          "mp-aaaaafja",
+          "mp-aaaaabey",
+          "mp-aaaaceqi"
+        ]
+      },
+      "retrieval_ms_all_configs": 1.8
+    },
+    {
+      "id": "t5-dielectric-30",
+      "tier": 5,
+      "question": "Materials with a dielectric constant above 30",
+      "relevant": 31,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.2,
+          "mrr": 0.16666666666666666,
+          "ndcg@10": 0.14201905717762703,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 31
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.2,
+          "mrr": 0.16666666666666666,
+          "ndcg@10": 0.14201905717762703,
+          "violation_rate": 0.8,
+          "returned": 10,
+          "relevant": 31
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 31
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 31
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 31
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabsauu",
+          "mp-aaaabriw",
+          "mp-aaaacbgs",
+          "mp-aaaaaaft",
+          "mp-aaabrpre",
+          "mp-aaacevdw",
+          "mp-aaaabxrp",
+          "mp-aaaaadwf",
+          "mp-aaabrgjr",
+          "mp-aaabqyqv"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabsauu",
+          "mp-aaaabriw",
+          "mp-aaaacbgs",
+          "mp-aaaaaaft",
+          "mp-aaabrpre",
+          "mp-aaacevdw",
+          "mp-aaaabxrp",
+          "mp-aaaaadwf",
+          "mp-aaabrgjr",
+          "mp-aaabqyqv"
+        ],
+        "proposed": [
+          "mp-aaaaagtv",
+          "mp-aaacevdw",
+          "mp-aaaaafsk",
+          "mp-aaaaabzq",
+          "mp-aaabcsjy",
+          "mp-aaaaaged",
+          "mp-aaaaadee",
+          "mp-aaadbmtq",
+          "mp-aaabraex",
+          "mp-aaaaagmt"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaabqxxz",
+          "mp-aaabraex",
+          "mp-aaabcsjy",
+          "mp-aaaaabzq",
+          "mp-aaadbmtq",
+          "mp-aaaaagtv",
+          "mp-aaaaaibp",
+          "mp-aaaaafsk",
+          "mp-aaaaadee",
+          "mp-aaaaafsw"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaagtv",
+          "mp-aaacevdw",
+          "mp-aaaaafsk",
+          "mp-aaaaabzq",
+          "mp-aaabcsjy",
+          "mp-aaaaaged",
+          "mp-aaaaadee",
+          "mp-aaadbmtq",
+          "mp-aaabraex",
+          "mp-aaaaagmt"
+        ]
+      },
+      "retrieval_ms_all_configs": 2.0
+    },
+    {
+      "id": "t5-high-n-oxides",
+      "tier": 5,
+      "question": "Oxides with a refractive index above 2.5",
+      "relevant": 28,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.1,
+          "mrr": 0.16666666666666666,
+          "ndcg@10": 0.07839826897867533,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 28
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.1,
+          "mrr": 0.16666666666666666,
+          "ndcg@10": 0.07839826897867533,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 28
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 28
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 28
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 28
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaaapjq",
+          "mp-aaabqwdp",
+          "mp-aaabsmsy",
+          "mp-aaaaadzt",
+          "mp-aaaabptv",
+          "mp-aaaaaapa",
+          "mp-aaaaabqn",
+          "mp-aaaaaefy",
+          "mp-aaaablkh",
+          "mp-aaacqfat"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaaapjq",
+          "mp-aaabqwdp",
+          "mp-aaabsmsy",
+          "mp-aaaaadzt",
+          "mp-aaaabptv",
+          "mp-aaaaaapa",
+          "mp-aaaaabqn",
+          "mp-aaaaaefy",
+          "mp-aaaablkh",
+          "mp-aaacqfat"
+        ],
+        "proposed": [
+          "mp-aaadbsja",
+          "mp-aaaaaanx",
+          "mp-aaaaafuy",
+          "mp-aaabrgxk",
+          "mp-aaaabbzu",
+          "mp-aaaabdws",
+          "mp-aaaaafoa",
+          "mp-aaaaanog",
+          "mp-aaabsbff",
+          "mp-aaabsmlm"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaacpbga",
+          "mp-aaadbsja",
+          "mp-aaabrgxk",
+          "mp-aaabsbff",
+          "mp-aaabsmlm",
+          "mp-aaaaaanx",
+          "mp-aaaabbzu",
+          "mp-aaaaafuy",
+          "mp-aaabwise",
+          "mp-aaabscxc"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaadbsja",
+          "mp-aaaaaanx",
+          "mp-aaaaafuy",
+          "mp-aaabrgxk",
+          "mp-aaaabbzu",
+          "mp-aaaabdws",
+          "mp-aaaaafoa",
+          "mp-aaaaanog",
+          "mp-aaabsbff",
+          "mp-aaabsmlm"
+        ]
+      },
+      "retrieval_ms_all_configs": 9.2
+    },
+    {
+      "id": "t5-low-poisson",
+      "tier": 5,
+      "question": "Materials with a Poisson's ratio below 0.2",
+      "relevant": 8,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.125,
+          "mrr": 0.1,
+          "ndcg@10": 0.07311683844390995,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 8
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.125,
+          "mrr": 0.1,
+          "ndcg@10": 0.07311683844390995,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 8
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 8,
+          "relevant": 8
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 8,
+          "relevant": 8
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 8,
+          "relevant": 8
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaadjxvk",
+          "mp-aaabfsbh",
+          "mp-aaaaabgj",
+          "mp-aaaaaiqq",
+          "mp-aaabscjl",
+          "mp-aaaaaasc",
+          "mp-aaabftlh",
+          "mp-aaaabcrc",
+          "mp-aaaaberd",
+          "mp-aaaaakjg"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaadjxvk",
+          "mp-aaabfsbh",
+          "mp-aaaaabgj",
+          "mp-aaaaaiqq",
+          "mp-aaabscjl",
+          "mp-aaaaaasc",
+          "mp-aaabftlh",
+          "mp-aaaabcrc",
+          "mp-aaaaberd",
+          "mp-aaaaakjg"
+        ],
+        "proposed": [
+          "mp-aaaaakjg",
+          "mp-aaaaacex",
+          "mp-aaaaacxk",
+          "mp-aaaabqad",
+          "mp-aaaabrgr",
+          "mp-aaaaabwr",
+          "mp-aaaaaabg",
+          "mp-aaaaaluf"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaacex",
+          "mp-aaaaakjg",
+          "mp-aaaabqad",
+          "mp-aaaaacxk",
+          "mp-aaaabrgr",
+          "mp-aaaaaluf",
+          "mp-aaaaabwr",
+          "mp-aaaaaabg"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaakjg",
+          "mp-aaaaacex",
+          "mp-aaaaacxk",
+          "mp-aaaabqad",
+          "mp-aaaabrgr",
+          "mp-aaaaabwr",
+          "mp-aaaaaabg",
+          "mp-aaaaaluf"
+        ]
+      },
+      "retrieval_ms_all_configs": 1.6
+    },
+    {
+      "id": "t5-stiff-wide-oxides",
+      "tier": 5,
+      "question": "Oxides with bulk modulus above 150 GPa and band gap above 3 eV",
+      "relevant": 7,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 7
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.14285714285714285,
+          "mrr": 0.1,
+          "ndcg@10": 0.07945707943276742,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 7
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 7,
+          "relevant": 7
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 7,
+          "relevant": 7
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 7,
+          "relevant": 7
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaaffpkb",
+          "mp-aaaabdmf",
+          "mp-aaaaakxr",
+          "mp-aaaaabvc",
+          "mp-aaaaadkx",
+          "mp-aaaabcjw",
+          "mp-aaaaadru",
+          "mp-aaaabcrd",
+          "mp-aaabrumk",
+          "mp-aaaaadvp"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaaffpkb",
+          "mp-aaaabdmf",
+          "mp-aaaaakxr",
+          "mp-aaaaabvc",
+          "mp-aaaaadkx",
+          "mp-aaaabcjw",
+          "mp-aaaabcrd",
+          "mp-aaabrumk",
+          "mp-aaaaadvp",
+          "mp-aaacevdw"
+        ],
+        "proposed": [
+          "mp-aaaaabrz",
+          "mp-aaaaabwr",
+          "mp-aaacevdw",
+          "mp-aaaaaano",
+          "mp-aaaaaezy",
+          "mp-aaaaaaii",
+          "mp-aaaaaefy"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaabrz",
+          "mp-aaaaaano",
+          "mp-aaaaabwr",
+          "mp-aaaaaefy",
+          "mp-aaaaaezy",
+          "mp-aaaaaaii",
+          "mp-aaacevdw"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaabrz",
+          "mp-aaaaabwr",
+          "mp-aaacevdw",
+          "mp-aaaaaano",
+          "mp-aaaaaezy",
+          "mp-aaaaaaii",
+          "mp-aaaaaefy"
+        ]
+      },
+      "retrieval_ms_all_configs": 9.0
+    },
+    {
+      "id": "t5-top-bulk",
+      "tier": 5,
+      "question": "Top 5 materials with the highest bulk modulus",
+      "relevant": 1,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 0.6,
+          "returned": 5,
+          "relevant": 1
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 0.6,
+          "returned": 5,
+          "relevant": 1
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 1
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 1
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 5,
+          "relevant": 1
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabfqjs",
+          "mp-aaaabteu",
+          "mp-aaaabgwb",
+          "mp-aaabrwaj",
+          "mp-aaaabwgj"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabfqjs",
+          "mp-aaaabteu",
+          "mp-aaaabgwb",
+          "mp-aaabrwaj",
+          "mp-aaaabwgj"
+        ],
+        "proposed": [
+          "mp-aaaaadkx",
+          "mp-aaaaabrz",
+          "mp-aaaaaarq",
+          "mp-aaabfsbh",
+          "mp-aaaaaano"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaaaadkx",
+          "mp-aaaaabrz",
+          "mp-aaaaaarq",
+          "mp-aaabfsbh",
+          "mp-aaaaaano"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaadkx",
+          "mp-aaaaabrz",
+          "mp-aaaaaarq",
+          "mp-aaabfsbh",
+          "mp-aaaaaano"
+        ]
+      },
+      "retrieval_ms_all_configs": 7.7
+    },
+    {
+      "id": "t5-ti-high-k",
+      "tier": 5,
+      "question": "Titanium compounds with a dielectric constant above 20",
+      "relevant": 13,
+      "metrics": {
+        "B1_vector_rag": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 13
+        },
+        "B2_graphrag_fixed_hop": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 1.0,
+          "returned": 10,
+          "relevant": 13
+        },
+        "proposed": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 13
+        },
+        "ablation_no_semantic": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 13
+        },
+        "ablation_no_similar_to": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 13
+        }
+      },
+      "ranked": {
+        "B1_vector_rag": [
+          "mp-aaabrgjr",
+          "mp-aaabsbtn",
+          "mp-aaaabwft",
+          "mp-aaaabqnk",
+          "mp-aaabmjrj",
+          "mp-aaabrwyb",
+          "mp-aaabeghj",
+          "mp-aaabqwdp",
+          "mp-aaabryem",
+          "mp-aaabsmsy"
+        ],
+        "B2_graphrag_fixed_hop": [
+          "mp-aaabrgjr",
+          "mp-aaabsbtn",
+          "mp-aaaabqnk",
+          "mp-aaabrwyb",
+          "mp-aaabeghj",
+          "mp-aaabqwdp",
+          "mp-aaabryem",
+          "mp-aaabsmsy",
+          "mp-aaaabpnv",
+          "mp-aaacqfat"
+        ],
+        "proposed": [
+          "mp-aaaaaapa",
+          "mp-aaaabegx",
+          "mp-aaaaaged",
+          "mp-aaadbmtq",
+          "mp-aaaaaibp",
+          "mp-aaaabptv",
+          "mp-aaaaaieu",
+          "mp-aaabqwac",
+          "mp-aaabegsq",
+          "mp-aaaabcfy"
+        ],
+        "ablation_no_semantic": [
+          "mp-aaadbmtq",
+          "mp-aaaaaibp",
+          "mp-aaaaaieu",
+          "mp-aaaaaapa",
+          "mp-aaaabegx",
+          "mp-aaaaaged",
+          "mp-aaabegsq",
+          "mp-aaaabptv",
+          "mp-aaabqwac",
+          "mp-aaabscxc"
+        ],
+        "ablation_no_similar_to": [
+          "mp-aaaaaapa",
+          "mp-aaaabegx",
+          "mp-aaaaaged",
+          "mp-aaadbmtq",
+          "mp-aaaaaibp",
+          "mp-aaaabptv",
+          "mp-aaaaaieu",
+          "mp-aaabqwac",
+          "mp-aaabegsq",
+          "mp-aaaabcfy"
+        ]
+      },
+      "retrieval_ms_all_configs": 2.3
+    }
+  ],
+  "llm": {
+    "sample_size": 6,
+    "parsed_by_llm": 6,
+    "parser_field_accuracy": 0.4545,
+    "e2e": {
+      "recall@10": 0.66,
+      "mrr": 0.6,
+      "ndcg@10": 0.633,
+      "violation_rate": 0.2667
+    },
+    "explained_by_llm": 1,
+    "traceability_llm": 1.0,
+    "rows": [
+      {
+        "id": "t1-wide-gap",
+        "tier": 1,
+        "parser": "llm",
+        "parser_model": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+        "parser_fields_correct": 1,
+        "parser_fields_total": 1,
+        "parser_wrong_fields": [],
+        "e2e_metrics": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 143
+        },
+        "generator": "llm",
+        "generator_model": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+        "traceability": 1.0,
+        "claims": 6,
+        "ungrounded": []
+      },
+      {
+        "id": "t1-dense",
+        "tier": 1,
+        "parser": "llm",
+        "parser_model": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+        "parser_fields_correct": 1,
+        "parser_fields_total": 1,
+        "parser_wrong_fields": [],
+        "e2e_metrics": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "violation_rate": 0.0,
+          "returned": 10,
+          "relevant": 47
+        },
+        "generator": "template",
+        "generator_model": null,
+        "traceability": 1.0,
+        "claims": 64,
+        "ungrounded": []
+      },
+      {
+        "id": "t2-mn-cathodes-low-hull",
+        "tier": 2,
+        "parser": "llm",
+        "parser_model": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+        "parser_fields_correct": 1,
+        "parser_fields_total": 3,
+        "parser_wrong_fields": [
+          "application_domains",
+          "property_ranges"
+        ],
+        "e2e_metrics": {
+          "recall@10": 0.8,
+          "mrr": 0.5,
+          "ndcg@10": 0.6698623505528797,
+          "violation_rate": 0.2,
+          "returned": 10,
+          "relevant": 34
+        },
+        "generator": "template",
+        "generator_model": null,
+        "traceability": 1.0,
+        "claims": 60,
+        "ungrounded": []
+      },
+      {
+        "id": "t3-ti4-dielectrics",
+        "tier": 3,
+        "parser": "llm",
+        "parser_model": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+        "parser_fields_correct": 0,
+        "parser_fields_total": 3,
+        "parser_wrong_fields": [
+          "application_domains",
+          "include_elements",
+          "oxidation_states"
+        ],
+        "e2e_metrics": {
+          "recall@10": 0.5,
+          "mrr": 0.5,
+          "ndcg@10": 0.4950940324881554,
+          "violation_rate": 0.5,
+          "returned": 10,
+          "relevant": 40
+        },
+        "generator": "template",
+        "generator_model": null,
+        "traceability": 1.0,
+        "claims": 70,
+        "ungrounded": []
+      },
+      {
+        "id": "t3-oxynitrides",
+        "tier": 3,
+        "parser": "llm",
+        "parser_model": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+        "parser_fields_correct": 1,
+        "parser_fields_total": 1,
+        "parser_wrong_fields": [],
+        "e2e_metrics": {
+          "recall@10": NaN,
+          "mrr": NaN,
+          "ndcg@10": NaN,
+          "violation_rate": 0.0,
+          "returned": 0,
+          "relevant": 0
+        },
+        "generator": "template",
+        "generator_model": null,
+        "traceability": 1.0,
+        "claims": 2,
+        "ungrounded": []
+      },
+      {
+        "id": "t4-limn2o4-noli",
+        "tier": 4,
+        "parser": "llm",
+        "parser_model": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+        "parser_fields_correct": 1,
+        "parser_fields_total": 2,
+        "parser_wrong_fields": [
+          "exclude_elements"
+        ],
+        "e2e_metrics": {
+          "recall@10": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "violation_rate": 0.9,
+          "returned": 10,
+          "relevant": 42
+        },
+        "generator": "template",
+        "generator_model": null,
+        "traceability": 1.0,
+        "claims": 67,
+        "ungrounded": []
+      }
+    ]
+  },
+  "ingestion": {
+    "summary": {
+      "held_out": 50,
+      "mp_path_categorical_edge_recovery": 1.0,
+      "mp_path_similar_to_jaccard_vs_rebuild": 0.98,
+      "composition_path_pattern_match": 1.0,
+      "composition_path_chemsys_match": 1.0,
+      "composition_path_oxidation_guess_exact": 0.7021
+    },
+    "rows": [
+      {
+        "material_id": "mp-aaabrqjf",
+        "formula": "Li7Ti11O24",
+        "cluster": "battery_cathode_oxide",
+        "categorical_recovered": 15,
+        "categorical_total": 15,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaaabvfw",
+        "formula": "LiMnP2O7",
+        "cluster": "battery_cathode_phosphate",
+        "categorical_recovered": 17,
+        "categorical_total": 17,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaabrgrt",
+        "formula": "Mn2Cr3O12",
+        "cluster": "magnetic_spinel_oxide",
+        "categorical_recovered": 13,
+        "categorical_total": 13,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaabmyso",
+        "formula": "Ce16O27",
+        "cluster": "oxide_binary",
+        "categorical_recovered": 12,
+        "categorical_total": 12,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaaaaged",
+        "formula": "Ca3Ti2O7",
+        "cluster": "perovskite_oxide",
+        "categorical_recovered": 15,
+        "categorical_total": 15,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaacqnpk",
+        "formula": "SiC",
+        "cluster": "semiconductor_group_iv",
+        "categorical_recovered": 11,
+        "categorical_total": 11,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaaaeba",
+        "formula": "HgTe",
+        "cluster": "semiconductor_ii_vi",
+        "categorical_recovered": 9,
+        "categorical_total": 9,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaaaazl",
+        "formula": "AlN",
+        "cluster": "semiconductor_iii_v",
+        "categorical_recovered": 10,
+        "categorical_total": 10,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaaafuy",
+        "formula": "LiNbO2",
+        "cluster": "battery_cathode_oxide",
+        "categorical_recovered": 14,
+        "categorical_total": 14,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaabmsh",
+        "formula": "Li6Cr9(PO4)8",
+        "cluster": "battery_cathode_phosphate",
+        "categorical_recovered": 18,
+        "categorical_total": 18,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaackrcy",
+        "formula": "TiCo3O8",
+        "cluster": "magnetic_spinel_oxide",
+        "categorical_recovered": 14,
+        "categorical_total": 14,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaacunat",
+        "formula": "FeO",
+        "cluster": "oxide_binary",
+        "categorical_recovered": 14,
+        "categorical_total": 14,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaacquev",
+        "formula": "Sr3Ta5O15",
+        "cluster": "perovskite_oxide",
+        "categorical_recovered": 13,
+        "categorical_total": 13,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaaaaaen",
+        "formula": "Sn",
+        "cluster": "semiconductor_group_iv",
+        "categorical_recovered": 7,
+        "categorical_total": 7,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaaabro",
+        "formula": "CdO",
+        "cluster": "semiconductor_ii_vi",
+        "categorical_recovered": 9,
+        "categorical_total": 9,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaaadfo",
+        "formula": "AlAs",
+        "cluster": "semiconductor_iii_v",
+        "categorical_recovered": 10,
+        "categorical_total": 10,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaabrirl",
+        "formula": "Li17V16O32",
+        "cluster": "battery_cathode_oxide",
+        "categorical_recovered": 16,
+        "categorical_total": 16,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaabhgcg",
+        "formula": "Li2Co3(P2O7)2",
+        "cluster": "battery_cathode_phosphate",
+        "categorical_recovered": 18,
+        "categorical_total": 18,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaabqwqj",
+        "formula": "Zn(CoO2)2",
+        "cluster": "magnetic_spinel_oxide",
+        "categorical_recovered": 11,
+        "categorical_total": 11,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaaabqn",
+        "formula": "BaO2",
+        "cluster": "oxide_binary",
+        "categorical_recovered": 12,
+        "categorical_total": 12,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaaaavuk",
+        "formula": "Na4TiO4",
+        "cluster": "perovskite_oxide",
+        "categorical_recovered": 14,
+        "categorical_total": 14,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaackglc",
+        "formula": "Si7Ge",
+        "cluster": "semiconductor_group_iv",
+        "categorical_recovered": 10,
+        "categorical_total": 10,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaabfotg",
+        "formula": "ZnS",
+        "cluster": "semiconductor_ii_vi",
+        "categorical_recovered": 11,
+        "categorical_total": 11,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaabikuu",
+        "formula": "BN",
+        "cluster": "semiconductor_iii_v",
+        "categorical_recovered": 10,
+        "categorical_total": 10,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 0.6667,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaacpltc",
+        "formula": "Li95Mn16O64",
+        "cluster": "battery_cathode_oxide",
+        "categorical_recovered": 12,
+        "categorical_total": 12,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": null
+      },
+      {
+        "material_id": "mp-aaackrnc",
+        "formula": "Li2Cr5(PO4)4",
+        "cluster": "battery_cathode_phosphate",
+        "categorical_recovered": 18,
+        "categorical_total": 18,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaacrnrw",
+        "formula": "Mn2CoO4",
+        "cluster": "magnetic_spinel_oxide",
+        "categorical_recovered": 14,
+        "categorical_total": 14,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaacotap",
+        "formula": "Mn2O3",
+        "cluster": "oxide_binary",
+        "categorical_recovered": 12,
+        "categorical_total": 12,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaabrhye",
+        "formula": "BaNb5O8",
+        "cluster": "perovskite_oxide",
+        "categorical_recovered": 12,
+        "categorical_total": 12,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaaaaabg",
+        "formula": "Ge",
+        "cluster": "semiconductor_group_iv",
+        "categorical_recovered": 7,
+        "categorical_total": 7,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaackimi",
+        "formula": "CdS2",
+        "cluster": "semiconductor_ii_vi",
+        "categorical_recovered": 10,
+        "categorical_total": 10,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaaabsm",
+        "formula": "GaSb",
+        "cluster": "semiconductor_iii_v",
+        "categorical_recovered": 9,
+        "categorical_total": 9,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaabrzmd",
+        "formula": "Li8Fe2O9",
+        "cluster": "battery_cathode_oxide",
+        "categorical_recovered": 12,
+        "categorical_total": 12,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": null
+      },
+      {
+        "material_id": "mp-aaaabmnn",
+        "formula": "Li3Mn2(PO4)3",
+        "cluster": "battery_cathode_phosphate",
+        "categorical_recovered": 17,
+        "categorical_total": 17,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaabcfy",
+        "formula": "TiMnO3",
+        "cluster": "magnetic_spinel_oxide",
+        "categorical_recovered": 13,
+        "categorical_total": 13,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaabdgk",
+        "formula": "Fe2O3",
+        "cluster": "oxide_binary",
+        "categorical_recovered": 9,
+        "categorical_total": 9,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaabcsjy",
+        "formula": "Ba5Ta4O15",
+        "cluster": "perovskite_oxide",
+        "categorical_recovered": 15,
+        "categorical_total": 15,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaacpnyx",
+        "formula": "Sn3Ge",
+        "cluster": "semiconductor_group_iv",
+        "categorical_recovered": 8,
+        "categorical_total": 8,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": null
+      },
+      {
+        "material_id": "mp-aaaaadfs",
+        "formula": "ZnTe",
+        "cluster": "semiconductor_ii_vi",
+        "categorical_recovered": 10,
+        "categorical_total": 10,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaaadru",
+        "formula": "GaP",
+        "cluster": "semiconductor_iii_v",
+        "categorical_recovered": 10,
+        "categorical_total": 10,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaabrygd",
+        "formula": "Li2Ti4O9",
+        "cluster": "battery_cathode_oxide",
+        "categorical_recovered": 16,
+        "categorical_total": 16,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaabmqv",
+        "formula": "Li2Fe(PO3)4",
+        "cluster": "battery_cathode_phosphate",
+        "categorical_recovered": 18,
+        "categorical_total": 18,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaabxana",
+        "formula": "CrCo3O8",
+        "cluster": "magnetic_spinel_oxide",
+        "categorical_recovered": 14,
+        "categorical_total": 14,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaaaabgj",
+        "formula": "Li2O2",
+        "cluster": "oxide_binary",
+        "categorical_recovered": 11,
+        "categorical_total": 11,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaaaakte",
+        "formula": "K4SnO4",
+        "cluster": "perovskite_oxide",
+        "categorical_recovered": 14,
+        "categorical_total": 14,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaaaaft",
+        "formula": "Si",
+        "cluster": "semiconductor_group_iv",
+        "categorical_recovered": 8,
+        "categorical_total": 8,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaaaadkw",
+        "formula": "CdO2",
+        "cluster": "semiconductor_ii_vi",
+        "categorical_recovered": 11,
+        "categorical_total": 11,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 0.6667,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaaaabey",
+        "formula": "GaN",
+        "cluster": "semiconductor_iii_v",
+        "categorical_recovered": 10,
+        "categorical_total": 10,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 0.6667,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": true
+      },
+      {
+        "material_id": "mp-aaagbhlq",
+        "formula": "Li(MoO2)2",
+        "cluster": "battery_cathode_oxide",
+        "categorical_recovered": 14,
+        "categorical_total": 14,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      },
+      {
+        "material_id": "mp-aaacqeas",
+        "formula": "Li2Ti2(PO4)3",
+        "cluster": "battery_cathode_phosphate",
+        "categorical_recovered": 17,
+        "categorical_total": 17,
+        "missing_edges": [],
+        "extra_edges": [],
+        "similar_to_jaccard": 1.0,
+        "composition_pattern_match": true,
+        "composition_chemsys_match": true,
+        "oxidation_guess_exact": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+# Held-out parser check: paraphrased questions written AFTER the rule parser
+# was fixed against config/benchmark_queries.yaml. The rule parser must not be
+# tuned against this file - it exists to estimate how the parser generalizes
+# to wording it wasn't fixed on. Scored by scripts/evaluate.py (no LLM).
+queries:
+  - question: I need lithium battery cathodes that are thermodynamically stable and contain no cobalt
+    gold: {application_domains: [battery_cathode], include_elements: [Li], exclude_elements: [Co],
+           property_classes: [{kind: stability, name: stable}]}
+  - question: Show me nitride compounds crystallizing in the hexagonal system
+    gold: {include_elements: [N], crystal_systems: [Hexagonal]}
+  - question: Oxides whose DFT band gap exceeds 3.5 eV
+    gold: {include_elements: [O], property_ranges: [{property: band_gap, min: 3.5}]}
+  - question: Which compounds have a formation energy lower than -3.5 eV/atom?
+    gold: {property_ranges: [{property: formation_energy_per_atom, max: -3.5}]}
+  - question: Ferromagnetic materials containing manganese
+    gold: {include_elements: [Mn], property_classes: [{kind: magnetic_ordering, name: FM}]}
+  - question: Give me the 3 materials with the lowest density
+    gold: {top_k: 3, sort_by: density, sort_descending: false}
+  - question: Candidates for photocatalysis that are free of lead
+    gold: {application_domains: [photocatalyst], exclude_elements: [Pb]}
+  - question: Compounds analogous to CaTiO3
+    gold: {anchor_materials: [CaTiO3]}
+  - question: Tetragonal oxides that are metallic
+    gold: {crystal_systems: [Tetragonal], include_elements: [O], property_classes: [{kind: band_gap, name: metal}]}
+  - question: Materials with shear modulus of at least 120 GPa
+    gold: {property_ranges: [{property: shear_modulus_vrh, min: 120.0}]}
+  - question: Selenides that behave as semiconductors
+    gold: {include_elements: [Se], application_domains: [semiconductor_device]}
+  - question: Anything containing Cr3+ that is antiferromagnetic
+    gold: {oxidation_states: [Cr3+], property_classes: [{kind: magnetic_ordering, name: AFM}]}
+  - question: Spinel oxides with iron
+    gold: {formula_patterns: [AB2C4], include_elements: [O, Fe]}
+  - question: Dielectrics with refractive index below 2
+    gold: {application_domains: [dielectric], property_ranges: [{property: refractive_index, max: 2.0}]}
+  - question: Materials resembling GaAs without arsenic
+    gold: {anchor_materials: [GaAs], exclude_elements: [As]}

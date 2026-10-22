@@ -1,0 +1,311 @@
+# Phase 2 retrieval benchmark (docs/PHASE2_PLAN.md §7).
+#
+# Each query has a natural-language `question` and hand-written `gold`
+# constraints (QueryConstraints fields). The relevant set is NOT taken from
+# the graph: matgraph.eval.oracle recomputes it directly from the raw
+# Materials Project JSON with independent code, so a bug in enrich.py or the
+# retriever cannot also define the right answer.
+#
+# Tiers:
+#   1 single constraint      2 multi-constraint      3 multi-hop / relational
+#   4 similarity-anchored    5 sparse data (elastic/dielectric ~18-20% coverage)
+#
+# Anchor queries (tier 4): a material is relevant if it satisfies the hard
+# constraints AND is a structural-stoichiometric analogue of the anchor (same
+# formula_anonymous); graded relevance adds 0.5 for the same crystal system.
+
+queries:
+  # --- tier 1: single constraint -------------------------------------------
+  - id: t1-wide-gap
+    tier: 1
+    question: Which materials have a wide band gap?
+    gold: {property_classes: [{kind: band_gap, name: wide_gap}]}
+  - id: t1-metals
+    tier: 1
+    question: Which materials are metallic?
+    gold: {property_classes: [{kind: band_gap, name: metal}]}
+  - id: t1-cathodes
+    tier: 1
+    question: Which materials are battery cathode candidates?
+    gold: {application_domains: [battery_cathode]}
+  - id: t1-photocatalysts
+    tier: 1
+    question: Find photocatalyst candidates.
+    gold: {application_domains: [photocatalyst]}
+  - id: t1-gallium
+    tier: 1
+    question: Which materials contain gallium?
+    gold: {include_elements: [Ga]}
+  - id: t1-cubic
+    tier: 1
+    question: List cubic materials.
+    gold: {crystal_systems: [Cubic]}
+  - id: t1-perovskite-pattern
+    tier: 1
+    question: Which materials have the ABC3 perovskite stoichiometry?
+    gold: {formula_patterns: [ABC3]}
+  - id: t1-ti4
+    tier: 1
+    question: Which materials contain Ti4+?
+    gold: {oxidation_states: [Ti4+]}
+  - id: t1-gap-above-4
+    tier: 1
+    question: Materials with a band gap above 4 eV
+    gold: {property_ranges: [{property: band_gap, min: 4.0}]}
+  - id: t1-dense
+    tier: 1
+    question: Materials with density above 8 g/cm3
+    gold: {property_ranges: [{property: density, min: 8.0}]}
+  - id: t1-afm
+    tier: 1
+    question: Which materials are antiferromagnetic?
+    gold: {property_classes: [{kind: magnetic_ordering, name: AFM}]}
+  - id: t1-dielectrics
+    tier: 1
+    question: Which materials are suitable as dielectrics?
+    gold: {application_domains: [dielectric]}
+
+  # --- tier 2: multi-constraint ---------------------------------------------
+  - id: t2-cathode-cofree
+    tier: 2
+    question: Stable, cobalt-free lithium cathode materials with a band gap above 2 eV
+    gold:
+      application_domains: [battery_cathode]
+      include_elements: [Li]
+      exclude_elements: [Co]
+      property_classes: [{kind: stability, name: stable}]
+      property_ranges: [{property: band_gap, min: 2.0}]
+  - id: t2-stable-wide-oxides
+    tier: 2
+    question: Thermodynamically stable wide-band-gap oxides
+    gold:
+      include_elements: [O]
+      property_classes: [{kind: band_gap, name: wide_gap}, {kind: stability, name: stable}]
+  - id: t2-hex-nitrides-direct
+    tier: 2
+    question: Hexagonal nitrides with a direct band gap
+    gold:
+      include_elements: [N]
+      crystal_systems: [Hexagonal]
+      boolean_flags: [{flag: is_gap_direct, value: true}]
+  - id: t2-leadfree-perovskite-dielectrics
+    tier: 2
+    question: Lead-free ABC3 perovskite dielectrics
+    gold:
+      formula_patterns: [ABC3]
+      application_domains: [dielectric]
+      exclude_elements: [Pb]
+  - id: t2-ti-photocatalysts
+    tier: 2
+    question: Titanium-containing photocatalysts with a band gap between 2 and 3 eV
+    gold:
+      application_domains: [photocatalyst]
+      include_elements: [Ti]
+      property_ranges: [{property: band_gap, min: 2.0, max: 3.0}]
+  - id: t2-stable-fm-oxides
+    tier: 2
+    question: Stable ferromagnetic oxides
+    gold:
+      include_elements: [O]
+      property_classes: [{kind: magnetic_ordering, name: FM}, {kind: stability, name: stable}]
+  - id: t2-mn-cathodes-low-hull
+    tier: 2
+    question: Manganese cathode materials with energy above hull below 0.02 eV/atom
+    gold:
+      application_domains: [battery_cathode]
+      include_elements: [Mn]
+      property_ranges: [{property: energy_above_hull, max: 0.02}]
+  - id: t2-arsenide-narrow
+    tier: 2
+    question: Arsenic-containing semiconductors with a band gap below 1.5 eV
+    gold:
+      application_domains: [semiconductor_device]
+      include_elements: [As]
+      property_ranges: [{property: band_gap, max: 1.5}]
+  - id: t2-nm-light-oxides
+    tier: 2
+    question: Non-magnetic oxides with density below 4 g/cm3
+    gold:
+      include_elements: [O]
+      property_classes: [{kind: magnetic_ordering, name: NM}]
+      property_ranges: [{property: density, max: 4.0}]
+  - id: t2-cubic-oxides-gap3
+    tier: 2
+    question: Cubic oxides with a band gap above 3 eV
+    gold:
+      crystal_systems: [Cubic]
+      include_elements: [O]
+      property_ranges: [{property: band_gap, min: 3.0}]
+  - id: t2-stable-zn-semis
+    tier: 2
+    question: Stable zinc compounds usable as semiconductors
+    gold:
+      include_elements: [Zn]
+      property_classes: [{kind: stability, name: stable}]
+      application_domains: [semiconductor_device]
+  - id: t2-ortho-phosphate-cathodes
+    tier: 2
+    question: Orthorhombic phosphate battery cathodes
+    gold:
+      crystal_systems: [Orthorhombic]
+      include_elements: [P, O]
+      application_domains: [battery_cathode]
+  - id: t2-direct-gap-semis
+    tier: 2
+    question: Direct band gap semiconductors
+    gold:
+      application_domains: [semiconductor_device]
+      boolean_flags: [{flag: is_gap_direct, value: true}]
+  - id: t2-metallic-v-oxides
+    tier: 2
+    question: Metallic vanadium oxides
+    gold:
+      include_elements: [V, O]
+      property_classes: [{kind: band_gap, name: metal}]
+  - id: t2-nickel-free-spinels
+    tier: 2
+    question: Nickel-free AB2C4 spinel-type oxides
+    gold:
+      formula_patterns: [AB2C4]
+      include_elements: [O]
+      exclude_elements: [Ni]
+
+  # --- tier 3: multi-hop / relational ---------------------------------------
+  - id: t3-ti4-dielectrics
+    tier: 3
+    question: Dielectric materials that contain Ti4+ ions
+    gold: {oxidation_states: [Ti4+], application_domains: [dielectric]}
+  - id: t3-fe2-cathodes
+    tier: 3
+    question: Battery cathodes containing Fe2+
+    gold: {oxidation_states: [Fe2+], application_domains: [battery_cathode]}
+  - id: t3-abc3-low-formation
+    tier: 3
+    question: ABC3 materials with formation energy below -3 eV/atom
+    gold:
+      formula_patterns: [ABC3]
+      property_ranges: [{property: formation_energy_per_atom, max: -3.0}]
+  - id: t3-nb5-wide
+    tier: 3
+    question: Wide-band-gap materials containing Nb5+
+    gold:
+      oxidation_states: [Nb5+]
+      property_classes: [{kind: band_gap, name: wide_gap}]
+  - id: t3-spinel-ferrimagnets
+    tier: 3
+    question: Ferrimagnetic AB2C4 materials
+    gold:
+      formula_patterns: [AB2C4]
+      property_classes: [{kind: magnetic_ordering, name: FiM}]
+  - id: t3-co3-stable
+    tier: 3
+    question: Stable materials containing Co3+
+    gold:
+      oxidation_states: [Co3+]
+      property_classes: [{kind: stability, name: stable}]
+  - id: t3-trigonal-li-wide
+    tier: 3
+    question: Trigonal lithium compounds with a band gap above 3 eV
+    gold:
+      crystal_systems: [Trigonal]
+      include_elements: [Li]
+      property_ranges: [{property: band_gap, min: 3.0}]
+  - id: t3-rocksalt-sg
+    tier: 3
+    question: Materials in space group Fm-3m
+    gold: {space_groups: [Fm-3m]}
+  - id: t3-mn3-magnets
+    tier: 3
+    question: Magnetic materials containing Mn3+
+    gold: {oxidation_states: [Mn3+], application_domains: [magnetic_material]}
+  # No material in the dataset contains both O and N: the correct answer is
+  # "none". Ranking metrics are undefined (excluded from means); the violation
+  # rate still scores methods that return something anyway.
+  - id: t3-oxynitrides
+    tier: 3
+    question: Materials containing both oxygen and nitrogen
+    gold: {include_elements: [O, N]}
+
+  # --- tier 4: similarity-anchored --------------------------------------------
+  - id: t4-lifepo4-mn
+    tier: 4
+    question: Materials similar to LiFePO4 but based on manganese
+    gold: {anchor_materials: [LiFePO4], include_elements: [Mn]}
+  - id: t4-batio3-noba
+    tier: 4
+    question: Analogues of BaTiO3 without barium
+    gold: {anchor_materials: [BaTiO3], exclude_elements: [Ba]}
+  - id: t4-gan
+    tier: 4
+    question: Materials like GaN
+    gold: {anchor_materials: [GaN]}
+  - id: t4-licoo2-cofree
+    tier: 4
+    question: Materials similar to LiCoO2 without cobalt
+    gold: {anchor_materials: [LiCoO2], exclude_elements: [Co]}
+  - id: t4-zno-cd
+    tier: 4
+    question: Materials like ZnO but containing cadmium
+    gold: {anchor_materials: [ZnO], include_elements: [Cd]}
+  - id: t4-tio2-wide
+    tier: 4
+    question: Materials similar to TiO2 with a band gap above 3 eV
+    gold:
+      anchor_materials: [TiO2]
+      property_ranges: [{property: band_gap, min: 3.0}]
+  - id: t4-fe3o4-nofe
+    tier: 4
+    question: Analogues of Fe3O4 that do not contain iron
+    gold: {anchor_materials: [Fe3O4], exclude_elements: [Fe]}
+  - id: t4-srtio3-dielectric
+    tier: 4
+    question: Dielectrics similar to SrTiO3
+    gold: {anchor_materials: [SrTiO3], application_domains: [dielectric]}
+  - id: t4-limn2o4-noli
+    tier: 4
+    question: Materials similar to LiMn2O4 without lithium
+    gold: {anchor_materials: [LiMn2O4], exclude_elements: [Li]}
+  - id: t4-gaas-p
+    tier: 4
+    question: Materials like GaAs that contain phosphorus
+    gold: {anchor_materials: [GaAs], include_elements: [P]}
+
+  # --- tier 5: sparse data -------------------------------------------------------
+  - id: t5-bulk-200
+    tier: 5
+    question: Materials with a bulk modulus above 200 GPa
+    gold: {property_ranges: [{property: bulk_modulus_vrh, min: 200.0}]}
+  - id: t5-shear-100
+    tier: 5
+    question: Materials with a shear modulus above 100 GPa
+    gold: {property_ranges: [{property: shear_modulus_vrh, min: 100.0}]}
+  - id: t5-dielectric-30
+    tier: 5
+    question: Materials with a dielectric constant above 30
+    gold: {property_ranges: [{property: dielectric_total, min: 30.0}]}
+  - id: t5-high-n-oxides
+    tier: 5
+    question: Oxides with a refractive index above 2.5
+    gold:
+      include_elements: [O]
+      property_ranges: [{property: refractive_index, min: 2.5}]
+  - id: t5-low-poisson
+    tier: 5
+    question: Materials with a Poisson's ratio below 0.2
+    gold: {property_ranges: [{property: homogeneous_poisson, max: 0.2}]}
+  - id: t5-stiff-wide-oxides
+    tier: 5
+    question: Oxides with bulk modulus above 150 GPa and band gap above 3 eV
+    gold:
+      include_elements: [O]
+      property_ranges: [{property: bulk_modulus_vrh, min: 150.0}, {property: band_gap, min: 3.0}]
+  - id: t5-top-bulk
+    tier: 5
+    question: Top 5 materials with the highest bulk modulus
+    gold: {sort_by: bulk_modulus_vrh, sort_descending: true, top_k: 5}
+  - id: t5-ti-high-k
+    tier: 5
+    question: Titanium compounds with a dielectric constant above 20
+    gold:
+      include_elements: [Ti]
+      property_ranges: [{property: dielectric_total, min: 20.0}]
