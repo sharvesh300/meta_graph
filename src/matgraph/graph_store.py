@@ -30,6 +30,10 @@ from matgraph.pipeline import COGNEE_SYSTEM_DIR, DATASET_NAME
 MATERIAL_TO_MATERIAL = {"similar_to"}
 
 
+def _is_struct(props: dict[str, Any]) -> bool:
+    return str(props.get("material_id", "")).startswith("struct-")
+
+
 class Graph:
     """Thin in-memory index over cognee's (nodes, edges) tuples."""
 
@@ -51,9 +55,12 @@ class Graph:
         type_name = props.get("type", "?")
         self.by_type[type_name].append(node_id)
         if type_name == "Material":
-            # Formula is not unique in principle, but Phase 1 dedupes by
-            # formula, so first-wins is only a guard.
-            self.material_by_formula.setdefault(props["formula"], node_id)
+            # Phase 1 dedupes by formula, but a user-supplied structure can be
+            # another polymorph of a formula already present: a formula then
+            # resolves to the Materials Project node, never the struct- one.
+            current = self.material_by_formula.get(props["formula"])
+            if current is None or (_is_struct(self.node[current]) and not _is_struct(props)):
+                self.material_by_formula[props["formula"]] = node_id
             self.material_by_id[props["material_id"]] = node_id
 
     def _index_edge(self, source_id: str, target_id: str, rel: str, props: dict) -> None:

@@ -104,6 +104,10 @@ class Material(DataPoint):
     # Where this node came from: "mp" for the curated cluster build, "user"
     # for materials added later through matgraph.ingest.
     origin: str = "mp"
+    # Where the property values came from: "mp" (Materials Project record),
+    # "composition" (formula only) or "cgcnn" (predicted from a user-supplied
+    # structure; material_id "struct-...").
+    property_source: str = "mp"
 
     # Core computed properties. Always present for Materials Project records;
     # None only for composition-only materials added through matgraph.ingest
@@ -140,6 +144,20 @@ class Material(DataPoint):
     dielectric_electronic: float | None = None
     dielectric_ionic: float | None = None
     refractive_index: float | None = None
+
+    # CGCNN predictions (Phase 3, matgraph.cgcnn.interpret). Never written into
+    # the DFT fields above: on a struct- node those stay None. prediction_model
+    # names the pinned model set; expected errors per attribute are in
+    # artifacts/eval/cgcnn_graph_eval.json.
+    predicted_formation_energy_per_atom: float | None = None
+    predicted_band_gap: float | None = None
+    predicted_is_metal: bool | None = None
+    predicted_metal_probability: float | None = None
+    predicted_efermi: float | None = None
+    predicted_bulk_modulus_vrh: float | None = None
+    predicted_shear_modulus_vrh: float | None = None
+    predicted_homogeneous_poisson: float | None = None
+    prediction_model: str | None = None
 
     # These are relationship fields: builders pass a (Edge(...), target(s)) tuple
     # as the value (see build_material in enrich.py). SkipValidation is required
