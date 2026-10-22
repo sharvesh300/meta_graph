@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MatGraph Explorer</title>
+<script src="https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/3dmol@2.5.5/build/3Dmol-min.js"></script>
+<style>
+  :root {
+    --canvas: #f4f5f8; --panel: rgba(255, 255, 255, 0.82); --panel-solid: #ffffff; --border: rgba(20, 24, 40, 0.10);
+    --text: #161a26; --muted: #646b7f; --soft: rgba(20, 24, 40, 0.05); --accent: #4f6bed; --accent-soft: rgba(79, 107, 237, 0.12);
+    --ok: #13915f; --ok-soft: rgba(19, 145, 95, 0.12); --warn: #b26b00; --warn-soft: rgba(230, 160, 20, 0.16);
+    --bad: #c8343b; --bad-soft: rgba(200, 52, 59, 0.12); --shadow: 0 10px 40px rgba(20, 24, 40, 0.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --canvas: #0b0d14; --panel: rgba(20, 23, 34, 0.78); --panel-solid: #141722; --border: rgba(255, 255, 255, 0.08);
+      --text: #e9ebf3; --muted: #9097ad; --soft: rgba(255, 255, 255, 0.05); --accent: #8ea2ff; --accent-soft: rgba(142, 162, 255, 0.14);
+      --ok: #4ade9a; --ok-soft: rgba(74, 222, 154, 0.12); --warn: #fbbf24; --warn-soft: rgba(251, 191, 36, 0.13);
+      --bad: #ff7a85; --bad-soft: rgba(255, 122, 133, 0.12); --shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+    }
+  }
+  :root[data-theme="dark"] {
+    --canvas: #0b0d14; --panel: rgba(20, 23, 34, 0.78); --panel-solid: #141722; --border: rgba(255, 255, 255, 0.08);
+    --text: #e9ebf3; --muted: #9097ad; --soft: rgba(255, 255, 255, 0.05); --accent: #8ea2ff; --accent-soft: rgba(142, 162, 255, 0.14);
+    --ok: #4ade9a; --ok-soft: rgba(74, 222, 154, 0.12); --warn: #fbbf24; --warn-soft: rgba(251, 191, 36, 0.13);
+    --bad: #ff7a85; --bad-soft: rgba(255, 122, 133, 0.12); --shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--canvas); color: var(--text);
+               font: 13.5px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+  #graph { position: fixed; inset: 0; }
+  .panel { position: fixed; background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+           box-shadow: var(--shadow); backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%); }
+  #side { top: 16px; left: 16px; width: 290px; max-height: calc(100vh - 250px); overflow: auto; padding: 16px; }
+  #side h1 { font-size: 16px; margin: 0; letter-spacing: -0.01em; }
+  #side h1 span { color: var(--muted); font-weight: 500; }
+  .stats { color: var(--muted); font-size: 12px; margin: 4px 0 12px; font-variant-numeric: tabular-nums; }
+  .section { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 650; margin: 14px 0 6px; }
+  input[type=text] { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 10px; background: var(--soft);
+                     color: var(--text); font: inherit; outline: none; }
+  input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .legend-row { display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 8px; cursor: pointer; user-select: none; }
+  .legend-row:hover { background: var(--soft); }
+  .legend-row.off { opacity: 0.38; }
+  .legend-row .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; box-shadow: 0 0 8px currentColor; }
+  .legend-row .count { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+  .gap-ramp { height: 6px; border-radius: 3px; margin: 6px 6px 2px; }
+  .gap-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; padding: 0 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: 999px; padding: 3px 9px;
+          font: inherit; font-size: 12px; cursor: pointer; }
+  .chip.on { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+  .links a { color: var(--accent); text-decoration: none; font-size: 12.5px; }
+  #import { left: 16px; bottom: 16px; width: 290px; padding: 14px; }
+  #drop { border: 1.5px dashed var(--border); border-radius: 12px; padding: 14px 10px; text-align: center; color: var(--muted);
+          cursor: pointer; transition: all 0.2s; font-size: 12.5px; }
+  #drop:hover, #drop.armed { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  #drop b { color: var(--text); }
+  .row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+  button.primary { background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 8px 14px; font: inherit;
+                   font-weight: 650; cursor: pointer; white-space: nowrap; }
+  button.primary:disabled { opacity: 0.5; cursor: progress; }
+  label.check { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: 12.5px; }
+  #drawer { top: 16px; right: 16px; bottom: 16px; width: 380px; padding: 0; overflow: hidden; display: flex; flex-direction: column;
+            transform: translateX(calc(100% + 24px)); transition: transform 0.45s cubic-bezier(.2, .8, .2, 1); }
+  #drawer.open { transform: none; }
+  #drawer header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 16px 16px 10px; }
+  #drawer header h2 { margin: 0; font-size: 18px; letter-spacing: -0.01em; }
+  #drawer header .sub { color: var(--muted); font-size: 12px; }
+  #drawer .close { border: 0; background: var(--soft); color: var(--muted); width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+  #drawerBody { overflow: auto; padding: 0 16px 16px; flex: 1; }
+  #crystal { position: relative; height: 210px; border-radius: 12px; background: var(--soft); margin-bottom: 10px; overflow: hidden; }
+  #crystal .tag { position: absolute; left: 10px; top: 8px; font-size: 11px; color: var(--muted); z-index: 2; }
+  .steps { list-style: none; margin: 4px 0 10px; padding: 0; }
+  .steps li { position: relative; padding: 5px 0 5px 22px; opacity: 0; transform: translateY(4px); animation: in 0.35s forwards; }
+  .steps li::before { content: ""; position: absolute; left: 4px; top: 11px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .steps li.run::before { animation: blink 0.9s infinite; }
+  .steps li.done::before { background: var(--ok); }
+  .steps li.pred::before { background: var(--warn); }
+  .steps li.matched::before { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-soft); }
+  .steps li .detail { color: var(--muted); font-size: 12px; }
+  @keyframes in { to { opacity: 1; transform: none; } }
+  @keyframes blink { 50% { opacity: 0.25; } }
+  .banner { border-radius: 10px; padding: 9px 11px; margin: 8px 0; font-size: 12.5px; }
+  .banner.ok { background: var(--ok-soft); color: var(--ok); }
+  .banner.warn { background: var(--warn-soft); color: var(--warn); }
+  .banner.bad { background: var(--bad-soft); color: var(--bad); }
+  .kv { display: grid; grid-template-columns: 1fr auto auto; gap: 3px 10px; font-size: 12.5px; }
+  .kv .v { text-align: right; font-variant-numeric: tabular-nums; }
+  .badge { font-size: 10.5px; padding: 1px 7px; border-radius: 999px; align-self: center; }
+  .b-mp { background: var(--ok-soft); color: var(--ok); }
+  .b-derived { background: var(--accent-soft); color: var(--accent); }
+  .b-guessed, .b-predicted { background: var(--warn-soft); color: var(--warn); }
+  .list a { display: flex; justify-content: space-between; gap: 8px; padding: 4px 6px; border-radius: 8px; color: var(--text);
+            text-decoration: none; cursor: pointer; font-size: 12.5px; }
+  .list a:hover { background: var(--soft); }
+  .list a span { color: var(--muted); }
+  #toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%) translateY(-90px); padding: 9px 16px; border-radius: 12px;
+           background: var(--panel-solid); border: 1px solid var(--border); box-shadow: var(--shadow); transition: transform 0.4s; z-index: 10;
+           font-weight: 600; }
+  #toast.show { transform: translateX(-50%); }
+  #dropOverlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 20;
+                 background: rgba(79, 107, 237, 0.12); border: 3px dashed var(--accent); font-size: 20px; font-weight: 700; color: var(--accent); }
+  #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 15px; }
+  .graph-tip { background: var(--panel-solid) !important; color: var(--text) !important; border: 1px solid var(--border);
+               border-radius: 8px; padding: 6px 9px !important; font: 12.5px/1.4 -apple-system, sans-serif !important; box-shadow: var(--shadow); }
+  @media (max-width: 760px) {
+    #side { width: auto; right: 16px; max-height: 42vh; }
+    #import { width: auto; right: 16px; }
+    #drawer { top: auto; left: 16px; width: auto; height: 62vh; transform: translateY(calc(100% + 24px)); }
+  }
+</style>
+</head>
+<body>
+<div id="graph"></div>
+<div id="loading">Loading the knowledge graph…</div>
+
+<aside id="side" class="panel">
+  <h1>MatGraph <span>Explorer</span></h1>
+  <div class="stats" id="stats">—</div>
+  <input type="text" id="search" list="searchList" placeholder="Find a material, element, space group…" autocomplete="off">
+  <datalist id="searchList"></datalist>
+  <div class="section">Nodes</div>
+  <div id="legend"></div>
+  <div class="section">Material colour = DFT band gap</div>
+  <div class="gap-ramp" id="gapRamp"></div>
+  <div class="gap-labels"><span>metal</span><span>1</span><span>3</span><span>≥ 5 eV</span></div>
+  <div class="section">Edges shown</div>
+  <div class="chips" id="rels"></div>
+  <div class="section">Also</div>
+  <div class="links"><a href="./">← Ask &amp; compare dashboard</a></div>
+</aside>
+
+<section id="import" class="panel">
+  <div class="section" style="margin-top:0">Import &amp; match</div>
+  <div id="drop"><b>Drop a CIF / POSCAR</b> or click to choose<br>— it is predicted with CGCNN and matched against the graph</div>
+  <input type="file" id="file" accept=".cif,.mcif,.vasp,.poscar,POSCAR,CONTCAR,text/plain" hidden>
+  <div class="row"><input type="text" id="key" placeholder="…or an MP id / formula, e.g. SrZrO3"><button class="primary" id="goKey">Match</button></div>
+  <div class="row"><label class="check"><input type="checkbox" id="persist"> save to graph (cognee)</label></div>
+</section>
+
+<aside id="drawer" class="panel">
+  <header><div><h2 id="dTitle">—</h2><div class="sub" id="dSub"></div></div><button class="close" id="dClose" aria-label="Close">×</button></header>
+  <div id="drawerBody"></div>
+</aside>
+<div id="toast"></div>
+<div id="dropOverlay">Drop the structure to match it against the graph</div>
+
+<script>
+/* ------------------------------------------------------------------ setup */
+const $ = (s) => document.querySelector(s);
+const API = (() => {
+  const o = new URLSearchParams(location.search).get("api");
+  if (o) return o.replace(/\/$/, "");
+  return location.protocol.startsWith("http") ? "" : "http://127.0.0.1:8000";
+})();
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const fmt = (v) => typeof v === "number" ? (Math.abs(v) >= 100 ? v.toFixed(1) : +v.toFixed(3)) : v;
+const dark = () => document.documentElement.dataset.theme === "dark" ||
+  (document.documentElement.dataset.theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+
+const TYPES = {
+  Material: {name: "Materials", color: "#60a5fa"},
+  Element: {name: "Elements", color: "#10b981"},
+  OxidationState: {name: "Oxidation states", color: "#06b6d4"},
+  ChemicalSystem: {name: "Chemical systems", color: "#84cc16"},
+  FormulaPattern: {name: "Formula patterns", color: "#d946ef"},
+  SpaceGroup: {name: "Space groups", color: "#8b5cf6"},
+  CrystalSystem: {name: "Crystal systems", color: "#6366f1"},
+  PropertyClass: {name: "Property classes", color: "#f97316"},
+  ApplicationDomain: {name: "Application domains", color: "#f43f5e"},
+};
+const RELS = {
+  member_of: "chemical system", has_formula_pattern: "formula pattern", has_space_group: "space group",
+  crystal_system: "crystal system", classified_as: "class", suitable_for: "application", similar_to: "similar to",
+  contains: "element", has_oxidation_state: "oxidation state", composition: "composition (import)",
+};
+const DEFAULT_RELS = new Set(["member_of", "has_formula_pattern", "has_space_group", "crystal_system", "classified_as",
+                              "suitable_for", "similar_to", "composition"]);
+const PREDICTED = "#facc15";
+
+// Band-gap ramp for materials: metal slate -> sky -> blue -> indigo/violet.
+const GAP_STOPS = [[0, [100, 116, 139]], [0.01, [125, 211, 252]], [1, [56, 189, 248]], [3, [99, 102, 241]], [5, [168, 85, 247]]];
+function gapColor(g) {
+  if (g == null) return "#94a3b8";
+  for (let i = 1; i < GAP_STOPS.length; i++) {
+    const [x1, c1] = GAP_STOPS[i];
+    if (g <= x1) {
+      const [x0, c0] = GAP_STOPS[i - 1];
+      const t = x1 === x0 ? 1 : (g - x0) / (x1 - x0);
+      return `rgb(${c0.map((c, k) => Math.round(c + (c1[k] - c) * t)).join(",")})`;
+    }
+  }
+  return `rgb(${GAP_STOPS[GAP_STOPS.length - 1][1].join(",")})`;
+}
+$("#gapRamp").style.background = `linear-gradient(90deg, ${gapColor(0)} 0%, ${gapColor(0.05)} 6%, ${gapColor(1)} 25%, ${gapColor(3)} 62%, ${gapColor(5)} 100%)`;
+
+const nodeColor = (n) => n.type === "Material" ? gapColor(n.band_gap ?? n.predicted_band_gap) : TYPES[n.type].color;
+const isPredictedNode = (n) => n.property_source === "cgcnn";
+const shortLabel = (n) => n.type === "Material" ? n.formula : n.label.replace(/^[A-Za-z]+:/, "").replace(/^band_gap\/|^stability\/|^magnetic_ordering\//, "");
+
+/* ------------------------------------------------------------------ state */
+let G, data = {nodes: [], links: []};
+const byId = new Map(), byLabel = new Map(), adj = new Map();
+const visibleTypes = new Set(Object.keys(TYPES)), visibleRels = new Set(DEFAULT_RELS);
+let selected = null, hlNodes = new Set(), hlLinks = new Set();
+const pulses = new Map();   // node id -> {start, color, strong}
+let follow = null;          // node the camera tracks during the match animation
+
+function index() {
+  byId.clear(); byLabel.clear(); adj.clear();
+  data.nodes.forEach((n) => { byId.set(n.id, n); byLabel.set(n.label, n); adj.set(n.id, new Set()); n.degree = 0; });
+  data.links.forEach((l) => {
+    const s = l.source.id ?? l.source, t = l.target.id ?? l.target;
+    adj.get(s)?.add(l); adj.get(t)?.add(l);
+    if (byId.get(s)) byId.get(s).degree++;
+    if (byId.get(t)) byId.get(t).degree++;
+  });
+}
+const otherEnd = (l, id) => ((l.source.id ?? l.source) === id ? (l.target.id ?? l.target) : (l.source.id ?? l.source));
+const radius = (n) => n.type === "Material" ? (n.__new ? 6 : 2.6) : Math.min(14, 2.5 + Math.sqrt(n.degree) * 0.55);
+
+/* ------------------------------------------------------------------ load */
+async function getJSON(path, opts) {
+  let r;
+  try { r = await fetch(API + path, opts); }
+  catch { throw new Error(`Can't reach the MatGraphRAG API at ${API || location.origin} (uv run python scripts/serve.py).`); }
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail || r.statusText));
+  return body;
+}
+const post = (path, body) => getJSON(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+
+async function load() {
+  try {
+    data = await getJSON("/graph");
+  } catch (e) { $("#loading").textContent = e.message; return; }
+  index();
+  $("#loading").remove();
+  renderLegend(); renderRels(); renderSearch(); renderStats();
+  build();
+}
+
+function renderStats() {
+  const m = data.nodes.filter((n) => n.type === "Material").length;
+  $("#stats").textContent = `${m.toLocaleString()} materials · ${data.nodes.length.toLocaleString()} nodes · ${data.links.length.toLocaleString()} edges`;
+}
+
+function renderLegend() {
+  const counts = {};
+  data.nodes.forEach((n) => counts[n.type] = (counts[n.type] || 0) + 1);
+  $("#legend").innerHTML = Object.entries(TYPES).map(([t, v]) =>
+    `<div class="legend-row ${visibleTypes.has(t) ? "" : "off"}" data-type="${t}"><span class="dot" style="background:${v.color};color:${v.color}"></span>${v.name}<span class="count">${(counts[t] || 0).toLocaleString()}</span></div>`).join("");
+  document.querySelectorAll(".legend-row").forEach((el) => el.onclick = () => {
+    const t = el.dataset.type;
+    visibleTypes.has(t) ? visibleTypes.delete(t) : visibleTypes.add(t);
+    el.classList.toggle("off");
+    G.nodeVisibility(G.nodeVisibility()); G.linkVisibility(G.linkVisibility());
+  });
+}
+
+function renderRels() {
+  const used = new Set(data.links.map((l) => l.rel));
+  $("#rels").innerHTML = Object.entries(RELS).filter(([r]) => used.has(r) || r === "composition")
+    .map(([r, label]) => `<button class="chip ${visibleRels.has(r) ? "on" : ""}" data-rel="${r}">${label}</button>`).join("");
+  document.querySelectorAll("#rels .chip").forEach((el) => el.onclick = () => {
+    const r = el.dataset.rel;
+    visibleRels.has(r) ? visibleRels.delete(r) : visibleRels.add(r);
+    el.classList.toggle("on");
+    G.linkVisibility(G.linkVisibility());
+  });
+}
+
+function renderSearch() {
+  const opts = data.nodes.map((n) => n.type === "Material" ? `${n.formula} · ${n.material_id}` : n.label);
+  $("#searchList").innerHTML = opts.map((o) => `<option value="${esc(o)}">`).join("");
+}
+
+/* ------------------------------------------------------------------ graph */
+function build() {
+  const el = $("#graph");
+  G = new ForceGraph(el)
+    .graphData(data)
+    .backgroundColor(getComputedStyle(document.documentElement).getPropertyValue("--canvas").trim())
+    .nodeId("id")
+    .nodeRelSize(1)
+    .nodeVal((n) => radius(n) ** 2)
+    .nodeVisibility((n) => visibleTypes.has(n.type))
+    .nodeLabel((n) => `<div class="graph-tip">${tipHtml(n)}</div>`)
+    .nodeCanvasObjectMode(() => "replace")
+    .nodeCanvasObject(drawNode)
+    .nodePointerAreaPaint((n, color, ctx) => { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(n.x, n.y, radius(n) + 1.5, 0, 2 * Math.PI); ctx.fill(); })
+    .linkVisibility((l) => visibleRels.has(l.rel) && visibleTypes.has(l.source.type ?? byId.get(l.source)?.type) && visibleTypes.has(l.target.type ?? byId.get(l.target)?.type))
+    .linkColor(linkColor)
+    .linkWidth((l) => hlLinks.has(l) ? (l.__fresh ? 2.2 : 1.3) : 0.35)
+    .linkLineDash((l) => l.predicted ? [3, 2] : (l.rel === "composition" ? [1, 2.5] : null))
+    .linkDirectionalParticles((l) => l.__fresh ? 4 : (hlLinks.has(l) ? 2 : 0))
+    .linkDirectionalParticleWidth((l) => l.__fresh ? 3.2 : 2)
+    .linkDirectionalParticleSpeed((l) => l.__fresh ? 0.012 : 0.006)
+    .linkDirectionalParticleColor((l) => l.predicted ? PREDICTED : (l.__fresh ? "#ffffff" : TYPES[(byId.get(l.target.id ?? l.target) || {}).type || "Material"].color))
+    .autoPauseRedraw(false)
+    .warmupTicks(40)
+    .cooldownTicks(260)
+    .d3VelocityDecay(0.32)
+    .onNodeClick((n) => select(n, true))
+    .onBackgroundClick(clearSelection)
+    .onRenderFramePost(() => { if (follow && follow.x != null) G.centerAt(follow.x, follow.y); });
+  G.d3Force("charge").strength((n) => n.type === "Material" ? -14 : -60).distanceMax(420);
+  G.d3Force("link").distance((l) => l.rel === "similar_to" ? 18 : (l.rel === "composition" ? 30 : 34))
+    .strength((l) => {
+      const s = byId.get(l.source.id ?? l.source), t = byId.get(l.target.id ?? l.target);
+      return 0.9 / Math.max(1, Math.min(s?.degree || 1, t?.degree || 1)) + (l.rel === "member_of" || l.rel === "similar_to" ? 0.25 : 0);
+    });
+  addEventListener("resize", () => G.width(innerWidth).height(innerHeight));
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () =>
+    G.backgroundColor(getComputedStyle(document.documentElement).getPropertyValue("--canvas").trim()));
+  setTimeout(() => G.zoomToFit(1200, 60), 1800);
+}
+
+function tipHtml(n) {
+  if (n.type === "Material") {
+    const gap = n.band_gap != null ? `band gap ${fmt(n.band_gap)} eV (DFT)` : (n.predicted_band_gap != null ? `band gap ≈ ${fmt(n.predicted_band_gap)} eV (CGCNN)` : "no band gap");
+    return `<b>${esc(n.formula)}</b> <span style="opacity:.6">${esc(n.material_id)}</span><br>${esc(gap)}` +
+      (isPredictedNode(n) ? "<br><span style='color:#d4a106'>predicted properties</span>" : "") + (n.preview ? "<br><i>preview, not saved</i>" : "");
+  }
+  return `<b>${esc(shortLabel(n))}</b><br><span style="opacity:.6">${esc(TYPES[n.type].name.replace(/s$/, ""))} · ${n.degree} links</span>`;
+}
+
+function linkColor(l) {
+  const t = byId.get(l.target.id ?? l.target);
+  let c = l.predicted ? PREDICTED : (l.rel === "similar_to" ? "#60a5fa" : (l.rel === "composition" ? "#94a3b8" : TYPES[t?.type || "Material"].color));
+  const active = hlNodes.size > 0;
+  const a = hlLinks.has(l) ? (l.__fresh ? 0.95 : 0.75) : (active ? 0.03 : (dark() ? 0.11 : 0.16));
+  return hexA(c, a);
+}
+function hexA(hex, a) {
+  if (hex.startsWith("rgb")) return hex.replace("rgb(", "rgba(").replace(")", `,${a})`);
+  const v = parseInt(hex.slice(1), 16);
+  return `rgba(${v >> 16},${(v >> 8) & 255},${v & 255},${a})`;
+}
+
+function drawNode(n, ctx, scale) {
+  const r = radius(n), active = hlNodes.size > 0, lit = !active || hlNodes.has(n.id);
+  const color = nodeColor(n), now = performance.now();
+  ctx.globalAlpha = lit ? 1 : 0.13;
+  const pulse = pulses.get(n.id);
+  if (pulse) {   // expanding rings
+    for (let k = 0; k < (pulse.strong ? 3 : 2); k++) {
+      const t = (((now - pulse.start) / 1400) + k / 3) % 1;
+      ctx.beginPath(); ctx.arc(n.x, n.y, r + (pulse.strong ? 26 : 14) * t / Math.max(0.6, scale * 0.35), 0, 2 * Math.PI);
+      ctx.strokeStyle = hexA(pulse.color, (1 - t) * 0.8); ctx.lineWidth = 1.6 / scale; ctx.stroke();
+    }
+  }
+  if (lit && (n.type !== "Material" || n.__new || hlNodes.has(n.id))) {   // soft glow
+    ctx.shadowColor = color; ctx.shadowBlur = n.__new ? 24 : (hlNodes.has(n.id) ? 14 : 6);
+  }
+  ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 2 * Math.PI); ctx.fillStyle = color; ctx.fill();
+  ctx.shadowBlur = 0;
+  if (isPredictedNode(n) || n.preview) {
+    ctx.setLineDash([2 / scale, 1.5 / scale]); ctx.strokeStyle = PREDICTED; ctx.lineWidth = 1.4 / scale;
+    ctx.beginPath(); ctx.arc(n.x, n.y, r + 1.6 / scale + 0.8, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+  }
+  if (selected === n) {
+    ctx.strokeStyle = dark() ? "#fff" : "#111"; ctx.lineWidth = 1.8 / scale;
+    ctx.beginPath(); ctx.arc(n.x, n.y, r + 2.5 / scale + 1, 0, 2 * Math.PI); ctx.stroke();
+  }
+  const showLabel = n.__new || selected === n || (active ? hlNodes.has(n.id) && (n.type !== "Material" || scale > (hlNodes.size < 40 ? 0 : 3.2))
+    : (n.type !== "Material" ? (scale > 1.1 && n.degree > 2) || n.degree > 120 : scale > 4.2));
+  if (showLabel && lit) {
+    const size = (n.__new ? 13 : (n.type === "Material" ? 10 : 11)) / scale;
+    ctx.font = `${n.__new || selected === n ? 700 : 550} ${size}px -apple-system, Inter, sans-serif`;
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    const text = shortLabel(n);
+    ctx.lineWidth = 3 / scale; ctx.strokeStyle = hexA(dark() ? "#0b0d14" : "#f4f5f8", 0.85); ctx.strokeText(text, n.x, n.y + r + 2 / scale);
+    ctx.fillStyle = dark() ? "#e9ebf3" : "#161a26"; ctx.fillText(text, n.x, n.y + r + 2 / scale);
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ------------------------------------------------------------------ selection */
+function highlight(node) {
+  hlNodes = new Set([node.id]); hlLinks = new Set();
+  (adj.get(node.id) || []).forEach((l) => { hlLinks.add(l); hlNodes.add(otherEnd(l, node.id)); });
+}
+function clearSelection() {
+  if (follow) return;
+  selected = null; hlNodes = new Set(); hlLinks = new Set();
+  $("#drawer").classList.remove("open");
+}
+function flyTo(n, zoom = 4.5, ms = 1100) { G.centerAt(n.x, n.y, ms); G.zoom(zoom, ms); }
+
+async function select(n, fly) {
+  if (follow) return;
+  selected = n; highlight(n);
+  if (fly) flyTo(n, n.type === "Material" ? 5 : 2.2);
+  openDrawer(n.type === "Material" ? n.formula : shortLabel(n),
+    n.type === "Material" ? `${n.material_id}${isPredictedNode(n) ? " · CGCNN-predicted" : ""}` : `${TYPES[n.type].name.replace(/s$/, "")} · ${n.degree} links`);
+  if (n.type !== "Material") {
+    const mats = [...adj.get(n.id)].map((l) => byId.get(otherEnd(l, n.id))).filter((m) => m && m.type === "Material")
+      .sort((a, b) => a.formula.localeCompare(b.formula));
+    const other = [...adj.get(n.id)].map((l) => byId.get(otherEnd(l, n.id))).filter((m) => m && m.type !== "Material");
+    body(`${other.length ? `<div class="section">Linked</div><div class="list">${other.map(linkItem).join("")}</div>` : ""}
+      <div class="section">${mats.length} materials</div><div class="list">${mats.slice(0, 300).map(linkItem).join("")}</div>`);
+    return;
+  }
+  body(`<div class="banner warn" style="background:var(--soft);color:var(--muted)">Loading properties…</div>`);
+  try {
+    const r = await getJSON(`/material/${encodeURIComponent(n.material_id)}`);
+    if (selected !== n) return;
+    body(propsHtml(r.properties) + hubsHtml(r) + neighboursHtml(r));
+    wireLinks();
+  } catch (e) { body(`<div class="banner bad">${esc(e.message)}</div>`); }
+}
+const linkItem = (m) => `<a data-id="${esc(m.id)}">${esc(m.type === "Material" ? m.formula : shortLabel(m))}<span>${esc(m.type === "Material" ? m.material_id : TYPES[m.type].name.replace(/s$/, ""))}</span></a>`;
+function wireLinks() {
+  document.querySelectorAll("#drawerBody [data-id]").forEach((a) => a.onclick = () => { const m = byId.get(a.dataset.id); if (m) select(m, true); });
+}
+function openDrawer(title, sub) { $("#dTitle").textContent = title; $("#dSub").textContent = sub || ""; $("#drawer").classList.add("open"); }
+function body(html) { $("#drawerBody").innerHTML = html; wireLinks(); }
+$("#dClose").onclick = () => { follow = null; clearSelection(); };
+
+function errText(p) {
+  if (p.expected_error == null) return "";
+  if (p.expected_error_units === "error rate") return `${Math.round(p.expected_error * 100)}% misclass.`;
+  if ((p.expected_error_units || "").startsWith("log10")) return `×/÷ ${Math.pow(10, p.expected_error).toFixed(2)}`;
+  return `± ${+p.expected_error.toFixed(3)}`;
+}
+function propsHtml(props) {
+  const rows = props.filter((p) => p.value !== null && p.value !== undefined && typeof p.value !== "object");
+  const missing = props.filter((p) => p.provenance === "unavailable").map((p) => p.name);
+  return `<div class="section">Properties</div><div class="kv">${rows.map((p) => {
+      const v = typeof p.value === "boolean" ? (p.value ? "yes" : "no") : fmt(p.value);
+      const pred = p.provenance === "predicted";
+      return `<div>${esc(p.name.replace(/^predicted_/, ""))}</div><div class="v">${pred ? "≈" : ""}${esc(v)}${p.units ? " " + esc(p.units) : ""}${pred && p.expected_error != null ? ` <span style="color:var(--muted)">${esc(errText(p))}</span>` : ""}</div><span class="badge b-${esc(p.provenance)}">${esc(p.provenance)}</span>`;
+    }).join("")}</div>${missing.length ? `<div style="color:var(--muted);font-size:12px;margin-top:6px">Not available: ${esc(missing.join(", "))}</div>` : ""}`;
+}
+function hubsHtml(r) {
+  if (!r.shared_hubs.length) return "";
+  return `<div class="section">Shared graph nodes</div><div class="list">${r.shared_hubs.map((h) => {
+    const n = byLabel.get(h.node);
+    return `<a ${n ? `data-id="${esc(n.id)}"` : ""}>${esc(h.node.replace(/^[A-Za-z]+:/, ""))}${h.predicted ? ' <span class="badge b-predicted">predicted</span>' : ""}<span>${h.new_node ? "new node" : h.shared_with + " materials"}</span></a>`;
+  }).join("")}</div>`;
+}
+function neighboursHtml(r) {
+  const list = [...r.similar_materials, ...(r.compositional_neighbours || [])];
+  if (!list.length) return "";
+  return `<div class="section">Nearest materials</div><div class="list">${list.map((m) => {
+    const n = data.nodes.find((x) => x.material_id === m.material_id);
+    return `<a ${n ? `data-id="${esc(n.id)}"` : ""}>${esc(m.formula)}<span>${m.kind === "similar_to" ? "similar_to" : "composition"} ${m.weight.toFixed(3)}</span></a>`;
+  }).join("")}</div>`;
+}
+
+/* ------------------------------------------------------------------ search */
+$("#search").addEventListener("change", () => {
+  const v = $("#search").value.trim();
+  const n = data.nodes.find((x) => (x.type === "Material" ? `${x.formula} · ${x.material_id}` : x.label) === v)
+    || data.nodes.find((x) => x.type === "Material" && (x.formula === v || x.material_id === v))
+    || data.nodes.find((x) => shortLabel(x).toLowerCase() === v.toLowerCase());
+  if (n) { visibleTypes.add(n.type); select(n, true); } else toast(`No node matches “${v}”`);
+});
+function toast(text, ms = 2600) { const t = $("#toast"); t.textContent = text; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), ms); }
+
+/* ------------------------------------------------------------------ import & match */
+const drop = $("#drop"), fileInput = $("#file");
+drop.onclick = () => fileInput.click();
+fileInput.onchange = () => fileInput.files[0] && importFile(fileInput.files[0]);
+$("#goKey").onclick = () => { const k = $("#key").value.trim(); if (k) importKey(k); };
+$("#key").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#goKey").click(); });
+let dragDepth = 0;
+addEventListener("dragenter", (e) => { e.preventDefault(); dragDepth++; $("#dropOverlay").style.display = "flex"; });
+addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; $("#dropOverlay").style.display = "none"; } });
+addEventListener("dragover", (e) => e.preventDefault());
+addEventListener("drop", (e) => {
+  e.preventDefault(); dragDepth = 0; $("#dropOverlay").style.display = "none";
+  const f = e.dataTransfer.files[0]; if (f) importFile(f);
+});
+
+function formatOf(name) {
+  name = name.toLowerCase();
+  return /\.m?cif$/.test(name) ? "cif" : (/\.(vasp|poscar)$/.test(name) || /^(poscar|contcar)/.test(name) ? "poscar" : null);
+}
+
+async function importFile(f) {
+  if (follow) return;
+  if (f.size > 1000000) return toast("The file is larger than 1 MB");
+  const text = await f.text(), format = formatOf(f.name) || (text.includes("data_") ? "cif" : "poscar");
+  await runImport({structure: text, structure_format: format, filename: f.name}, f.name, text, format);
+}
+async function importKey(key) {
+  if (follow) return;
+  const body = /^(mp|mvc)-/.test(key) ? {material_id: key} : {formula: key};
+  await runImport(body, key, null, null);
+}
+
+let viewer = null;
+function showCrystal(text, format) {
+  const host = $("#crystal");
+  if (!host || !window.$3Dmol) return;
+  try {
+    viewer = $3Dmol.createViewer(host, {backgroundColor: "white", backgroundAlpha: 0});
+    const m = viewer.addModel(text, format === "cif" ? "cif" : "vasp", {doAssembly: true, normalizeAssembly: true, duplicateAssemblyAtoms: true});
+    viewer.setStyle({}, {sphere: {scale: 0.32, colorscheme: "Jmol"}, stick: {radius: 0.11, colorscheme: "Jmol"}});
+    if (format === "cif") viewer.addUnitCell(m, {box: {color: "#8ea2ff"}, alabel: "", blabel: "", clabel: ""});
+    viewer.zoomTo(); viewer.zoom(0.9); viewer.render();
+    viewer.spin("y", 0.7);
+    // The drawer is still sliding in when the viewer is created: re-fit once it has settled.
+    setTimeout(() => { viewer.resize(); viewer.zoomTo(); viewer.zoom(0.9); viewer.render(); }, 550);
+  } catch (e) { host.insertAdjacentHTML("beforeend", `<div class="tag">3D preview unavailable (${esc(e.message)})</div>`); }
+}
+
+function step(text, detail = "", cls = "run") {
+  const ul = $("#steps");
+  ul.querySelectorAll("li.run").forEach((li) => { li.classList.remove("run"); li.classList.add("done"); });
+  const li = document.createElement("li");
+  li.className = cls; li.innerHTML = `${text}${detail ? `<div class="detail">${detail}</div>` : ""}`;
+  ul.appendChild(li); li.scrollIntoView({block: "nearest", behavior: "smooth"});
+  return li;
+}
+function finishSteps() { $("#steps").querySelectorAll("li.run").forEach((li) => { li.classList.remove("run"); li.classList.add("done"); }); }
+
+async function runImport(body, title, text, format) {
+  const btn = $("#goKey"); btn.disabled = true;
+  selected = null; hlNodes = new Set(); hlLinks = new Set();
+  openDrawer(title, text ? "crystal structure" : "Materials Project lookup");
+  $("#drawerBody").innerHTML = `${text ? `<div id="crystal"><div class="tag">uploaded structure · drag to rotate</div></div>` : ""}<ul class="steps" id="steps"></ul><div id="result"></div>`;
+  if (text) showCrystal(text, format);
+  step(text ? "Reading the structure and running CGCNN…" : "Fetching from Materials Project…",
+       text ? "size, site and occupancy checks; 7 pre-trained models" : "lowest energy-above-hull polymorph for a formula");
+  let resp;
+  try {
+    resp = await post("/materials/ingest", {...body, persist: $("#persist").checked, explain: false});
+  } catch (e) {
+    step(`<span style="color:var(--bad)">${esc(e.message)}</span>`, "", "done");
+    btn.disabled = false; return;
+  }
+  try { await animateMatch(resp.report); } finally { follow = null; btn.disabled = false; }
+}
+
+async function animateMatch(r) {
+  const props = Object.fromEntries(r.properties.map((p) => [p.name, p]));
+  const sg = props.space_group?.value;
+  step(`${esc(r.formula)}${sg ? ` · ${esc(sg)}` : ""}`, r.source === "cgcnn" ? "properties predicted by CGCNN, not DFT" : (r.source === "graph" ? "" : "Materials Project record"));
+  await sleep(500);
+
+  // 1. Same-formula candidates light up.
+  const same = data.nodes.filter((n) => n.type === "Material" && n.formula === r.formula);
+  step(`Comparing with ${same.length} graph material${same.length === 1 ? "" : "s"} of formula ${esc(r.formula)}`,
+       same.length ? "StructureMatcher against each stored structure" : "no polymorph in the graph yet");
+  same.forEach((n) => pulses.set(n.id, {start: performance.now(), color: "#8ea2ff"}));
+  hlNodes = new Set(same.map((n) => n.id));
+  if (same.length === 1) flyTo(same[0], 3.5, 900);   // fitting a single node would zoom all the way in
+  else if (same.length) G.zoomToFit(900, 140, (n) => hlNodes.has(n.id));
+  await sleep(same.length ? 1500 : 700);
+  same.forEach((n) => pulses.delete(n.id));
+
+  // 2a. Matched an existing node.
+  if (r.already_in_graph) {
+    const n = byId.get(r.node_id);
+    step(`<b>Matched ${esc(r.formula)} (${esc(r.material_id)})</b>`, "already in the graph — no new node", "matched");
+    if (n) {
+      selected = n; highlight(n); pulses.set(n.id, {start: performance.now(), color: "#4ade9a", strong: true});
+      [...adj.get(n.id)].forEach((l) => l.__fresh = true);
+      flyTo(n, 3.5, 1200); await sleep(2600);
+      [...adj.get(n.id)].forEach((l) => delete l.__fresh);
+    }
+    const cmp = r.notes.find((x) => x.startsWith("CGCNN on the uploaded"));
+    finishSteps();
+    $("#result").innerHTML = `<div class="banner ok">Structure matches ${esc(r.formula)} (${esc(r.material_id)}).</div>` +
+      (cmp ? `<div class="banner warn">${esc(cmp)}</div>` : "") + propsHtml(r.properties) + hubsHtml(r);
+    wireLinks();
+    return;
+  }
+
+  // 2b. New node: spawn it near its hubs, then wire it hub by hub.
+  const hubs = r.shared_hubs.map((h) => ({h, n: byLabel.get(h.node)}));
+  const existing = hubs.filter((x) => x.n && x.n.x != null);
+  const cx = existing.length ? existing.reduce((s, x) => s + x.n.x, 0) / existing.length : 0;
+  const cy = existing.length ? existing.reduce((s, x) => s + x.n.y, 0) / existing.length : 0;
+  const bandGap = props.band_gap?.value ?? null, predictedGap = props.predicted_band_gap?.value ?? null;
+  const node = {
+    id: r.node_id, type: "Material", label: `Material:${r.formula} (${r.material_id})`, formula: r.formula, material_id: r.material_id,
+    band_gap: bandGap, predicted_band_gap: predictedGap, property_source: r.source === "cgcnn" ? "cgcnn" : r.source,
+    preview: !r.persisted, __new: true, x: cx, y: cy, fx: cx, fy: cy, degree: 0,
+  };
+  data.nodes.push(node); byId.set(node.id, node); byLabel.set(node.label, node); adj.set(node.id, new Set());
+  G.graphData(data);
+  selected = node; hlNodes = new Set([node.id]); hlLinks = new Set();
+  pulses.set(node.id, {start: performance.now(), color: r.source === "cgcnn" ? PREDICTED : "#8ea2ff", strong: true});
+  step(`<b>New material ${esc(r.material_id)}</b>`, r.persisted ? "saved to the cognee graph" : "preview — tick “save to graph” to keep it", r.source === "cgcnn" ? "pred" : "done");
+  G.centerAt(cx, cy, 1000); G.zoom(3.2, 1000);
+  await sleep(1100);
+
+  const addLink = (target, rel, extra = {}) => {
+    const l = {source: node.id, target: target.id, rel, __fresh: true, ...extra};
+    data.links.push(l); adj.get(node.id).add(l); adj.get(target.id)?.add(l);
+    node.degree++; target.degree++;
+    hlLinks.add(l); hlNodes.add(target.id);
+    G.graphData(data);
+    return l;
+  };
+  for (const {h, n: hubNode} of hubs) {
+    let target = hubNode;
+    if (!target) {   // a hub this material creates (e.g. a new chemical system)
+      const type = h.node.split(":")[0];
+      target = {id: `new:${h.node}`, type: TYPES[type] ? type : "ChemicalSystem", label: h.node, degree: 0,
+                x: cx + (Math.random() - 0.5) * 60, y: cy + (Math.random() - 0.5) * 60};
+      data.nodes.push(target); byId.set(target.id, target); byLabel.set(target.label, target); adj.set(target.id, new Set());
+    }
+    visibleRels.add(h.relation);
+    addLink(target, h.relation, h.predicted ? {predicted: true} : {});
+    pulses.set(target.id, {start: performance.now(), color: h.predicted ? PREDICTED : TYPES[target.type].color});
+    const what = h.new_node ? "new node" : `shared with ${h.shared_with} material${h.shared_with === 1 ? "" : "s"}`;
+    step(`${esc(RELS[h.relation] || h.relation)} → <b>${esc(h.node.replace(/^[A-Za-z]+:/, ""))}</b>`, what + (h.predicted ? " · rests on a CGCNN prediction" : ""), h.predicted ? "pred" : "run");
+    await sleep(420);
+  }
+  for (const m of r.similar_materials) {
+    const t = data.nodes.find((x) => x.material_id === m.material_id);
+    if (!t) continue;
+    addLink(t, "similar_to", {weight: m.weight});
+    pulses.set(t.id, {start: performance.now(), color: "#60a5fa"});
+    step(`similar to <b>${esc(m.formula)}</b>`, `10-d property cosine ${m.weight.toFixed(3)}`);
+    await sleep(380);
+  }
+  if (!r.similar_materials.length) {
+    for (const m of (r.compositional_neighbours || []).slice(0, 4)) {
+      const t = data.nodes.find((x) => x.material_id === m.material_id);
+      if (!t || t.id === node.id) continue;
+      addLink(t, "composition", {weight: m.weight});
+      pulses.set(t.id, {start: performance.now(), color: "#94a3b8"});
+      step(`composition close to <b>${esc(m.formula)}</b>`, `element-fraction cosine ${m.weight.toFixed(3)}`);
+      await sleep(320);
+    }
+  }
+  G.linkVisibility(G.linkVisibility());
+  renderRels();
+
+  // 3. Let the physics pull it into place, camera following.
+  step("Settling into the graph", "forces pull the node towards the hubs it shares");
+  delete node.fx; delete node.fy;
+  follow = node;
+  G.d3ReheatSimulation();
+  await sleep(3200);
+  follow = null;
+  [...pulses.keys()].filter((id) => id !== node.id).forEach((id) => pulses.delete(id));
+  data.links.forEach((l) => delete l.__fresh);
+  G.zoomToFit(1200, 120, (n) => hlNodes.has(n.id));
+  finishSteps();
+  renderStats(); renderSearch(); renderLegend();
+
+  const fired = r.rules.filter((x) => x.status === "fired").map((x) => x.domain.replace(/_/g, " ") + (x.predicted ? " (predicted)" : ""));
+  $("#result").innerHTML =
+    (r.source === "cgcnn" ? `<div class="banner warn">Properties are CGCNN predictions (pre-trained txie-93 models) with the error measured on graph materials the models had not seen — not DFT values.</div>` : "") +
+    (fired.length ? `<div class="banner ok">Suitable for: ${esc(fired.join(", "))}</div>` : "") +
+    propsHtml(r.properties) + hubsHtml(r) + neighboursHtml(r);
+  wireLinks();
+  setTimeout(() => pulses.delete(node.id), 6000);
+}
+
+load();
+</script>
+</body>
+</html>
