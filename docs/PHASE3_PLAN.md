@@ -1,23 +1,23 @@
-# MatGraphRAG — Phase 3 Plan: CGCNN Property Prediction and Structure Ingestion
+# MatGraphRAG — Phase 3 Plan: CGCNN Inference and Structure Ingestion
 
-> **Status (2026-10-22): M0 in progress.** The §9 recommended defaults were
-> accepted on 2026-10-22: own PyTorch CGCNN, matgl MEGNet as the fallback
-> encoder, a current MP pull for production with Matbench only for the gate,
-> opt-in elastic gap-filling after M3, and `structurally_similar` (M6)
-> instead of a lower `similar_to` threshold.
+> **Status (2026-10-22): plan revised, nothing implemented.** The reference
+> is [`txie-93/cgcnn`](https://github.com/txie-93/cgcnn) at commit `f42ab23`
+> (MIT). Scope is **inference** with its published pre-trained models, wired
+> into the existing Phase 2 ingestion feature. Training our own CGCNN is no
+> longer in the main scope; it moves to the optional M6.
 
-Goal: a user supplies a **crystal structure** (CIF / POSCAR, or an MP id whose
-structure we already cache). A CGCNN trained on Materials Project predicts its
+Goal: a user supplies a **crystal structure** (CIF / POSCAR file, or an MP id
+whose structure we already cache). The pre-trained CGCNN models predict its
 properties. The material is then **added to the existing knowledge graph as a
-new, clearly labelled node**, related to existing nodes through the same
-edges Phase 2 ingestion builds. Every predicted number carries the provenance
-`predicted` plus the model id and its measured error, so retrieval and the
-grounding checker never confuse a prediction with a DFT value.
+new, clearly named node**, related to existing nodes through the same edges
+Phase 2 ingestion builds (`scripts/add_material.py`, `POST /materials/ingest`).
+Every predicted number carries the provenance `predicted`, the model id and
+its measured error. That way retrieval and the grounding checker never
+confuse a prediction with a DFT value.
 
-This is the PRD's `/predict` flow and the `cgcnn` property source promised in
-PHASE2_PLAN §6.5. Structural embeddings, `structurally_similar` edges and the
-ionic-substitution model are later milestones (M6–M7) that reuse the same
-encoder.
+The same inference also **completes the existing graph**. 82% of the current
+nodes have no elastic data, and CGCNN ships bulk/shear/Poisson models. Those
+predictions are added as separately labelled `predicted_*` attributes (M4).
 
 ---
 
@@ -25,114 +25,158 @@ encoder.
 
 | | |
 |---|---|
-| Records | **795** MP summary records (794 curated plus 1 user-added), 46 distinct elements |
+| Records | **795** MP summary records (794 curated plus 1 user-added), 46 distinct elements. IDs are MP's new format (`mp-aaaaaabg`); legacy ids still resolve through the API. |
 | Clusters | perovskite_oxide 247, oxide_binary 155, battery_cathode_oxide 154, magnetic_spinel_oxide 108, battery_cathode_phosphate 88, semiconductor_ii_vi 17, semiconductor_iii_v 17, semiconductor_group_iv 8 |
 | Composition | 4 unary, 193 binary, 510 ternary, 88 quaternary |
 | Crystal systems | Monoclinic 224, Orthorhombic 161, Triclinic 109, Trigonal 96, Cubic 88, Tetragonal 87, Hexagonal 30 |
 | `nsites` | min 2, median 24, max 198 |
-| **`structure`** | **795 / 795**: full pymatgen `Structure` dict (lattice and sites), cached but not in the graph |
-| band_gap | 795/795, 0 – 5.87 eV (median 1.16); 231 metals |
-| formation_energy_per_atom | 795/795, −4.02 – 0.15 eV/atom (median −2.40) |
-| energy_above_hull | 795/795, 0 – 0.148 eV/atom; 365 stable; 462 flagged `theoretical` |
-| density / volume / magnetization | 795/795 |
-| cbm / vbm | 575/795 |
-| Elastic (bulk, shear, anisotropy, Poisson) | **143/795 (18%)**. Includes unphysical values (bulk modulus min −3.0e5 GPa, anisotropy −3.7e4) |
-| Dielectric (e_total, e_ionic, e_electronic, n) | **159/795 (20%)** |
+| **`structure`** | **795 / 795**: full pymatgen `Structure` dict, cached on disk but not in the graph |
+| band_gap / E_form / E_hull | 795/795. Gap 0–5.87 eV (231 metals); E_form −4.02–0.15 eV/atom; 365 stable |
+| efermi | 795/795 |
+| Elastic (bulk, shear, anisotropy, Poisson) | **143/795 (18%)**. Includes unphysical values (bulk modulus min −3.0e5 GPa) |
+| Dielectric | **159/795 (20%)**. No CGCNN model exists for it, so it stays `unavailable`. |
 
-What this means for the feature:
+Every node already has its structure, so we can run inference on the whole
+graph without any API call. The graph is also the **evaluation set** for the
+pre-trained models (§2.4).
 
-- **795 structures are far too few to train a CGCNN.** The published models
-  train on ~10⁵ structures. Our graph is the **inference target and the
-  real-world test set**, not the training set.
-- Structures are already cached for every node, so embeddings and
-  predictions for existing nodes need no extra API calls.
-- The data is chemically narrow (oxides, phosphates, III-V and II-VI). A
-  model trained on all of MP is the right choice; a model trained only on
-  our clusters would not generalise to user uploads.
-- Elastic data includes garbage values. Any elastic head (optional, §9)
-  must filter them, e.g. require K, G > 0 and |anisotropy| < 100.
+## 2. The reference repository: `txie-93/cgcnn`
 
-## 2. Research summary: CGCNN and alternatives
+### 2.1 What it contains
 
-**CGCNN** (Xie & Grossman, PRL 2018; reference code `txie-93/cgcnn`, MIT).
-- **Graph:** atoms are nodes. Each node gets a 92-d element feature
-  (`atom_init.json`: group, period, electronegativity, covalent radius,
-  valence electrons, ionisation energy, electron affinity, …, one-hot binned).
-- **Edges:** the 12 nearest neighbours within 8 Å, with periodic images
-  allowed, so this is a multigraph. Each distance is expanded in a Gaussian
-  basis: 0–8 Å with a 0.2 Å step gives 41 dimensions.
-- **Model:** 3 gated convolution layers
-  `v_i ← v_i + Σ_j σ(z_ij W_f + b_f) ⊙ softplus(z_ij W_s + b_s)`,
-  with batch norm, then mean pooling over atoms and an MLP head. Atom
-  feature size is 64 and hidden size is 128, roughly 10⁵ parameters.
-- **The embedding is the pooled vector before the head.** That vector is the
-  PRD's "crystal embedding".
-- **Published accuracy:**
+The repo was last updated 2021-09-06 (commit `f42ab23`). It has about 1,350
+lines of Python:
 
-  | Benchmark | Formation energy MAE | Band gap MAE |
-  |---|---|---|
-  | Original paper (~28k MP) | 0.039 eV/atom | 0.388 eV |
-  | Matbench v0.1 `mp_e_form` (132,752 structures), CGCNN v2019 | **0.0337 eV/atom** | — |
-  | Matbench v0.1 `mp_gap` (106,113 structures), CGCNN v2019 | — | **0.2972 eV** |
+| File | Contents |
+|---|---|
+| `cgcnn/model.py` (187 lines) | `ConvLayer` and `CrystalGraphConvNet` |
+| `cgcnn/data.py` (352 lines) | `GaussianDistance`, `AtomCustomJSONInitializer` and `CIFData` |
+| `main.py` | Training |
+| `predict.py` | Inference over a directory of CIFs plus `id_prop.csv` |
+| `data/sample-*/atom_init.json` | 92-d element features for Z = 1–100 |
+| `pre-trained/*.pth.tar` | 8 models, about 0.8 MB each |
+| `data/material-data/mp-ids-*.csv` | The legacy MP ids used in the paper (46,744 / 27,430 / 3,402) |
 
-  For reference on the same tasks: ALIGNN scores 0.0215 / 0.1861, MEGNet
-  (kgcnn) 0.0252 / 0.1934, and coGN 0.0170 / 0.1559.
-- **PRD gate:** formation-energy MAE of about 0.03–0.04 eV/atom. CGCNN's
-  published 0.0337 sits inside it, so a faithful reproduction should pass.
+### 2.2 How the crystal graph is built (`CIFData.__getitem__`)
 
-**Implementation options**
+For each site:
+1. Take the 92-d `atom_init.json` vector for its atomic number.
+2. Run `structure.get_all_neighbors(r=8, include_index=True)` and sort by
+   distance.
+3. Keep the **12 nearest neighbours**. If fewer than 12 are found, pad with
+   index 0 and distance r + 1 = 9 Å, and emit a warning.
+4. Expand each distance with Gaussians over `arange(0, 8 + 0.2, 0.2)`, which
+   gives **41 dimensions**, with var = 0.2.
 
-| Option | Pros | Cons |
-|---|---|---|
-| **A. Own minimal CGCNN in PyTorch** (recommended) | About 300 lines. Depends only on torch, pymatgen and numpy. Runs on Apple M4 via MPS/CPU without PyG or DGL. Embedding extraction is trivial. Fits the repo's Python 3.13 env. It is exactly the PRD's model. | We own correctness, so it needs the invariance tests and the reproduction gate. |
-| B. Vendor `txie-93/cgcnn` | Reference implementation. Ships pre-trained `formation-energy-per-atom.pth.tar`, `band-gap`, etc. | Torch 1.0-era code that reads one CIF file per crystal plus `id_prop.csv`. The data loader is slow, and the pre-trained weights come from a 2018 MP snapshot. **Use its `atom_init.json` and its pre-trained weights as a cross-check only.** |
-| C. matgl (MEGNet / M3GNet) | v3.0.0 (May 2026) is PyG-only. Pre-trained `MEGNet-Eform-MP-2018.6.1` and `M3GNet-Eform-MP-2018.6.1` are on Hugging Face (`materialyze`). | It is not CGCNN. Its weights are retrained after a v3 message-passing fix, so check the names on HF first. It adds a PyG dependency. **Recommended fallback encoder.** |
-| D. ALIGNN (PRD's named fallback) | Most accurate of the four (0.0215 eV/atom). | Requires DGL pinned to torch 2.1 and recommends Python 3.10. **Incompatible with our Python 3.13 env** unless it runs in a separate venv or container. |
+The model takes `atom_fea (N, 92)`, `nbr_fea (N, 12, 41)`, `nbr_fea_idx (N,
+12)` and `crystal_atom_idx` (the atoms belonging to each crystal).
 
-The PRD names ALIGNN as the fallback. Option D's environment conflict is the
-reason to swap it for matgl (C); see §9.
+### 2.3 Model (`CrystalGraphConvNet`)
 
-## 3. Training data
+The layers run in this order:
+1. `embedding` (92→64)
+2. n_conv gated `ConvLayer`s, each computing
+   `softplus(v_i + BN(Σ_j σ(BN(W[v_i‖v_j‖u_ij])_filter) ⊙ softplus(…_core)))`
+3. **mean pooling** over atoms
+4. softplus → `conv_to_fc` (64→h) → softplus
+5. `fc_out` (h→1, or h→2 with LogSoftmax for classification)
 
-Two datasets with two different jobs.
+A regression output is denormalised with the checkpoint's `normalizer`
+(mean, std).
 
-1. **Reproduction gate: Matbench `mp_e_form` and `mp_gap`.** Load with
-   `matminer.datasets.load_dataset`. Run the official 5-fold CV (or at least
-   fold 0) so our MAE is directly comparable with the 0.0337 and 0.2972
-   leaderboard values. This is an MP 2018 snapshot with the old energy
-   corrections, so it is **only** used to validate the implementation.
-2. **Production model: current MP snapshot.** Pull it from the API with the
-   same client and correction scheme as the graph (MP2020-compatible
-   formation energies). Use paged `/materials/summary/` requests with fields
-   `material_id, structure, formation_energy_per_atom, band_gap,
-   energy_above_hull, is_metal, nsites` and optional `bulk_modulus,
-   shear_modulus` (§9). Filters match Matbench:
-   - E_form ≤ 2.5 eV/atom
-   - for the gap target, e_hull ≤ 0.15 eV/atom
-   - no deprecated entries
-   - none of the radioactive elements in `config/materials.yaml →
-     exclude_elements`
-   - `nsites` ≤ 200
+**The pre-trained models do not use the repo defaults.** Their checkpoint
+`args` say `n_conv=4`, `atom_fea_len=64`, `h_fea_len=32`, `n_h=1`. The
+architecture must therefore be built **from the checkpoint args**, never from
+defaults. We verified this from the tensor shapes: `convs.0..3`,
+`fc_full (128, 169)` where 169 = 2·64 + 41, `conv_to_fc (32, 64)` and
+`fc_out (1, 32)`.
 
-   Cache the result to `data/training/mp_<YYYY.MM>/` (gitignored), compressed
-   and sharded.
+### 2.4 Pre-trained models
 
-**Leakage rule.** All 795 graph `material_id`s **and every MP entry sharing a
-graph material's reduced formula** go into a fixed **graph-holdout split**.
-The formula rule also catches polymorphs. The remaining data splits
-80/10/10 into train, validation and test with a fixed seed. Save the split
-file next to the model. Reporting MAE on the graph-holdout tells us how
-accurate predictions are *for the chemistry this graph covers*. It is the
-number the evidence bundle will quote.
+We read these values from each checkpoint's metadata with a restricted
+unpickler that runs no code. All of them were trained on an **MP snapshot of
+2017-04-19**.
 
-**Featurisation cost.** We precompute neighbour lists once with pymatgen
-`get_all_neighbors(r=8)`, keep the top 12 per atom, and store
-`(nbr_index:int32, distance:float16)` per crystal. That is a few hundred MB
-for ~130k crystals. Gaussian expansion happens on the fly in the collate
-function, because storing the 41-d edge features would take several GB,
-which is too much for 16 GB RAM. We run this with `multiprocessing` and
-measure the wall time in M0. Training a model this small should take hours
-per run on the M4, not days; M0 measures it before we commit to ensembles.
+| Checkpoint | Our attribute | Units | Train size | Best **validation** score | Epoch |
+|---|---|---|---|---|---|
+| `formation-energy-per-atom` | `predicted_formation_energy_per_atom` | eV/atom | 28,046 | MAE **0.0397** | 968 |
+| `band-gap` | `predicted_band_gap` | eV | 16,458 (`20170419_semi.json`) | MAE **0.369** | 457 |
+| `semi-metal-classification` | `predicted_is_metal` | metal = 1 | 37,394 | AUC **0.959** | 92 |
+| `efermi` | `predicted_efermi` | eV | 28,046 | MAE 0.355 | 804 |
+| `bulk-moduli` | `predicted_bulk_modulus_vrh` | log(GPa) | 2,041 | MAE 0.0553 | 759 |
+| `shear-moduli` | `predicted_shear_modulus_vrh` | log(GPa) | 2,041 | MAE 0.0908 | 118 |
+| `poisson-ratio` | `predicted_homogeneous_poisson` | — | 2,041 | MAE 0.0293 | 66 |
+| `final-energy-per-atom` | *not used*: raw uncorrected total energy, not in our schema | eV/atom | 28,046 | MAE 0.079 | 953 |
+
+Things the code and checkpoints imply, which M1 has to verify:
+
+- **The band-gap model was trained only on non-metals.** It used the "semi"
+  file, which has about 16k entries against 28k for formation energy. So
+  `predicted_band_gap` is gated by the classifier:
+  - if P(metal) ≥ 0.5, the gap is 0
+  - otherwise it is the regressor output, clipped at 0
+
+  M1 checks this on the 231 graph metals.
+- **The log base for the moduli is not documented.** We settle it
+  empirically on the 143 graph materials that have elastic data. Their median
+  bulk modulus is 106 GPa, which is 2.03 in log₁₀ and 4.66 in ln, so the two
+  are easy to tell apart. After that we store values in GPa.
+- **Data drift.** The 2017 MP formation energies use the legacy
+  correction scheme, while the graph uses current MP2020-compatible values.
+  Most of the graph is transition-metal oxides, where the corrections
+  changed, so expect a **systematic offset**. We measure it and report it,
+  and we do not hide it with a fitted correction.
+- **Contamination.** Many graph materials were probably in CGCNN's training
+  data. M1 maps the 46,744 legacy ids to new ids through the API, then
+  reports graph MAE separately for *seen in training* and *unseen*. The
+  unseen number is the honest one, and it is the one quoted in evidence.
+- **Validation MAE is not test MAE.** We quote our own graph-measured MAE,
+  not the checkpoint's `best_mae_error`.
+- **Loading.** The checkpoints are in the legacy (pre-1.6) torch format.
+  Modern torch's `weights_only=True` default rejects the numpy scalar in the
+  classifier's metadata. A one-time **conversion** step loads them with an
+  allowlist and re-saves each model as a plain `state_dict` plus `meta.json`.
+  After that, runtime loading never unpickles anything.
+
+### 2.5 What we reuse and what we change
+
+| Reference | In this repo |
+|---|---|
+| `model.py` | **Vendored almost verbatim** as `src/matgraph/cgcnn/model.py`, with the MIT notice and commit hash. Weight compatibility depends on keeping parameter names identical. The changes are: drop `Variable`; vectorise `pooling` with `index_add_` (results identical, tested); add `forward(..., return_embedding=True)` returning the 64-d pooled vector, which M5 uses. |
+| `data.py` featurisation | Re-implemented as `featurize(structure: Structure)` in `src/matgraph/cgcnn/featurize.py`. It takes pymatgen objects instead of files, so there is no `id_prop.csv` or CIF directory, and it uses the same r, max_nbr, Gaussians and padding. The repo's `atom_init.json` is copied in. |
+| `predict.py` | Replaced by `CGCNNPredictor`. It loads all 7 models once (as the PRD requires for the API), featurises a structure **once** and shares it across models, and returns a typed `Prediction` per property. No CSV output. |
+| `main.py` (training) | Not used. It becomes the reference for optional retraining (M6). |
+| `sklearn` dependency | Not needed, because we don't compute metrics at inference time. |
+
+Dependencies: **only `torch`**, in a new `[ml]` optional extra. pymatgen and
+numpy are already installed. Inference on ≤200 sites should take well under
+a second on CPU (measured in M0), so MPS is not needed. The weights come from
+`scripts/fetch_cgcnn_weights.py`: it downloads the 8 checkpoints pinned to
+commit `f42ab23`, checks their sha256, converts them, and writes them to
+`models/cgcnn/txie93-f42ab23/` (gitignored, so the weights are build
+artifacts as the PRD asks). Committing the converted 5.6 MB instead is a
+§9 decision.
+
+## 3. Inference module
+
+```
+src/matgraph/cgcnn/
+  __init__.py
+  model.py        # vendored CrystalGraphConvNet (+ return_embedding)
+  featurize.py    # Structure -> (atom_fea, nbr_fea, nbr_fea_idx); atom_init.json
+  predictor.py    # CGCNNPredictor: load models/meta, predict(structure) -> Predictions
+  validate.py     # parse limits + standardisation for user structures
+  atom_init.json  # from txie-93/cgcnn data/sample-regression
+models/cgcnn/txie93-f42ab23/<property>/{state_dict.pt, meta.json}
+  meta.json = {property, units, task, args, normalizer, val_score, source_commit, sha256, graph_eval}
+```
+
+`Prediction` holds:
+- `property` and `value`
+- `units`
+- `model_id`, e.g. `cgcnn-txie93-f42ab23/formation-energy-per-atom`
+- `expected_error`: our graph-measured MAE on unseen materials
+- `flags`, e.g. `out_of_distribution`, `few_neighbours`, `near_bucket_boundary`
 
 ## 4. Naming conventions
 
@@ -146,222 +190,203 @@ struct-<reduced_formula>-sg<spacegroup_number>-<hash8>
 e.g.  struct-LiFePO4-sg62-3f9a1c2e
 ```
 
-- **`struct-`** says the node came from a user-supplied structure. It names
-  where the structure came from, not the model, because predictions can be
-  re-run with a newer model while the id stays stable.
-- **`reduced_formula` and `sg<number>`** make the id readable. The number
-  comes from `SpacegroupAnalyzer(symprec=0.1)`, the same tolerance as MP.
+- **`struct-`** marks a node built from a user-supplied structure. It names
+  where the structure came from, not the model, so the id stays stable if the
+  predictions are re-run with a different model.
+- **`sg<number>`** comes from `SpacegroupAnalyzer(symprec=0.1)`, the same
+  tolerance as MP.
 - **`hash8`** is the first 8 hex characters of the SHA-256 of the canonical
-  structure. To canonicalise, standardise to the conventional cell, sort the
-  sites, round fractional coordinates to 1e-3 and the lattice to 1e-3 Å.
-  This makes the same crystal uploaded twice in different settings resolve
-  to the same id. A `StructureMatcher` check (§5) catches anything the hash
-  misses.
+  structure. To canonicalise, take the conventional standard cell, sort the
+  sites, and round fractional coordinates and the lattice to 1e-3. That way
+  the same crystal uploaded in different settings gets one id.
+  `StructureMatcher` (§5) catches what the hash misses.
 
-### 4.2 Node attributes
+### 4.2 Attributes
 
 | Field | Values | Meaning |
 |---|---|---|
 | `origin` (exists) | `mp` \| `user` | Who added the node. Structure uploads are `user`. |
-| `property_source` (new) | `mp` \| `composition` \| `cgcnn` | Where the property values came from. Mirrors the ingest `PropertySource.name`. |
-| `predicted_<property>` (new) | float \| None | e.g. `predicted_formation_energy_per_atom`, `predicted_band_gap`, `predicted_is_metal` |
-| `predicted_<property>_std` (new) | float \| None | Ensemble standard deviation (§6) |
-| `prediction_model` (new) | str | e.g. `cgcnn-mp2026.10-v1` |
+| `property_source` (new) | `mp` \| `composition` \| `cgcnn` | Where the main property values came from. Mirrors `PropertySource.name`. |
+| `predicted_<property>` (new) | float/bool \| None | One per model in §2.4, e.g. `predicted_band_gap` |
+| `prediction_model` (new) | str | e.g. `cgcnn-txie93-f42ab23` |
 
-**Predicted values never go into the DFT fields** (`band_gap`,
-`formation_energy_per_atom`, …). Those fields stay `None` on a `struct-`
-node. Retrieval hard constraints read DFT fields by default and use
-`predicted_*` only when the caller opts in (§7). This avoids a quiet failure
-in which "band_gap > 2" returns a material whose 2.1 eV is a ±0.3 eV guess.
+**Predictions never go into the DFT fields.** On a `struct-` node, `band_gap`,
+`formation_energy_per_atom` and the other DFT fields stay `None`. On existing
+MP nodes, the DFT fields are untouched and `predicted_*` sits next to them.
+Retrieval reads DFT fields unless the caller opts in (§7).
 
-### 4.3 Model artifacts
+The `profile` text gets one sentence per predicted value, for example "CGCNN
+predicts a band gap of about 2.1 eV (expected error ±0.4 eV)". This keeps
+semantic search and the Vector RAG baseline honest about it.
 
-```
-models/cgcnn/<model_id>/        # gitignored; released as versioned build artifacts (PRD)
-  config.yaml                   # hyperparameters, featuriser settings, targets
-  member_{0..4}.pt              # ensemble weights
-  normalizer.json               # per-target mean/std
-  split.json                    # ids per split, incl. graph-holdout
-  metrics.json                  # MAE per split, per cluster, per target - quoted in evidence
-  atom_init.json                # element features used (copied from txie-93/cgcnn)
-model_id = cgcnn-<data tag>-v<n>            e.g. cgcnn-matbench-v1 (gate), cgcnn-mp2026.10-v1 (production)
-```
+### 4.3 Provenance labels (extends Phase 2's `mp | derived | guessed | unavailable`)
 
-### 4.4 New node and edge types (M6–M7)
-
-New nodes and edges follow the repo's existing style: **PascalCase node types
-and snake_case edges**, not the PRD's UPPER_CASE. A mapping table goes in the
-README.
-
-| Node | Identity | Description |
-|---|---|---|
-| `Structure` | `material_id` | Holds `nsites`, the CIF and `crystal_embedding`. |
-| `Prototype` | prototype name | e.g. perovskite or spinel |
-| `CoordinationEnvironment` | — | e.g. octahedral or tetrahedral |
-
-The existing `OxidationState` node already plays the PRD's `Species` role.
-
-| Edge | Connects |
+| Label | Used for |
 |---|---|
-| `has_structure` | Material → Structure |
-| `matches_prototype` | Structure → Prototype |
-| `has_coordination` | Structure → CoordinationEnvironment |
-| `structurally_similar` | Structure → Structure, weighted by embedding cosine |
-| `substitutable_with` | OxidationState → OxidationState, weighted by Hautier probability |
+| `predicted` | CGCNN outputs |
+| `derived` | Exact values computed from the uploaded structure: formula, chemsys, `formula_anonymous`, space group, crystal system, volume, density, nsites |
+| `guessed` | Oxidation states from `BVAnalyzer` / `oxi_state_guesses` |
 
-## 5. Ingestion flow (structure in, labelled node out)
+### 4.4 Later node and edge types (M5+)
 
-This adds `CGCNNSource` to `ingest.py` next to `MPSource` and
-`CompositionSource`. The input is a structure, or an MP id with a cached
-structure when we want "predict anyway" mode for model checks.
+These follow the repo's style: PascalCase node types and snake_case edges,
+not the PRD's UPPER_CASE. The README will carry a mapping table.
 
-1. **Parse with safety limits.**
-   - Size limits: at most 1 MB of input and at most 200 sites.
-   - A 10 s parse timeout.
-   - Reject partial occupancy or disordered sites (CGCNN needs an ordered
-     cell).
-   - Reject elements outside `atom_init.json` or in `exclude_elements`.
-   - Reject atoms closer than 0.5 Å.
-2. **Standardise** with `SpacegroupAnalyzer`, then compute the canonical
-   hash and the `struct-…` id.
-3. **Deduplicate.**
-   - Same hash already in the graph: return the existing node.
+| New | Kind |
+|---|---|
+| `Structure` | Node, holding the CIF, nsites and `crystal_embedding` |
+| `Prototype` | Node |
+| `has_structure` | Edge |
+| `matches_prototype` | Edge |
+| `structurally_similar` | Edge |
+| `substitutable_with` | Edge |
+
+## 5. Integration with the existing ingestion feature
+
+`ingest.py` gains `CGCNNSource` next to `MPSource` and `CompositionSource`.
+The rest of the pipeline stays as it is: `NodeFactory`, `RelationReport`, the
+overlay preview, `--persist`, `_user_materials.json` replay, and
+`explain_relation` with the grounding checker.
+
+1. **Parse with safety limits** (`validate.py`). Reject the input when any
+   of these hold:
+   - the file is over 1 MB, or the parse takes more than 10 s
+   - it has more than 200 sites (the graph's max is 198)
+   - it has partial occupancy, which CGCNN needs ordered sites for
+   - an element is outside `atom_init.json` or in `exclude_elements`
+   - two atoms are closer than 0.5 Å
+2. **Standardise and name.** Run `SpacegroupAnalyzer`, then build the
+   `struct-…` id (§4.1).
+3. **Deduplicate.** These checks replace the formula-only lookup that
+   `ingest_material` does today, for structure input only.
+   - If the hash already exists in the graph, return that node.
    - Otherwise, run `StructureMatcher` against graph materials with the same
-     reduced formula, using their cached structures. A match means it is
-     already known. In that case return the existing MP node, **plus the
-     model's prediction next to the DFT value** as a free sanity check.
-   - This replaces the formula-only lookup that `ingest_material` does today
-     for this input type. A new polymorph of an existing formula is a
-     **different** material and must not collapse onto the MP node.
-     `Graph.material_by_formula` keeps preferring the MP node for formula
-     lookups.
-4. **Predict.** Run the ensemble forward pass and return mean ± std for each
-   target, plus the 128-d embedding (stored from M6).
-5. **Check out-of-distribution status.** Flag `low_confidence` when any of
-   these hold:
-   - an element is rare in training (fewer than N occurrences)
-   - `nsites` is above the 99th percentile of training
-   - the ensemble std is above 2× the test MAE
+     reduced formula, using their cached structures. If one matches, return
+     the **existing MP node**, with the CGCNN prediction shown next to its
+     DFT value as a free model check.
+   - If nothing matches, the structure is a new polymorph and becomes a new
+     node, even when its formula already exists. `Graph.material_by_formula`
+     keeps resolving a formula to the MP node.
+4. **Predict.** `CGCNNPredictor.predict(structure)` runs all models on one
+   featurisation.
+5. **Build the raw record**, shaped like an MP summary so the factory works
+   unchanged.
+   - Derived fields: `formula_pretty`, `elements`, `chemsys`,
+     `formula_anonymous`, `symmetry`, `volume`, `density`, `nsites`, and
+     `possible_species` (guessed).
+   - `predicted_*` values are added alongside.
+   - The DFT keys are left out.
 
-   The flag is shown, and it never blocks ingestion.
-6. **Build the node.** Use `NodeFactory.material(raw, origin="user")`.
-   - The raw record is assembled from the structure: elements, chemsys,
-     `formula_anonymous`, space group, crystal system, volume, density,
-     `nsites`, and oxidation-state guesses from `BVAnalyzer`. These are
-     **derived exactly**, not predicted. That gives the node real
-     `contains`, `member_of`, `has_space_group`, `has_formula_pattern` and
-     `has_oxidation_state` edges straight away.
-   - `classified_as` band-gap and metal classes come from the prediction,
-     with edge property `provenance: predicted`. A class is assigned only if
-     the predicted value is more than 1 MAE from a bucket boundary;
-     otherwise the edge is omitted and a note says why.
-   - The stability class is **not** assigned, because CGCNN gives E_form,
-     not E_hull. An optional step estimates E_hull against the MP phase
-     diagram of the chemsys, labelled `derived-from-predicted`.
-   - `suitable_for` rules are evaluated on predicted values and marked the
-     same way.
-7. **Relate.**
-   - `similar_to` uses the existing 10-d cosine on the frozen scale, with
-     predicted values substituted. That is about 4 of 10 dimensions, below
-     `MIN_SIMILARITY_DIMENSIONS = 5`. Decided (§9): keep the threshold, so
-     structure nodes get no `similar_to` edges and are related through
-     `structurally_similar` from M6.
-   - Compositional neighbours work as they do today.
+   The node then gets real `contains`, `member_of`, `has_space_group`,
+   `has_formula_pattern` and `has_oxidation_state` edges, exactly as an MP
+   material does.
+6. **Predicted classes and rules.** `NodeFactory.classifications` gets a
+   predicted path.
+   - **band_gap class:** assigned from `predicted_band_gap` only when the
+     value is more than one expected-error away from a bucket boundary.
+     Otherwise the edge is omitted and a note explains why.
+   - **stability class:** not assigned. CGCNN predicts formation energy, not
+     energy above hull. An optional step estimates E_hull against the MP
+     phase diagram of the chemsys, labelled `derived-from-predicted`.
+   - **application rules:** evaluated on predicted values and reported in
+     `RelationReport.rules` as `predicted`.
+   - **edge marking:** these `classified_as` and `suitable_for` edges carry
+     `properties={"provenance": "predicted", "model": …}`.
+7. **Relate.** Compositional neighbours work as today. `similar_to` needs 5
+   DFT dimensions, so structure nodes get none. This keeps the accepted
+   decision: the structural relation comes from `structurally_similar` in
+   M5.
 8. **Persist.** Save to `data/user_structures/<material_id>.json`: the
-   structure, the predictions and `prediction_model`. Record the material in
-   `_user_materials.json` with `source: "cgcnn"`.
-   `build_graph.py`'s replay re-adds it **from the stored predictions**, so a
-   rebuild is deterministic. `scripts/add_material.py --repredict` refreshes
-   them after a model upgrade.
+   structure, the predictions and the `prediction_model`. Add an entry to
+   `_user_materials.json` with `source: "cgcnn"`. `build_graph.py` replays
+   from the stored predictions, so a rebuild is deterministic.
+   `add_material.py --repredict` refreshes them after a weights change.
 
-**Interfaces.**
-- `scripts/add_material.py --structure path.cif [--persist]`
-- `POST /predict` (multipart CIF): predictions only, no graph change, as in
-  the PRD.
-- `POST /materials/ingest`: now also accepts a CIF upload.
-- The dashboard gets a structure upload panel showing values with a
-  "predicted" badge.
+**Interfaces**
 
-## 6. Model and training
+| Interface | Change |
+|---|---|
+| `scripts/add_material.py --structure path.cif [--persist] [--explain]` | Structure input |
+| `scripts/predict.py path.cif …` | Prints predictions only. Replaces the reference `predict.py`. |
+| `POST /predict` | Multipart CIF upload. Returns predictions only, with no graph change (PRD). |
+| `POST /materials/ingest` | Also accepts a CIF upload. The 422 message "crystal structures go to CGCNN in Phase 3" goes away. |
+| `GET /health` | Adds `cgcnn_loaded` and runs a fixed-structure smoke test (PRD) |
+| Dashboard | Structure upload panel, with a "predicted" badge and expected error on each value |
 
-- **Architecture:** CGCNN as in §2 (3 conv layers, atom features 64, hidden
-  128, 12 neighbours, 8 Å, 41 Gaussians). The trunk is shared, with
-  **multi-task heads** for E_form (L1 loss), band gap (L1 loss) and
-  `is_metal` (BCE), as the PRD specifies. The band-gap head is trained only
-  on the e_hull ≤ 0.15 subset.
-- **Optimisation:** AdamW with cosine LR, early stopping on validation MAE,
-  and targets normalised with the training mean and std.
-- **Uncertainty:** a 5-seed ensemble. Matbench Discovery uses a 10-model
-  CGCNN ensemble for the same purpose. Report mean ± std.
-- **Device:** MPS when available, CPU otherwise. Scatter is avoided because
-  neighbours are padded to a fixed 12, so the convolution is plain
-  `index_select` + `sum`, which MPS supports.
-- **Invariance tests** (PRD: "verified explicitly before training"):
-  - a supercell of a structure gives the same prediction
-  - a different but equivalent setting gives the same prediction
-  - permuting sites gives the same prediction
-  - a rigid rotation gives the same prediction
+## 6. Completing existing nodes (gap-filling)
 
-  Tolerance is 1e-4 in tests/test_cgcnn.py.
+`scripts/predict_graph.py` runs the predictor over all 795 cached structures.
+It writes a `predicted_*` attribute for every model on every node, with DFT
+fields untouched, plus `prediction_model`. The batch is expected to take minutes on CPU
+(measured in M1). It is written back through `pipeline.add_to_graph`, which upserts by
+`material_id`. It is also wired into `build_graph.py` behind
+`--with-predictions`, so a rebuild reproduces it.
 
-## 7. Retrieval, evidence and grounding integration
+This is what fills the 82% elastic gap with labelled predictions. Retrieval
+does not use them unless asked (§7).
 
-- `query_schema`: add `include_predicted: bool = False`.
-  - When it is true, a numeric constraint on `band_gap` falls back to
-    `predicted_band_gap`, but only for nodes where the DFT value is `None`.
-  - The retrieval path marks that hop `predicted`.
-- `evidence.EvidenceFact` gets `provenance` and `model_id`. Predicted facts
-  render like this:
-  `[E7] struct-LiFePO4-sg62-3f9a1c2e predicted band_gap = 3.4 ± 0.2 eV (cgcnn-mp2026.10-v1, graph-holdout MAE 0.29 eV)`.
-- `grounding`: numbers in a claim are matched against predicted facts the
-  same way as DFT facts. A claim that states a predicted number **without**
-  hedging words ("predicted", "estimated", "~") is flagged.
-- `generator` prompt: predicted values must be called predictions.
+The same run produces the **graph evaluation** (M1), because every node also
+has DFT values to compare against.
+
+## 7. Retrieval, evidence and grounding
+
+- **`query_schema`.** Add `include_predicted: bool = False`.
+  - When it is true, a numeric constraint falls back to `predicted_<prop>`,
+    but only where the DFT value is `None`.
+  - The hop is marked `predicted` in the reasoning path.
+  - With it false, results are unchanged from Phase 2. The benchmark proves
+    this.
+- **`EvidenceFact`.** Add `provenance` and `model_id`. A predicted fact
+  renders like this:
+  `[E7] struct-LiFePO4-sg62-3f9a1c2e predicted band_gap ≈ 2.1 eV (CGCNN txie93 band-gap, expected error ±0.4 eV on unseen graph materials)`.
+- **Grounding.** A claim that states a predicted number without hedging
+  ("predicted", "estimated", "≈") is flagged. Predicted numbers are matched
+  within their expected error, not the DFT tolerance.
 
 ## 8. Milestones and acceptance criteria
 
 | | Milestone | Done when |
 |---|---|---|
-| **M0** | Deps and data. Add a `[ml]` extra (`torch`, `matminer`); write `scripts/fetch_training_data.py` (MP API pull, paged and cached) and `scripts/build_crystal_graphs.py` (neighbour lists). | Counts per filter logged. Graph-holdout split written. Featurisation wall time and size measured and recorded in this doc. |
-| **M1** | `src/matgraph/cgcnn/` with `featurize.py`, `model.py`, `data.py` (collate and Gaussian expansion) and `train.py` (`scripts/train_cgcnn.py`). | Invariance tests pass. Overfits 100 structures to near-zero loss. |
-| **M2** | **Reproduction gate** on Matbench `mp_e_form` fold 0 (fold 0–4 if time allows), plus `mp_gap`. | E_form MAE ≤ 0.040 eV/atom (published 0.0337) and gap MAE ≤ 0.35 eV (published 0.297). **Hard gate:** if it misses, fix the model before M3. Cross-check against txie-93's pre-trained E_form model on the same fold. |
-| **M3** | Production ensemble `cgcnn-mp<YYYY.MM>-v1` on the current MP snapshot. | `metrics.json` has MAE on test and graph-holdout, broken down per cluster. Predictions for all 795 graph materials are compared against DFT, and that table goes in the README. |
-| **M4** | `CGCNNSource` and structure ingestion (§5), with the naming conventions in §4, CLI, `/predict` and CIF upload on `/materials/ingest`. | Uploading a known MP structure in a different setting dedups onto the MP node and shows prediction vs DFT. A hypothetical polymorph creates a `struct-…` node with derived edges and predicted values. A rebuild replays it identically. Tests cover parse limits, dedup and naming. |
-| **M5** | Retrieval, evidence and grounding integration (§7). Dashboard badge. | With `include_predicted=false`, results are byte-identical to Phase 2 on the benchmark. With true, the predicted node is retrievable, and every predicted claim is hedged and grounded. |
-| **M6** | Crystal embeddings on `Structure` nodes, `structurally_similar` edges (top-k cosine), `/similar-structures`. Includes the CrystalNN 61-d site-fingerprint baseline (PRD). | Tier-4 (structural analogue) benchmark nDCG measured for embedding vs fingerprint vs the current 0.517, and reported honestly (PRD). |
-| **M7** | Hautier ionic substitution (`pymatgen.analysis.structure_prediction`), `substitutable_with` edges, `/similar-elements`. | Held-out compound recovery rate (PRD eval). |
+| **M0** | Add `torch` in an `[ml]` extra. `scripts/fetch_cgcnn_weights.py` handles download, sha256 check and conversion. Vendor `model.py` and write `featurize.py` and `predictor.py`. | **Parity test:** for the repo's 10 `sample-regression` CIFs, our predictor matches the reference `predict.py` (run once against the vendored code) to 1e-5. **Invariance tests:** a supercell, an equivalent setting, permuted sites and a rotated cell all give the same prediction within 1e-4. Everything runs offline once the weights are fetched. |
+| **M1** | Graph evaluation via `scripts/predict_graph.py --eval-only`. Map the legacy ids to find seen versus unseen materials. | `artifacts/eval/cgcnn_graph_eval.md` reports, per model and per cluster, MAE, bias and seen/unseen splits against the 795 DFT values. The moduli log base and the band-gap gating are settled. `meta.json.graph_eval` holds the expected errors that evidence will quote. |
+| **M2** | `CGCNNSource` and structure ingestion (§5), with naming, validation, dedup, persistence and replay. CLI `--structure` and `scripts/predict.py`. | A known MP structure in a different setting dedups onto its MP node and shows prediction vs DFT. A new polymorph creates a `struct-…` node with derived edges, predicted values and predicted classes. A rebuild replays it identically. Tests cover the parse limits, naming and hash stability, and dedup. |
+| **M3** | API and dashboard: `/predict`, CIF on `/materials/ingest`, `/health`, the upload panel. Retrieval, evidence and grounding integration (§7). | With `include_predicted=false` the benchmark is identical to Phase 2. With true, struct nodes are retrievable, and every predicted claim is hedged and grounded. API tests stay offline. |
+| **M4** | Gap-fill existing nodes (§6). | Every node has `predicted_*` attributes. The README documents coverage of DFT vs predicted per property. |
+| **M5** | (PRD Phase 3 continuation) Crystal embedding: the 64-d pooled vector from the formation-energy model, on a `Structure` node. Add `structurally_similar` edges and `/similar-structures`, plus the CrystalNN site-fingerprint baseline. | Tier-4 nDCG for embedding vs fingerprint vs the current 0.517, reported honestly. |
+| **M6** | (Optional) Retrain on the current MP snapshot with the reference `main.py` recipe, to remove the 2017 drift. Gate on Matbench `mp_e_form` (published CGCNN 0.0337 eV/atom). Then Hautier substitution, `substitutable_with` and `/similar-elements` (PRD). | Done only if M1 shows the drift matters. |
 
-M0–M5 is the feature asked for. M6–M7 complete the PRD's Phase 3 and reuse
-the M3 encoder.
+M0–M4 is the requested feature: complete CGCNN inference wired into the
+existing ingestion and the existing nodes.
 
-## 9. Decisions (accepted 2026-10-22: the recommendation in each item)
+## 9. Decisions
 
-1. **Implementation.** Recommended: **own minimal PyTorch CGCNN (option A)**,
-   with txie-93's weights as a cross-check.
-2. **Fallback encoder.** The PRD says ALIGNN, which is incompatible with
-   Python 3.13 because of its DGL pin. Recommended: **matgl MEGNet (option
-   C)**.
-3. **Training data.** Recommended: **current MP pull for production, and
-   Matbench only for the gate**. The alternative, Matbench only, is faster to
-   start but leaves the formation energies inconsistent with the graph's.
-4. **Gap-filling existing nodes.** Should the model also add
-   `predicted_bulk_modulus_vrh` / `predicted_shear_modulus_vrh` to the
-   82% of graph materials with no elastic data? CGCNN's paper reports 0.054
-   and 0.087 log₁₀ GPa MAE. This needs an elastic head trained on MP's
-   smaller elastic set (~10⁴). Phase 2 deliberately did not estimate missing
-   values. Recommendation: yes as an opt-in after M3, stored only in
-   `predicted_*` fields.
-5. **`similar_to` for structure nodes.** Lower `MIN_SIMILARITY_DIMENSIONS`
-   for `cgcnn` sources, or rely on `structurally_similar` (M6).
-   Recommendation: rely on M6, and use composition neighbours until then.
+Accepted 2026-10-22. They carry over unchanged:
+- **Own code over a vendored pipeline.** The model is vendored; the
+  featuriser and predictor are ours.
+- **Opt-in predicted values.** They are used only when the caller asks.
+- **No `similar_to` for structure nodes.** Their structural relation waits
+  for M5.
+
+Changed by this revision:
+- **Training.** Was "own training is the main path". Now **inference with
+  the txie-93 pre-trained models is the main path**, and retraining is the
+  optional M6.
+- **Fallback encoder.** Was matgl MEGNet. It is now only needed if M1 shows
+  CGCNN is unusable on this chemistry.
+
+Still open:
+1. **Weights in git?** The default is gitignored, with a fetch script and
+   sha256 pins. The alternative is to commit the 5.6 MB of converted weights
+   so the repo works offline from a clone.
+2. **Gap-filling scope.** The default is all 7 models on every node. The
+   alternative is elastic and Poisson only, where DFT coverage is 18%.
+   Formation energy, band gap and efermi are 100% DFT-covered, so those
+   predictions only serve evaluation.
 
 ## 10. Sources
 
+- Reference code and pre-trained models (MIT): https://github.com/txie-93/cgcnn, commit `f42ab23`. The checkpoint metadata in §2.4 was read from the files themselves.
 - Xie & Grossman, *Crystal Graph Convolutional Neural Networks…*, PRL 120, 145301 (2018), https://arxiv.org/abs/1710.10324
-- Reference code (MIT): https://github.com/txie-93/cgcnn
-- Matbench leaderboards: https://matbench.materialsproject.org/ (`mp_e_form`, `mp_gap` per-task pages)
-- Matbench / matminer dataset table: https://hackingmaterials.lbl.gov/matminer/dataset_summary.html
-- matgl v3 (PyG backend, HF weights): https://github.com/materialyzeai/matgl
-- ALIGNN install requirements (DGL, torch 2.1): https://github.com/usnistgov/alignn
-- Matbench Discovery (CGCNN ensemble): https://arxiv.org/abs/2308.14920
+- Matbench `mp_e_form` / `mp_gap` leaderboards (CGCNN 0.0337 eV/atom, 0.2972 eV): https://matbench.materialsproject.org/
+- matgl v3 (possible fallback): https://github.com/materialyzeai/matgl
 - PRD: `~/Documents/MatGraphRAG_Updated.pages`, sections "Crystal Structure Graph Representation", "Structure Aware Retrieval", Phase 3
