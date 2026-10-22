@@ -154,7 +154,7 @@ def _hub_description(kb: KnowledgeBase, kind: str, name: str, fallback: str) -> 
     """Reuse the existing PropertyClass description, so upserting this
     material does not rewrite the shared hub with a predicted value."""
     node_id = kb.graph.find("PropertyClass", kind=kind, name=name)
-    return kb.graph.node[node_id]["description"] if node_id else fallback
+    return (kb.graph.node[node_id].get("description") if node_id else None) or fallback
 
 
 def predicted_band_gap_class(raw: dict[str, Any], config: dict[str, Any]) -> str | None:

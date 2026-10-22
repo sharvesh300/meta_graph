@@ -250,12 +250,9 @@ def _node_props(dp: Any) -> dict[str, Any]:
 
 def _hop_props(edge_props: dict[str, Any]) -> dict[str, Any]:
     """Rule text, weight and (for CGCNN-based edges) provenance of an edge."""
-    inner = edge_props.get("properties") or {}
-    if isinstance(inner, str):  # cognee may hand edge properties back JSON-encoded
-        try:
-            inner = json.loads(inner)
-        except ValueError:
-            inner = {}
+    from matgraph.graph_store import edge_annotations
+
+    inner = edge_annotations(edge_props)
     picked = {"rule": inner.get("rule"), "weight": edge_props.get("weight"),
               "provenance": inner.get("provenance"), "model": inner.get("model")}
     return {k: v for k, v in picked.items() if v is not None}
@@ -342,22 +339,25 @@ def _predicted_rule_evaluations(raw: dict[str, Any], config: dict[str, Any],
     elements = set(raw["elements"])
     out = []
 
-    def add(domain, status, reason):
-        out.append(RuleEvaluation(domain=domain, rule=rules[domain], status=status, reason=reason, predicted=True))
+    def add(domain, status, reason, predicted=False):
+        # predicted marks verdicts that rest on the CGCNN values; compositional
+        # verdicts and "needs a property CGCNN lacks" are exact.
+        out.append(RuleEvaluation(domain=domain, rule=rules[domain], status=status, reason=reason, predicted=predicted))
 
     def by_gap(domain, low, high):
         status = _interval_status(lo, hi, low, high)
         if status == "uncertain":
-            add(domain, "cannot_evaluate", f"{gap_text} straddles the rule threshold")
+            add(domain, "cannot_evaluate", f"{gap_text} straddles the rule threshold", predicted=True)
         else:
-            add(domain, status, gap_text)
+            add(domain, status, gap_text, predicted=True)
 
     if "Li" in elements and elements & set(config["transition_metals"]):
         add("battery_cathode", "cannot_evaluate", "needs energy_above_hull (CGCNN predicts formation energy only)")
     else:
         add("battery_cathode", "not_fired", "composition lacks Li or a transition metal")
     if metal:
-        add("semiconductor_device", "not_fired", f"predicted metallic (P(metal) = {raw.get('predicted_metal_probability', 0):.2f})")
+        add("semiconductor_device", "not_fired",
+            f"predicted metallic (P(metal) = {raw.get('predicted_metal_probability', 0):.2f})", predicted=True)
     else:
         by_gap("semiconductor_device", 1e-9, 3.5)
     if "O" not in elements:
@@ -365,7 +365,7 @@ def _predicted_rule_evaluations(raw: dict[str, Any], config: dict[str, Any],
     else:
         by_gap("photocatalyst", 1.5, 3.5)
     if hi <= 2:
-        add("dielectric", "not_fired", gap_text)
+        add("dielectric", "not_fired", gap_text, predicted=True)
     else:
         add("dielectric", "cannot_evaluate", "needs total_magnetization (not predicted)")
     add("magnetic_material", "cannot_evaluate", "needs magnetic ordering and magnetization (not predicted)")
@@ -670,9 +670,9 @@ def relation_evidence(report: RelationReport):
 
     facts: list[EvidenceFact] = []
 
-    def add(kind, text, source, material_id=None, formula=None, **values):
+    def add(kind, text, source, material_id=None, formula=None, predicted=False, **values):
         facts.append(EvidenceFact(id=f"E{len(facts) + 1}", kind=kind, material_id=material_id, formula=formula,
-                                  text=text, source=source, values=values))
+                                  text=text, source=source, values=values, predicted=predicted))
 
     f, mid = report.formula, report.material_id
     for p in report.properties:
@@ -683,8 +683,10 @@ def relation_evidence(report: RelationReport):
         if p.provenance == "predicted":
             error = "" if p.expected_error is None else (
                 f"; expected error ±{p.expected_error:.3g} {p.expected_error_units or ''}".rstrip())
+            if p.expected_error is not None:
+                numeric["expected_error"] = p.expected_error
             add("property", f"{f} {p.name} ≈ {value}{(' ' + p.units) if p.units else ''} (predicted by {p.model}{error}).",
-                _PROVENANCE_SOURCE["predicted"], mid, f, **numeric)
+                _PROVENANCE_SOURCE["predicted"], mid, f, predicted=True, **numeric)
             continue
         add("property", f"{f} {p.name} = {value}.", _PROVENANCE_SOURCE[p.provenance], mid, f, **numeric)
     missing = [p.name for p in report.properties if p.provenance == "unavailable"]
@@ -696,7 +698,7 @@ def relation_evidence(report: RelationReport):
         basis = ", based on a CGCNN prediction" if hub.predicted else ""
         add("edge", f"{f} -{hub.relation}-> {hub.node} ({status}{basis}).",
             f"graph edge {hub.relation}" + (" (predicted)" if hub.predicted else ""), mid, f,
-            shared_with=hub.shared_with)
+            predicted=hub.predicted, shared_with=hub.shared_with)
     for n in report.similar_materials:
         add("similarity", f"{f} -similar_to-> {n.formula} ({n.material_id}) weight {n.weight}.",
             "similar_to: 10-d property cosine (frozen build-time scale)", n.material_id, n.formula, weight=n.weight)
@@ -705,8 +707,12 @@ def relation_evidence(report: RelationReport):
             "composition similarity", n.material_id, n.formula, weight=n.weight)
     for r in report.rules:
         add("edge", f"{f} rule {r.domain}: {r.status}" + (f" ({r.reason})" if r.reason else "") + f' - "{r.rule}".',
-            "application-domain rule evaluation" + (" on CGCNN predictions" if r.predicted else ""), mid, f)
-    related = list(dict.fromkeys([n.material_id for n in report.similar_materials + report.compositional_neighbours]))
+            "application-domain rule evaluation" + (" on CGCNN predictions" if r.predicted else ""), mid, f,
+            predicted=r.predicted)
+    # The material itself first, so an explanation covers its own facts (and,
+    # for a structure, its predictions), then the materials it relates to.
+    related = list(dict.fromkeys([mid] + [n.material_id for n in report.similar_materials
+                                          + report.compositional_neighbours]))
     return EvidenceBundle(facts=facts, material_ids=related)
 
 
