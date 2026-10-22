@@ -161,3 +161,26 @@ def test_query_degrades_when_embeddings_fail(client, monkeypatch):
     body = r.json()
     assert {c["formula"] for c in body["retrieval"]["candidates"]} == {"LiFePO4", "LiMnPO4"}
     assert any("Semantic search unavailable" in n for n in body["notices"])
+
+
+def test_graph_endpoint_serves_every_node_and_edge(client):
+    body = client.get("/graph").json()
+    g = api.state["kb"].graph
+    assert len(body["nodes"]) == len(g.node)
+    assert len(body["links"]) == sum(len(edges) for edges in g.out.values())
+    lfp = next(n for n in body["nodes"] if n.get("formula") == "LiFePO4")
+    assert lfp["type"] == "Material" and lfp["label"] == f"Material:LiFePO4 ({lfp['material_id']})"
+    assert {"source", "target", "rel"} <= set(body["links"][0])
+
+
+def test_graph_endpoint_marks_preview_and_predicted(client, fake_cgcnn):
+    client.post("/materials/ingest", json={"structure": _wurtzite_cif()})
+    body = client.get("/graph").json()
+    struct = next(n for n in body["nodes"] if n.get("material_id", "").startswith("struct-"))
+    assert struct["preview"] and struct["property_source"] == "cgcnn"
+    assert any(l.get("predicted") and l["source"] == struct["id"] for l in body["links"])
+
+
+def test_explorer_served(client):
+    r = client.get("/explorer")
+    assert r.status_code == 200 and "MatGraph Explorer" in r.text
