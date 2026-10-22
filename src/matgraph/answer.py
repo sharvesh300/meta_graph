@@ -22,6 +22,7 @@ from matgraph.query_schema import ParsedQuery
 from matgraph.retriever import RetrievalResult, load_retrieval_config, retrieve
 
 logger = logging.getLogger(__name__)
+SEMANTIC_TIMEOUT_S = 30.0
 
 
 class Answer(BaseModel):
@@ -89,7 +90,17 @@ async def answer_question(
     cfg = load_retrieval_config()
     semantic = {}
     if use_semantic:
-        semantic = await kb.semantic_scores(parsed.constraints.semantic_text, tuple(cfg["semantic_collections"]))
+        # Embedding the question needs the local embedding server; if it is down
+        # (cognee retries for minutes), answer from the graph alone and say so.
+        try:
+            semantic = await asyncio.wait_for(
+                kb.semantic_scores(parsed.constraints.semantic_text, tuple(cfg["semantic_collections"])),
+                timeout=SEMANTIC_TIMEOUT_S,
+            )
+        except Exception as error:  # noqa: BLE001 - timeout or any embedding/vector-store failure
+            logger.warning("semantic search unavailable: %r", error)
+            notices.append("Semantic search unavailable (embedding server not responding); "
+                           "ranked by graph constraints only.")
     timings["semantic"] = (time.perf_counter() - t) * 1000
 
     t = time.perf_counter()
