@@ -3,7 +3,7 @@
 **An Explainable Graph-Based Retrieval-Augmented Reasoning System for Intelligent Materials Discovery**
 
 > Project report: Phase 1 (knowledge graph construction) and Phase 2 (GraphRAG retrieval and recommendation)
-> Status: **Phase 1 complete** · **Phase 2 complete** · Phase 3 (CGCNN inference) in progress: M0–M2 done, see `docs/PHASE3_PLAN.md`
+> Status: **Phase 1 complete** · **Phase 2 complete** · Phase 3 (CGCNN inference) in progress: M0–M3 done, see `docs/PHASE3_PLAN.md`
 
 ---
 
@@ -595,7 +595,7 @@ relates it to the existing graph.
   facts are exact, and its properties are CGCNN predictions in `predicted_*`
   fields with expected errors. DFT fields stay empty.
 
-The API takes structure input from Phase 3 M3. See `docs/PHASE3_PLAN.md` §5.
+The API and dashboard take structure input too (§16). See `docs/PHASE3_PLAN.md` §5.
 
 Where the properties come from:
 
@@ -708,10 +708,14 @@ What these numbers do and don't show:
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /query` | question → parsed constraints, ranked candidates, comparison table, evidence, explanation, grounding report |
+| `POST /query` | question → parsed constraints, ranked candidates, comparison table, evidence, explanation, grounding report. `include_predicted` (default false) also uses CGCNN predictions, each labelled. |
 | `GET /material/{id}` | stored properties and 1-hop graph neighbourhood |
-| `POST /materials/ingest` | MP id or formula → relation report (optionally explained, optionally persisted) |
-| `GET /health` | graph loaded, embeddings reachable, LLM configured |
+| `POST /materials/ingest` | MP id, formula or crystal structure (`structure`: CIF/POSCAR text) → relation report (optionally explained, optionally persisted) |
+| `POST /predict` | crystal structure (`structure`: CIF/POSCAR text) → CGCNN predictions with expected errors; no graph change |
+| `GET /health` | graph loaded, embeddings reachable, LLM configured, CGCNN loaded and fixed-structure check |
+
+Structure endpoints take the file's text in JSON, e.g.
+`curl -X POST localhost:8000/predict -H 'Content-Type: application/json' -d "$(jq -Rs '{structure: .}' my.cif)"`.
 
 The dashboard is one static page with no build step. It shows:
 
@@ -723,6 +727,10 @@ The dashboard is one static page with no build step. It shows:
   facts on hover
 - an **Add material** tab that renders the relation report and a subgraph of
   how the new material connects
+- a **From structure** tab: upload a CIF/POSCAR to see CGCNN predictions, or
+  relate it to the graph. Predicted values and edges are marked (amber "≈",
+  dashed edges).
+- a **CGCNN predictions** toggle on Ask (off by default)
 
 ---
 

@@ -1,6 +1,6 @@
 # MatGraphRAG — Phase 3 Plan: CGCNN Inference and Structure Ingestion
 
-> **Status (2026-10-22): M0–M2 done (results in §8.1–8.3); M3 next.** The reference
+> **Status (2026-10-22): M0–M3 done (results in §8.1–8.4); M4 next.** The reference
 > is [`txie-93/cgcnn`](https://github.com/txie-93/cgcnn) at commit `f42ab23`
 > (MIT). Scope is **inference** with its published pre-trained models, wired
 > into the existing Phase 2 ingestion feature. Training our own CGCNN is no
@@ -319,9 +319,9 @@ overlay preview, `--persist`, `_user_materials.json` replay, and
 |---|---|
 | `scripts/add_material.py --structure path.cif [--persist] [--explain]` | Structure input |
 | `scripts/predict.py path.cif …` | Prints predictions only. Replaces the reference `predict.py`. |
-| `POST /predict` | Multipart CIF upload. Returns predictions only, with no graph change (PRD). |
-| `POST /materials/ingest` | Also accepts a CIF upload. The 422 message "crystal structures go to CGCNN in Phase 3" goes away. |
-| `GET /health` | Adds `cgcnn_loaded` and runs a fixed-structure smoke test (PRD) |
+| `POST /predict` | CIF/POSCAR text in the JSON body (`structure`, `format`, `filename`). Returns predictions only, with no graph change (PRD). JSON rather than multipart, like the other endpoints; `python-multipart` is only a transitive dependency here. |
+| `POST /materials/ingest` | Also accepts `structure` text, routed to `ingest_structure` |
+| `GET /health` | Adds `cgcnn`: available, model set, and a fixed-structure smoke test against the reference implementation's outputs (PRD) |
 | Dashboard | Structure upload panel, with a "predicted" badge and expected error on each value |
 
 ## 6. Completing existing nodes (gap-filling)
@@ -341,18 +341,35 @@ has DFT values to compare against.
 
 ## 7. Retrieval, evidence and grounding
 
-- **`query_schema`.** Add `include_predicted: bool = False`.
-  - When it is true, a numeric constraint falls back to `predicted_<prop>`,
-    but only where the DFT value is `None`.
-  - The hop is marked `predicted` in the reasoning path.
-  - With it false, results are unchanged from Phase 2. The benchmark proves
-    this.
-- **`EvidenceFact`.** Add `provenance` and `model_id`. A predicted fact
-  renders like this:
-  `[E7] struct-LiFePO4-sg62-3f9a1c2e predicted band_gap ≈ 2.1 eV (CGCNN txie93 band-gap, expected error ±0.4 eV on unseen graph materials)`.
-- **Grounding.** A claim that states a predicted number without hedging
-  ("predicted", "estimated", "≈") is flagged. Predicted numbers are matched
-  within their expected error, not the DFT tolerance.
+- **`include_predicted: bool = False`.** This is a request option on
+  `retrieve()`, `answer_question()` and the `/query` body. It is *not* a
+  `QueryConstraints` field, because that model is the LLM parser's output
+  schema and the LLM must not switch predictions on.
+  - **When it is false,** retrieval sees exactly the Phase 2 graph:
+    - no `struct-` materials;
+    - no edges marked `provenance: predicted`;
+    - no `predicted_*` values;
+    - ranking statistics (hub IDF, property spreads) over the same visible
+      materials.
+  - **When it is true,** a numeric or boolean constraint falls back to
+    `predicted_<prop>`, but only where the DFT value is `None`. The check,
+    the hop and the candidate are marked `predicted`.
+- **`EvidenceFact.predicted`.** A predicted fact renders like this:
+  `[E19] MgO predicted band_gap ≈ 3.9897 eV (CGCNN cgcnn-txie93-f42ab23, not a DFT value; expected error ±0.617 eV on unseen graph materials)`.
+  - Moduli state their error as a factor.
+  - Edges resting on a prediction say so.
+  - A caveat fact explains what predicted means.
+- **Grounding.** Numbers are matched exactly, as for DFT facts. Matching
+  "within the expected error", as first planned, would have let a claim
+  state a different number. A claim that rests on a prediction must hedge
+  ("predicted", "estimated", "≈", "CGCNN", …) or it is flagged. A claim rests
+  on a prediction when either holds:
+  - a number in it is supported only by a predicted fact;
+  - it cites nothing but predicted facts.
+- **LLM prompt.** The rule "call predictions predicted and give their
+  error" is added only when the evidence holds predicted facts. Prompts
+  (and the LLM cache keys) for DFT-only evidence stay byte-identical to
+  Phase 2.
 
 ## 8. Milestones and acceptance criteria
 
@@ -361,7 +378,7 @@ has DFT values to compare against.
 | **M0** | Add `torch` in an `[ml]` extra. `scripts/fetch_cgcnn_weights.py` handles download, sha256 check and conversion. Vendor `model.py` and write `featurize.py` and `predictor.py`. | **Parity test:** for the repo's 10 `sample-regression` CIFs, our predictor matches the reference `predict.py` (run once against the vendored code) to 1e-5. **Invariance tests:** a supercell, an equivalent setting, permuted sites and a rotated cell all give the same prediction within 1e-4. Everything runs offline once the weights are fetched. |
 | **M1** ✓ | Graph evaluation via `scripts/evaluate_cgcnn.py`. Map the legacy ids to find seen versus unseen materials. | `artifacts/eval/cgcnn_graph_eval.md` reports, per model and per cluster, MAE, bias and seen/unseen splits against the 795 DFT values. The moduli log base and the band-gap gating are settled in `cgcnn/interpret.py`. `artifacts/eval/cgcnn_graph_eval.json → expected_errors` (committed) holds the expected errors that evidence will quote. |
 | **M2** ✓ | `CGCNNSource` and structure ingestion (§5), with naming, validation, dedup, persistence and replay. CLI `--structure` and `scripts/predict.py`. | A known MP structure in a different setting dedups onto its MP node and shows prediction vs DFT. A new polymorph creates a `struct-…` node with derived edges, predicted values and predicted classes. A rebuild replays it identically. Tests cover the parse limits, naming and hash stability, and dedup. |
-| **M3** | API and dashboard: `/predict`, CIF on `/materials/ingest`, `/health`, the upload panel. Retrieval, evidence and grounding integration (§7). | With `include_predicted=false` the benchmark is identical to Phase 2. With true, struct nodes are retrievable, and every predicted claim is hedged and grounded. API tests stay offline. |
+| **M3** ✓ | API and dashboard: `/predict`, CIF on `/materials/ingest`, `/health`, the upload panel. Retrieval, evidence and grounding integration (§7). | With `include_predicted=false` the benchmark is identical to Phase 2. With true, struct nodes are retrievable, and every predicted claim is hedged and grounded. API tests stay offline. |
 | **M4** | Gap-fill existing nodes (§6). | Every node has `predicted_*` attributes. The README documents coverage of DFT vs predicted per property. |
 | **M5** | (PRD Phase 3 continuation) Crystal embedding: the 64-d pooled vector from the formation-energy model, on a `Structure` node. Add `structurally_similar` edges and `/similar-structures`, plus the CrystalNN site-fingerprint baseline. | Tier-4 nDCG for embedding vs fingerprint vs the current 0.517, reported honestly. |
 | **M6** | (Optional) Retrain on the current MP snapshot with the reference `main.py` recipe, to remove the 2017 drift. Gate on Matbench `mp_e_form` (published CGCNN 0.0337 eV/atom). Then Hautier substitution, `substitutable_with` and `/similar-elements` (PRD). | Done only if M1 shows the drift matters. |
@@ -480,10 +497,60 @@ store: one copy to persist into, and a pristine one to replay into.
 naming, dedup, predicted classes and rules, gating, and persist→replay. It
 uses a fake predictor and no stores.
 
-**Open until M3.** The retriever does not filter predicted edges yet. So a
-*persisted* struct node can already show up in class- or domain-based
-queries through its predicted `classified_as` / `suitable_for` edges. M3
-adds `include_predicted` (default off).
+**Open until M3 (closed in M3).** The retriever did not filter predicted
+edges yet, so a persisted struct node could show up in class- or
+domain-based queries.
+
+### 8.4 M3 results (2026-10-22)
+
+**Benchmark identity.** For each of the 55 benchmark queries' gold
+constraints (semantic scores off), we compared two runs:
+- the Phase 2 retriever and evidence code (git `HEAD` before M3) on the
+  clean graph;
+- the new code with predictions off, on the real graph *with* a preview
+  `struct-MgO` node added.
+
+Retrieval (candidates, scores, checks, `total_matching`, `pool_size`) and
+evidence text match exactly: **0 differences in 55**.
+
+That check found two ranking leaks, both now fixed. A struct node shifted
+the hub IDF (anchor queries, tier 4) and the density spread. Before the
+fix, 10 tier-4 rankings differed. A regression test covers this.
+
+**API**
+
+| Endpoint | Result |
+|---|---|
+| `/health` | `cgcnn: available, 7 models, smoke_test ok, max_abs_diff 0.0` against the reference outputs on COD 1000041 |
+| `/predict` | Returns the predictions with expected errors and leaves the graph unchanged |
+| `/materials/ingest` with a structure | Preview report; templated explanation 35/35 grounded |
+
+**Dashboard (checked in the browser on the real graph)**
+- **From structure tab:**
+  - Predict shows a table of predictions with their expected errors.
+  - Add to graph renders the relation report, with dashed predicted edges
+    and predicted provenance badges.
+- **Ask, "materials containing Mg with band gap above 3 eV":**
+  - Predictions off: MgO and MgO2 (MP).
+  - Predictions on: the wurtzite `struct-MgO` is added with a "predicted"
+    badge. Its comparison cells are amber "≈" values; the derived density
+    stays plain. The explanation is 40/40 grounded.
+- **Console:** no errors.
+
+**Graceful degradation (new).** If the question cannot be embedded within
+30 s, `/query` answers from the graph constraints alone, with a notice.
+Before this, cognee retried for about 4 minutes and returned a 500. That is
+the current state of this machine: the Ollama app is in the Trash.
+
+**Also fixed.**
+- **Explanations missed the material's own facts.** Relation evidence now
+  lists the ingested material first. Before, templated explanations of a
+  new material covered only its neighbours, which dropped its own and
+  predicted facts.
+- **Over-flagged rule verdicts.** Rule verdicts are marked predicted only
+  when they rest on the predicted gap. Compositional verdicts are exact.
+
+**Tests.** 97 pass.
 
 M0–M4 is the requested feature: complete CGCNN inference wired into the
 existing ingestion and the existing nodes.
