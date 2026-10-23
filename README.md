@@ -2,8 +2,8 @@
 
 **An Explainable Graph-Based Retrieval-Augmented Reasoning System for Intelligent Materials Discovery**
 
-> Project report: Phase 1 (knowledge graph construction) and Phase 2 (GraphRAG retrieval and recommendation)
-> Status: **Phase 1 complete** · **Phase 2 complete** · Phase 3 (CGCNN inference) in progress: M0–M3 done, see `docs/PHASE3_PLAN.md`
+> Project report: Phase 1 (knowledge graph construction), Phase 2 (GraphRAG retrieval and recommendation) and Phase 3 (crystal structure encoding)
+> Status: **Phase 1 complete** · **Phase 2 complete** · **Phase 3 complete** (CGCNN inference and structure ingestion, see `docs/PHASE3_PLAN.md`)
 
 ---
 
@@ -63,7 +63,7 @@ as the graph/vector storage and pipeline layer.
 |---|---|---|
 | **Phase 1** | Knowledge graph construction from Materials Project data | ✅ Complete |
 | **Phase 2** | GraphRAG retrieval + LLM-generated, evidence-backed recommendations | ✅ Complete |
-| Phase 3 | CGCNN inference with the txie-93 pre-trained models, structure ingestion, structural similarity, element substitution | In progress (M0: inference module, parity-tested; M1: graph evaluation, `artifacts/eval/cgcnn_graph_eval.md`; M2: structure ingestion) |
+| **Phase 3** | Crystal structure encoding: CGCNN inference with the txie-93 pre-trained models, wired into new-material ingestion | ✅ Complete |
 
 Phase 1 deliverable, as built and verified: a graph of **794 materials**
 spanning **46 elements**, **106 space groups**, **143 chemical systems**,
@@ -78,6 +78,15 @@ deterministic checker verifies the citations. On a 55-question benchmark,
 graph retrieval reaches **nDCG@10 0.910** with **0 constraint violations**,
 against 0.308 / 69.6% for vector RAG (§15). New materials can be added by MP
 id or formula and related to the existing graph.
+
+Phase 3 deliverable: a crystal structure (CIF or POSCAR) can be uploaded on its
+own. The pre-trained CGCNN models predict its properties, each quoted with the
+error measured on graph materials the models had not seen. If the structure
+matches a graph material it resolves to that node; otherwise it joins the graph
+as a `struct-…` node whose predicted values and edges are labelled
+`predicted` (§14, §16, `docs/PHASE3_PLAN.md`).
+
+Slide decks for the project reviews are in `presentation/` (§18).
 
 ## 3. Dataset
 
@@ -800,9 +809,16 @@ meta_graph/
 │   ├── evaluate.py              # run the evaluation -> artifacts/eval/
 │   ├── serve.py                 # API + dashboard
 │   └── generate_elements.py     # regenerates config/elements.json via pymatgen
-├── tests/                       # 44 unit/API tests (synthetic graph; no network)
+├── tests/                       # unit/API tests (synthetic graph; no network)
 ├── artifacts/eval/              # evaluation results (json + md)
-├── docs/PHASE1_PLAN.md, docs/PHASE2_PLAN.md
+├── docs/PHASE1_PLAN.md, docs/PHASE2_PLAN.md, docs/PHASE3_PLAN.md
+├── presentation/
+│   ├── MatGraphRAG_Review.pptx  # review deck in the first-review (Beamer-style) template, 4:3
+│   ├── MatGraphRAG.pptx         # standalone 16:9 project deck
+│   ├── build_review_deck.js     # generates MatGraphRAG_Review.pptx
+│   ├── build_deck.js            # generates MatGraphRAG.pptx
+│   ├── pptx_fixups.js           # theme colours + paragraph fixes applied after pptxgenjs
+│   └── assets/                  # screenshots of the dashboard and graph explorer
 └── .cognee_system/              # Cognee's embedded stores (gitignored)
 ```
 
@@ -845,6 +861,21 @@ uv run python scripts/serve.py                       # API + dashboard on :8000
 uv run python scripts/evaluate.py --llm-sample 10 --ingestion 50
 uv run pytest
 ```
+
+### Presentations
+
+The decks in `presentation/` are generated, so edit the scripts rather than
+the `.pptx` files. They need Node.js and a few npm packages, installed
+outside the repo:
+
+```bash
+npm install --prefix ~/.cache/matgraph-deck pptxgenjs jszip react react-dom react-icons sharp
+NODE_PATH=~/.cache/matgraph-deck/node_modules node presentation/build_review_deck.js
+NODE_PATH=~/.cache/matgraph-deck/node_modules node presentation/build_deck.js
+```
+
+The screenshots in `presentation/assets/` come from the running dashboard
+and graph explorer (`scripts/serve.py`).
 
 Embeddings are local (Ollama BGE-M3), so building the graph needs no API
 key. The LLM is an OpenRouter free model (`OPENROUTER_MODEL`, with
@@ -985,16 +1016,13 @@ kept here rather than scattered across commit messages:
 
 ## 20. Roadmap
 
-- **Phase 3: crystal structure encoding.**
-  - Train or reproduce a CGCNN, with a pretrained ALIGNN fallback.
-  - Use it for structural embeddings and for property prediction on
-    **uploaded CIF structures**. Structure input is deliberately routed there,
-    not handled in Phase 2.
-  - Add `STRUCTURALLY_SIMILAR` / `SUBSTITUTABLE_WITH` edges.
-  - Phase 2's evaluation motivates this directly: property-based
-    `similar_to` *hurts* on structural-analogue queries (tier 4, §15).
-  - `ingest.py`'s pluggable property source gets a `cgcnn` source, with
-    values labelled `predicted`.
+- **Beyond Phase 3.** Phase 3's CGCNN inference and structure ingestion are
+  done. Still open:
+  - Structural embeddings and `structurally_similar` edges. Phase 2's
+    evaluation motivates these: property-based `similar_to` *hurts* on
+    structural-analogue queries (tier 4, §15).
+  - Element substitution (`substitutable_with`, `/similar-elements`).
+  - Optional retraining of CGCNN on the current Materials Project snapshot.
 - **Neo4j migration.** This is a config swap
   (`GRAPH_DATABASE_PROVIDER=neo4j`). Retrieval depends only on
   `get_graph_data()` and vector search, so no retrieval code changes. It was
